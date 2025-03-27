@@ -31,14 +31,14 @@ jobs:
         run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
 
       - name: Build WebAssembly
-        run: wasm-pack build --target web --out-dir pkg
+        run: wasm-pack build --target web --out-dir wasm
 
       - name: Create dist directory
         run: |
           mkdir -p dist
           cp index.html dist/
           cp viz.html dist/
-          cp -r pkg dist/
+          cp -r wasm dist/
           cp -r css dist/ || true   # Copy CSS if it exists
           cp -r js dist/ || true    # Copy JS if it exists
           cp -r images dist/ || true # Copy images if it exists
