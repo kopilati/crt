@@ -452,6 +452,10 @@
 
             // Add event listeners for controls
             document.getElementById('search-box').addEventListener('input', () => searchNodes(nodes, links));
+
+            // Store the input data globally
+            window.inputNodes = nodes;
+            window.inputLinks = links;
         }
 
         // Add these helper functions
@@ -470,13 +474,25 @@
                 nodeItem.className = `node-item ${node.type || 'normal'}`;
                 nodeItem.dataset.id = node.id;
                 nodeItem.textContent = node.text;
-                nodeItem.addEventListener('click', () => focusOnNode(null, node));
+                nodeItem.addEventListener('click', function() {
+                    if (this.classList.contains('selected-primary')) {
+                        // If clicking selected node, reset the graph
+                        resetGraph();
+                    } else {
+                        // Otherwise, focus on the selected node
+                        focusOnNode(null, node);
+                    }
+                });
                 nodeList.appendChild(nodeItem);
             });
         }
 
         function focusOnNode(event, d) {
             if (!d) return;
+
+            // Get current simulation nodes and links
+            const currentNodes = simulation.nodes();
+            const currentLinks = simulation.force('link').links();
 
             // Update the selected node in the list
             document.querySelectorAll('.node-item').forEach(item => {
@@ -496,7 +512,7 @@
 
             // Function to recursively find all nodes reachable through THEN and AND relationships
             function findReachableNodes(nodeId) {
-                const outgoingLinks = links.filter(link => {
+                const outgoingLinks = currentLinks.filter(link => {
                     const sourceId = typeof link.source === 'object' ? link.source.id : link.source;
                     return sourceId === nodeId && (link.type === 'THEN' || link.type === 'AND');
                 });
@@ -513,24 +529,38 @@
             // Start the recursive search from the selected node
             findReachableNodes(d.id);
 
-            // Update node visibility
-            d3.selectAll('.node')
-                .classed('highlighted-primary', n => n.id === d.id)
-                .classed('highlighted-branch', n => n.id !== d.id && reachableNodes.has(n.id))
-                .classed('faded', n => !reachableNodes.has(n.id));
+            // Filter nodes and links to only show reachable ones
+            const filteredNodes = currentNodes.filter(node => reachableNodes.has(node.id));
+            const filteredLinks = currentLinks.filter(link => {
+                const sourceId = typeof link.source === 'object' ? link.source.id : link.source;
+                const targetId = typeof link.target === 'object' ? link.target.id : link.target;
+                return reachableNodes.has(sourceId) && reachableNodes.has(targetId);
+            });
 
-            // Update link visibility
-            d3.selectAll('.link')
-                .classed('highlighted', l => {
-                    const sourceId = typeof l.source === 'object' ? l.source.id : l.source;
-                    const targetId = typeof l.target === 'object' ? l.target.id : l.target;
-                    return reachableNodes.has(sourceId) && reachableNodes.has(targetId);
-                })
-                .classed('faded', l => {
-                    const sourceId = typeof l.source === 'object' ? l.source.id : l.source;
-                    const targetId = typeof l.target === 'object' ? l.target.id : l.target;
-                    return !reachableNodes.has(sourceId) || !reachableNodes.has(targetId);
-                });
+            // Update the simulation with filtered data
+            simulation.nodes(filteredNodes);
+            simulation.force('link').links(filteredLinks);
+
+            // Redraw the graph with filtered data
+            const svg = d3.select('.visualization-container svg');
+            const g = svg.select('g');
+
+            // Update links
+            const link = g.selectAll('.link')
+                .data(filteredLinks, d => `${d.source.id}-${d.target.id}`);
+            
+            link.exit().remove();
+            
+            // Update nodes
+            const nodeGroup = g.selectAll('.node-group')
+                .data(filteredNodes, d => d.id);
+            
+            nodeGroup.exit().remove();
+
+            // Highlight selected node
+            nodeGroup.selectAll('.node')
+                .classed('highlighted-primary', n => n.id === d.id)
+                .classed('highlighted-branch', n => n.id !== d.id);
 
             // Update node list highlighting
             document.querySelectorAll('.node-item').forEach(item => {
@@ -538,6 +568,9 @@
                 item.classList.toggle('selected-primary', nodeId === d.id);
                 item.classList.toggle('selected-branch', nodeId !== d.id && reachableNodes.has(nodeId));
             });
+
+            // Restart the simulation
+            simulation.alpha(1).restart();
         }
 
         function dragStarted(event, d) {
@@ -592,6 +625,25 @@
                 this.selectionStart = this.selectionEnd = start + 4;
             }
         });
+
+        function resetGraph() {
+            // Get the original nodes and links
+            const originalNodes = JSON.parse(JSON.stringify(inputNodes));
+            const originalLinks = JSON.parse(JSON.stringify(inputLinks));
+
+            // Update the simulation with original data
+            simulation.nodes(originalNodes);
+            simulation.force('link').links(originalLinks);
+
+            // Redraw the graph
+            renderGraph(originalNodes, originalLinks);
+
+            // Remove highlighting from node list
+            document.querySelectorAll('.node-item').forEach(item => {
+                item.classList.remove('selected-primary');
+                item.classList.remove('selected-branch');
+            });
+        }
     </script>
 </body>
 </html> 
