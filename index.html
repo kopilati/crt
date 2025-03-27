@@ -514,8 +514,6 @@
     </div>
 
     <script type="module">
-        // Get the base URL from current path
-        const baseUrl = window.location.pathname.replace(/\/[^/]*$/, '/');
         import init, { parse_content } from './pkg/crt_to_cypher.js';
 
         function updateLineNumbers() {
@@ -525,6 +523,11 @@
             lineNumbers.innerHTML = Array.from({length: lines}, (_, i) => i + 1).join('\n');
             lineNumbers.scrollTop = textarea.scrollTop;
         }
+
+        window.onerror = function(message, source, lineno, colno, error) {
+            console.error('Error caught:', message, 'at', source, lineno, colno);
+            return true;
+        };
 
         let isVisualizationMode = false;
         window.toggleView = function() {
