@@ -26,6 +26,10 @@
             justify-content: space-between;
             z-index: 100;
         }
+        .header-left {
+            display: flex;
+            align-items: center;
+        }
         .header h1 {
             margin: 0;
             color: #fff;
@@ -367,20 +371,129 @@
             opacity: 1;
             transform: translateY(0);
         }
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: -300px;
+            width: 300px;
+            height: 100vh;
+            background: #2d2d2d;
+            z-index: 1000;
+            transition: left 0.3s ease;
+            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.2);
+            display: flex;
+            flex-direction: column;
+        }
+        .sidebar.open {
+            left: 0;
+        }
+        .sidebar-header {
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #3d3d3d;
+        }
+        .sidebar-header h3 {
+            margin: 0;
+            color: #fff;
+        }
+        .sidebar-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px 0;
+        }
+        .doc-item {
+            padding: 12px 15px;
+            border-bottom: 1px solid #3d3d3d;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .doc-item:hover {
+            background: #3d3d3d;
+        }
+        .doc-item-title {
+            font-weight: bold;
+            color: #fff;
+            margin-bottom: 5px;
+        }
+        .doc-item-date {
+            font-size: 12px;
+            color: #aaa;
+        }
+        .sidebar-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+            display: none;
+        }
+        .sidebar-overlay.open {
+            display: block;
+        }
+        .auto-save-indicator {
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+            background: rgba(76, 175, 80, 0.8);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            opacity: 0;
+            transition: opacity 0.5s;
+        }
+        .auto-save-indicator.visible {
+            opacity: 1;
+        }
+        .doc-item.current {
+            background: #4a4a4a;
+            cursor: default;
+            border-left: 4px solid #4CAF50;
+            padding-left: 11px; /* 15px - 4px border */
+        }
+        .doc-item.current .doc-item-title {
+            color: #fff;
+        }
+        .doc-item.current .doc-item-date {
+            color: #bbb;
+        }
     </style>
 </head>
 <body>
     <div class="header">
-        <h1 id="editor-title" contenteditable="true" spellcheck="false">CRT to Cypher Parser</h1>
+        <div class="header-left">
+            <button class="icon-button menu-button" id="menu-button" title="Open Menu">
+                <span class="material-icons">menu</span>
+            </button>
+            <h1 id="editor-title" contenteditable="true" spellcheck="false">CRT to Cypher Parser</h1>
+        </div>
         <div>
             <button class="icon-button" onclick="toggleView()" title="Toggle View">
                 <span class="material-icons" id="view-toggle-icon">account_tree</span>
             </button>
-            <button class="icon-button" onclick="saveToLocalStorage()" title="Save">
-                <span class="material-icons">save</span>
-            </button>
         </div>
     </div>
+
+    <!-- Add this sidebar menu -->
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <h3>Saved Documents</h3>
+            <button class="icon-button close-button" id="close-menu">
+                <span class="material-icons">close</span>
+            </button>
+        </div>
+        <div class="sidebar-content" id="saved-docs-list">
+            <!-- Saved documents will be listed here -->
+        </div>
+    </div>
+
+    <!-- Add an overlay for when the menu is open -->
+    <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
     <div class="main-content">
         <div class="editor-container">
             <div class="line-numbers" id="line-numbers"></div>
@@ -1002,52 +1115,130 @@
             updateVisualization();
         }
 
-        // Initialize localStorage functionality
-        let autoSaveTimer;
-
+        // Update localStorage functionality for auto-save and sidebar menu
         function initLocalStorage() {
-            // Add event listener for beforeunload to save content
-            window.addEventListener('beforeunload', function() {
-                saveToLocalStorage();
-            });
+            // Add an auto-save indicator
+            const autoSaveIndicator = document.createElement('div');
+            autoSaveIndicator.className = 'auto-save-indicator';
+            autoSaveIndicator.textContent = 'Saving...';
+            document.body.appendChild(autoSaveIndicator);
             
-            // Load saved documents list and populate dropdown
-            loadSavedDocumentsList();
+            // Set up auto-save timer (save every 2 seconds if there are changes)
+            const textarea = document.getElementById('input');
+            const title = document.getElementById('editor-title');
+            let lastContent = textarea.value;
+            let lastTitle = title.innerText;
+            
+            setInterval(() => {
+                if (textarea.value !== lastContent || title.innerText !== lastTitle) {
+                    saveToLocalStorage();
+                    lastContent = textarea.value;
+                    lastTitle = title.innerText;
+                    
+                    // Show auto-save indicator
+                    autoSaveIndicator.classList.add('visible');
+                    setTimeout(() => {
+                        autoSaveIndicator.classList.remove('visible');
+                    }, 1000);
+                }
+            }, 2000); // 2 seconds
+            
+            // Save when switching to visualization mode
+            const originalToggleView = window.toggleView;
+            window.toggleView = function() {
+                saveToLocalStorage();
+                originalToggleView();
+            };
+            
+            // Load saved documents list for the sidebar
+            updateSavedDocumentsList();
             
             // Find and load the most recently edited document
             loadMostRecentDocument();
             
-            // Set up auto-save timer (save every 30 seconds if there are changes)
-            const textarea = document.getElementById('input');
-            const title = document.getElementById('editor-title');
+            // Set up menu button functionality
+            document.getElementById('menu-button').addEventListener('click', openSidebar);
+            document.getElementById('close-menu').addEventListener('click', closeSidebar);
+            document.getElementById('sidebar-overlay').addEventListener('click', closeSidebar);
             
-            function setupAutoSave() {
-                if (autoSaveTimer) clearInterval(autoSaveTimer);
-                
-                autoSaveTimer = setInterval(() => {
-                    if (textarea.dataset.lastSaved !== textarea.value) {
-                        saveToLocalStorage();
-                        textarea.dataset.lastSaved = textarea.value;
-                    }
-                }, 30000); // 30 seconds
+            // Update sidebar when title changes
+            document.getElementById('editor-title').addEventListener('blur', function() {
+                if (document.getElementById('sidebar').classList.contains('open')) {
+                    updateSavedDocumentsList();
+                }
+            });
+        }
+
+        // Open sidebar menu
+        function openSidebar() {
+            document.getElementById('sidebar').classList.add('open');
+            document.getElementById('sidebar-overlay').classList.add('open');
+            updateSavedDocumentsList(); // Refresh the list when opening
+        }
+
+        // Close sidebar menu
+        function closeSidebar() {
+            document.getElementById('sidebar').classList.remove('open');
+            document.getElementById('sidebar-overlay').classList.remove('open');
+        }
+
+        // Update the list of saved documents in the sidebar
+        function updateSavedDocumentsList() {
+            const savedDocs = JSON.parse(localStorage.getItem('savedCRTDocuments') || '{}');
+            const docsListElement = document.getElementById('saved-docs-list');
+            docsListElement.innerHTML = '';
+            
+            // Get current document title
+            const currentTitle = document.getElementById('editor-title').innerText.trim();
+            
+            // Convert to array for sorting
+            const documents = Object.entries(savedDocs).map(([title, data]) => ({
+                title,
+                lastEdited: data.lastEdited || '0',
+                content: data.content,
+                isCurrent: title === currentTitle
+            }));
+            
+            // Sort by last edited (most recent first)
+            documents.sort((a, b) => new Date(b.lastEdited) - new Date(a.lastEdited));
+            
+            if (documents.length === 0) {
+                const emptyMsg = document.createElement('div');
+                emptyMsg.className = 'doc-item-empty';
+                emptyMsg.textContent = 'No saved documents yet';
+                emptyMsg.style.padding = '15px';
+                emptyMsg.style.color = '#aaa';
+                emptyMsg.style.textAlign = 'center';
+                docsListElement.appendChild(emptyMsg);
+                return;
             }
             
-            // Track changes to content
-            textarea.addEventListener('input', () => {
-                setupAutoSave();
+            // Create document list items
+            documents.forEach(doc => {
+                const docItem = document.createElement('div');
+                docItem.className = doc.isCurrent ? 'doc-item current' : 'doc-item';
+                
+                const titleElement = document.createElement('div');
+                titleElement.className = 'doc-item-title';
+                titleElement.textContent = doc.title;
+                
+                const dateElement = document.createElement('div');
+                dateElement.className = 'doc-item-date';
+                dateElement.textContent = new Date(doc.lastEdited).toLocaleString();
+                
+                docItem.appendChild(titleElement);
+                docItem.appendChild(dateElement);
+                
+                // Add click handler only for non-current documents
+                if (!doc.isCurrent) {
+                    docItem.addEventListener('click', () => {
+                        loadFromLocalStorage(doc.title);
+                        closeSidebar();
+                    });
+                }
+                
+                docsListElement.appendChild(docItem);
             });
-            
-            // Track changes to title
-            title.addEventListener('input', () => {
-                setupAutoSave();
-            });
-            
-            // Initial setup
-            setupAutoSave();
-
-            // Save on blur (when editor loses focus)
-            document.getElementById('input').addEventListener('blur', saveToLocalStorage);
-            document.getElementById('editor-title').addEventListener('blur', saveToLocalStorage);
         }
 
         // Save current document to localStorage
@@ -1072,12 +1263,6 @@
             
             // Save back to localStorage
             localStorage.setItem('savedCRTDocuments', JSON.stringify(savedDocs));
-            
-            // Update the documents list
-            loadSavedDocumentsList();
-            
-            // Show a brief save confirmation
-            showSaveConfirmation();
         }
 
         // Load a document from localStorage
@@ -1088,6 +1273,11 @@
                 document.getElementById('editor-title').innerText = title;
                 document.getElementById('input').value = savedDocs[title].content;
                 updateLineNumbers();
+                
+                // Update the sidebar if it's open
+                if (document.getElementById('sidebar').classList.contains('open')) {
+                    updateSavedDocumentsList();
+                }
             }
         }
 
@@ -1112,79 +1302,6 @@
             
             // Load the most recent document
             loadFromLocalStorage(mostRecentTitle);
-        }
-
-        // Load the list of saved documents
-        function loadSavedDocumentsList() {
-            const savedDocs = JSON.parse(localStorage.getItem('savedCRTDocuments') || '{}');
-            const titles = Object.keys(savedDocs);
-            
-            // Remove existing dropdown if it exists
-            const existingDropdown = document.getElementById('docs-dropdown');
-            if (existingDropdown) {
-                existingDropdown.remove();
-            }
-            
-            // Add a dropdown menu to the header for loading saved documents
-            if (titles.length > 0) {
-                const dropdown = document.createElement('select');
-                dropdown.id = 'docs-dropdown';
-                dropdown.className = 'docs-dropdown';
-                
-                const defaultOption = document.createElement('option');
-                defaultOption.value = '';
-                defaultOption.textContent = 'Load saved document...';
-                dropdown.appendChild(defaultOption);
-                
-                // Sort titles by last edited time (most recent first)
-                titles.sort((a, b) => {
-                    const timeA = new Date(savedDocs[a].lastEdited || 0).getTime();
-                    const timeB = new Date(savedDocs[b].lastEdited || 0).getTime();
-                    return timeB - timeA;
-                });
-                
-                titles.forEach(title => {
-                    const option = document.createElement('option');
-                    option.value = title;
-                    
-                    // Format the last edited date
-                    const lastEdited = savedDocs[title].lastEdited 
-                        ? new Date(savedDocs[title].lastEdited).toLocaleString()
-                        : 'Unknown';
-                        
-                    option.textContent = `${title} (${lastEdited})`;
-                    dropdown.appendChild(option);
-                });
-                
-                dropdown.addEventListener('change', function() {
-                    if (this.value) {
-                        loadFromLocalStorage(this.value);
-                        this.value = ''; // Reset dropdown
-                    }
-                });
-                
-                // Add dropdown to header
-                const headerButtons = document.querySelector('.header div');
-                headerButtons.prepend(dropdown);
-            }
-        }
-
-        // Show a brief save confirmation
-        function showSaveConfirmation() {
-            const confirmation = document.createElement('div');
-            confirmation.className = 'save-confirmation';
-            confirmation.textContent = 'Document saved';
-            document.body.appendChild(confirmation);
-            
-            setTimeout(() => {
-                confirmation.classList.add('show');
-                setTimeout(() => {
-                    confirmation.classList.remove('show');
-                    setTimeout(() => {
-                        document.body.removeChild(confirmation);
-                    }, 300);
-                }, 2000);
-            }, 10);
         }
 
         // Call init function on page load
