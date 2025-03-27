@@ -39,6 +39,7 @@ jobs:
           cp index.html dist/
           cp viz.html dist/
           cp -r pkg dist/
+          rm dist/pkg/.gitignore
           cp -r css dist/ || true   # Copy CSS if it exists
           cp -r js dist/ || true    # Copy JS if it exists
           cp -r images dist/ || true # Copy images if it exists
