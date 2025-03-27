@@ -2,13 +2,13 @@ name: Build and Deploy
 
 on:
   push:
-    branches: [main]
+    branches: [ main ]  # Or your default branch name like 'master'
   pull_request:
-    branches: [main]
-  workflow_dispatch:
+    branches: [ main ]  # Or your default branch name like 'master'
+  workflow_dispatch:    # Allows manual triggering of the workflow
 
 permissions:
-  contents: write
+  contents: write       # This is important to allow the action to write to your repository
 
 jobs:
   build-and-deploy:
@@ -16,11 +16,16 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
+        with:
+          persist-credentials: true  # Ensure credentials are maintained
 
       - name: Setup Rust
-        uses: dtolnay/rust-toolchain@stable
+        uses: actions-rs/toolchain@v1
         with:
-          targets: wasm32-unknown-unknown
+          profile: minimal
+          toolchain: stable
+          override: true
+          target: wasm32-unknown-unknown
 
       - name: Install wasm-pack
         run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
@@ -28,19 +33,23 @@ jobs:
       - name: Build WebAssembly
         run: wasm-pack build --target web --out-dir pkg
 
-      - name: Deploy to GitHub Pages
+      - name: Create dist directory
         run: |
-          git config --global user.name "GitHub Actions"
-          git config --global user.email "actions@github.com"
-          
-          # Create and switch to gh-pages branch
-          git checkout -b gh-pages
-          
-          # Add all files
-          git add .
-          
-          # Commit changes
-          git commit -m "Deploy to GitHub Pages"
-          
-          # Force push to gh-pages branch
-          git push -f origin gh-pages 
+          mkdir -p dist
+          cp index.html dist/
+          cp viz.html dist/
+          cp -r pkg dist/
+          cp -r css dist/ || true   # Copy CSS if it exists
+          cp -r js dist/ || true    # Copy JS if it exists
+          cp -r images dist/ || true # Copy images if it exists
+          cp *.neo dist/ || true    # Copy any .neo files if they exist
+
+      - name: Deploy to GitHub Pages
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          folder: dist
+          branch: gh-pages
+          token: ${{ secrets.GITHUB_TOKEN }}  # Use the built-in token
+          clean: true  # Clean any existing files before deployment 
+          clean-exclude: |  # Don't clean these files/folders
+            pkg/**
