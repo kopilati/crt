@@ -1,0 +1,46 @@
+name: Build and Deploy
+
+on:
+  push:
+    branches: [ main ]  # Or your default branch name like 'master'
+  pull_request:
+    branches: [ main ]  # Or your default branch name like 'master'
+  workflow_dispatch:    # Allows manual triggering of the workflow
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Setup Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+          target: wasm32-unknown-unknown
+
+      - name: Install wasm-pack
+        run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
+
+      - name: Build WebAssembly
+        run: wasm-pack build --target web --out-dir pkg
+
+      - name: Create dist directory
+        run: |
+          mkdir -p dist
+          cp index.html dist/
+          cp viz.html dist/
+          cp -r pkg dist/
+          cp -r css dist/ || true   # Copy CSS if it exists
+          cp -r js dist/ || true    # Copy JS if it exists
+          cp -r images dist/ || true # Copy images if it exists
+          cp *.neo dist/ || true    # Copy any .neo files if they exist
+
+      - name: Deploy to GitHub Pages
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          folder: dist
+          branch: gh-pages 
