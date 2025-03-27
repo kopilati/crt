@@ -228,7 +228,7 @@
             position: absolute;
             top: 10px;
             right: 10px;
-            background: rgba(255, 255, 255, 0.9);
+            background: #ffffff;
             padding: 15px;
             border: 1px solid #ccc;
             border-radius: 5px;
@@ -239,9 +239,73 @@
             flex-direction: column;
             max-height: calc(100vh - 40px);
             overflow-y: auto;
+            color: #1e1e1e;
         }
         .branch-panel.visible {
             display: flex;
+        }
+        .branch-panel h3 {
+            margin-top: 0;
+            margin-bottom: 15px;
+            color: #333;
+            text-align: center;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+        }
+        .branch-item {
+            padding: 10px;
+            margin-bottom: 5px;
+            border-radius: 4px;
+        }
+        .branch-node {
+            background-color: #e0ffe0;
+            border-left: 4px solid #4caf50;
+        }
+        .branch-node.primary {
+            font-weight: bold;
+            background-color: #d0e8ff;
+            border-left: 4px solid #4a90e2;
+        }
+        .branch-relationship {
+            background-color: #f8f8f8;
+            color: #666;
+            text-align: center;
+            font-size: 12px;
+            font-weight: bold;
+            padding: 5px;
+        }
+        .tabs {
+            display: flex;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #ccc;
+            overflow-x: auto;
+            white-space: nowrap;
+            scrollbar-width: thin;
+        }
+        .tab {
+            padding: 8px 15px;
+            cursor: pointer;
+            border: 1px solid #ccc;
+            border-bottom: none;
+            border-radius: 4px 4px 0 0;
+            margin-right: 5px;
+            background-color: #f5f5f5;
+        }
+        .tab.active {
+            background-color: #fff;
+            font-weight: bold;
+            border-bottom: 1px solid #fff;
+            margin-bottom: -1px;
+        }
+        .tab-content {
+            display: none;
+            padding: 15px;
+            border: 1px solid #eee;
+            border-radius: 0 0 5px 5px;
+            background-color: #fff;
+        }
+        .tab-content.active {
+            display: block;
         }
         .tooltip {
             position: absolute;
@@ -506,42 +570,42 @@
         function focusOnNode(event, d) {
             if (!d) return;
             
-            // Check if this node is already selected (by checking the node list)
+            // Check if this node is already selected
             const nodeItem = document.querySelector(`.node-item[data-id="${d.id}"]`);
             const isAlreadySelected = nodeItem && nodeItem.classList.contains('selected-primary');
             
             // If the node is already selected, reset the graph
             if (isAlreadySelected) {
                 resetGraph();
+                document.getElementById('branch-panel').classList.remove('visible');
                 return;
             }
             
             // Get current simulation nodes and links
             const currentNodes = simulation.nodes();
             const currentLinks = simulation.force('link').links();
-
+            
             // Update the selected node in the list
             document.querySelectorAll('.node-item').forEach(item => {
                 item.classList.remove('selected-primary');
                 item.classList.remove('selected-branch');
             });
-
-            const listItem = document.querySelector(`.node-item[data-id="${d.id}"]`);
-            if (listItem) {
-                listItem.classList.add('selected-primary');
-                listItem.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            
+            if (nodeItem) {
+                nodeItem.classList.add('selected-primary');
+                nodeItem.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
             }
-
+            
             // Find all reachable nodes from the selected node
             const reachableNodes = new Set();
             reachableNodes.add(d.id);
-
+            
             function findReachableNodes(nodeId) {
                 const outgoingLinks = currentLinks.filter(link => {
                     const sourceId = typeof link.source === 'object' ? link.source.id : link.source;
                     return sourceId === nodeId && (link.type === 'THEN' || link.type === 'AND');
                 });
-
+                
                 outgoingLinks.forEach(link => {
                     const targetId = typeof link.target === 'object' ? link.target.id : link.target;
                     if (!reachableNodes.has(targetId)) {
@@ -550,9 +614,9 @@
                     }
                 });
             }
-
+            
             findReachableNodes(d.id);
-
+            
             // Filter nodes and links
             const filteredNodes = currentNodes.filter(node => reachableNodes.has(node.id));
             const filteredLinks = currentLinks.filter(link => {
@@ -560,16 +624,23 @@
                 const targetId = typeof link.target === 'object' ? link.target.id : link.target;
                 return reachableNodes.has(sourceId) && reachableNodes.has(targetId);
             });
-
+            
+            // ----- Find all possible paths -----
+            const allPaths = findAllPaths(d, filteredNodes, filteredLinks);
+            
+            // ----- Populate the branch panel -----
+            populateBranchPanel(d, allPaths);
+            
+            // ----- Update the visualization -----
             // Clear the existing visualization
             const svg = d3.select('.visualization-container svg');
             const g = svg.select('g');
-
+            
             // Remove all existing elements
             g.selectAll('.link').remove();
             g.selectAll('.link-label').remove();
             g.selectAll('.node-group').remove();
-
+            
             // Create new elements with filtered data
             // Links
             const link = g.append('g')
@@ -579,7 +650,7 @@
                 .append('line')
                 .attr('class', d => `link ${d.type}`)
                 .attr('marker-end', d => `url(#arrow-${d.type})`);
-
+            
             // Link labels
             const linkLabels = g.append('g')
                 .selectAll('text')
@@ -588,7 +659,7 @@
                 .append('text')
                 .attr('class', 'link-label')
                 .text(d => d.type);
-
+            
             // Node groups
             const nodeGroup = g.append('g')
                 .selectAll('.node-group')
@@ -601,11 +672,10 @@
                     .on('drag', dragged)
                     .on('end', dragEnded))
                 .on('click', focusOnNode);
-
-            // Circles for nodes - with simplified highlighting
+            
+            // Circles for nodes - with highlighting
             nodeGroup.append('circle')
                 .attr('class', function(node) {
-                    // Simple class assignment - primary for selected node, branch for others
                     if (node.id === d.id) {
                         return `node ${node.type || 'normal'} highlighted-primary`;
                     } else {
@@ -613,7 +683,7 @@
                     }
                 })
                 .attr('r', d => d.type === 'start' ? 50 : 40);
-
+            
             // Labels for nodes
             nodeGroup.append('text')
                 .attr('class', 'node-label')
@@ -621,8 +691,8 @@
                     const maxLength = 20;
                     return d.text.length > maxLength ? d.text.substring(0, maxLength) + '...' : d.text;
                 });
-
-            // Update node list highlighting - simple approach
+            
+            // Update node list highlighting
             document.querySelectorAll('.node-item').forEach(item => {
                 const nodeId = parseInt(item.dataset.id);
                 if (nodeId === d.id) {
@@ -631,11 +701,11 @@
                     item.classList.add('selected-branch');
                 }
             });
-
+            
             // Update simulation
             simulation.nodes(filteredNodes);
             simulation.force('link').links(filteredLinks);
-
+            
             // Update positions on each tick
             simulation.on('tick', () => {
                 link
@@ -643,16 +713,152 @@
                     .attr('y1', d => d.source.y)
                     .attr('x2', d => d.target.x)
                     .attr('y2', d => d.target.y);
-
+            
                 nodeGroup.attr('transform', d => `translate(${d.x},${d.y})`);
-
+            
                 linkLabels
                     .attr('x', d => (d.source.x + d.target.x) / 2)
                     .attr('y', d => (d.source.y + d.target.y) / 2 - 5);
             });
-
+            
             // Restart the simulation
             simulation.alpha(1).restart();
+        }
+
+        // Helper function to find all possible paths from the selected node
+        function findAllPaths(startNode, nodes, links) {
+            // Find all paths through THEN relationships
+            function findPathsFromNode(nodeId, visited = new Set(), currentPath = []) {
+                visited.add(nodeId);
+                
+                // Add current node to path
+                const node = nodes.find(n => n.id === nodeId);
+                currentPath.push(node);
+                
+                // Find all outgoing THEN links
+                const outgoingLinks = links.filter(link => {
+                    const sourceId = typeof link.source === 'object' ? link.source.id : link.source;
+                    return sourceId === nodeId && (link.type === 'THEN' || link.type === 'AND');
+                });
+                
+                // If no outgoing links, this is the end of a path
+                if (outgoingLinks.length === 0) {
+                    return [currentPath];
+                }
+                
+                let allPaths = [];
+                
+                // Follow each outgoing link
+                for (const link of outgoingLinks) {
+                    const targetId = typeof link.target === 'object' ? link.target.id : link.target;
+                    
+                    // Skip if we've visited this node (avoid cycles)
+                    if (visited.has(targetId)) continue;
+                    
+                    // Create a new path that includes this link
+                    const newPath = [...currentPath];
+                    newPath.push(link); // Add the link to the path
+                    
+                    // Continue from the target node
+                    const pathsFromHere = findPathsFromNode(targetId, new Set([...visited]), newPath);
+                    allPaths = [...allPaths, ...pathsFromHere];
+                }
+                
+                return allPaths.length > 0 ? allPaths : [currentPath];
+            }
+            
+            // Start from the selected node
+            return findPathsFromNode(startNode.id);
+        }
+
+        // Function to populate the branch panel with tabs for each path
+        function populateBranchPanel(selectedNode, allPaths) {
+            const branchPanel = document.getElementById('branch-panel');
+            const branchContent = document.getElementById('branch-content');
+            branchContent.innerHTML = '';
+            
+            // Make the branch panel visible
+            branchPanel.classList.add('visible');
+            
+            if (allPaths.length > 0) {
+                // Create tabs container
+                const tabsContainer = document.createElement('div');
+                tabsContainer.className = 'tabs';
+                branchContent.appendChild(tabsContainer);
+                
+                // Tab content container
+                const tabContentsContainer = document.createElement('div');
+                branchContent.appendChild(tabContentsContainer);
+                
+                // Create tabs and content for each path
+                for (let pathIndex = 0; pathIndex < allPaths.length; pathIndex++) {
+                    const path = allPaths[pathIndex];
+                    
+                    // Create a tab for this path
+                    const tab = document.createElement('div');
+                    tab.className = 'tab';
+                    if (pathIndex === 0) tab.classList.add('active');
+                    tab.textContent = `${pathIndex + 1}`;
+                    tab.dataset.path = pathIndex;
+                    tabsContainer.appendChild(tab);
+                    
+                    // Create content container for this path
+                    const tabContent = document.createElement('div');
+                    tabContent.className = 'tab-content';
+                    if (pathIndex === 0) tabContent.classList.add('active');
+                    tabContent.dataset.path = pathIndex;
+                    tabContentsContainer.appendChild(tabContent);
+                    
+                    // Add the IF title at the top
+                    const ifTitle = document.createElement('h3');
+                    ifTitle.textContent = 'IF';
+                    tabContent.appendChild(ifTitle);
+                    
+                    // Add the selected node
+                    const selectedNodeDiv = document.createElement('div');
+                    selectedNodeDiv.className = 'branch-item branch-node primary';
+                    selectedNodeDiv.textContent = selectedNode.text;
+                    tabContent.appendChild(selectedNodeDiv);
+                    
+                    // Process the path
+                    let lastItem = null;
+                    for (let i = 1; i < path.length; i++) {
+                        const item = path[i];
+                        
+                        // If it's a node
+                        if (item && item.id !== undefined) {
+                            // Add a node item
+                            const nodeDiv = document.createElement('div');
+                            nodeDiv.className = 'branch-item branch-node';
+                            nodeDiv.textContent = item.text;
+                            tabContent.appendChild(nodeDiv);
+                            lastItem = 'node';
+                        } 
+                        // If it's a link and the last item wasn't a relationship
+                        else if (item && item.type && lastItem !== 'relationship') {
+                            // Add a relationship item
+                            const relDiv = document.createElement('div');
+                            relDiv.className = 'branch-item branch-relationship';
+                            relDiv.textContent = item.type;
+                            tabContent.appendChild(relDiv);
+                            lastItem = 'relationship';
+                        }
+                    }
+                }
+                
+                // Add click handlers to tabs
+                document.querySelectorAll('.tab').forEach(tab => {
+                    tab.addEventListener('click', function() {
+                        // Remove active class from all tabs and contents
+                        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                        
+                        // Add active class to this tab and its content
+                        this.classList.add('active');
+                        document.querySelector(`.tab-content[data-path="${this.dataset.path}"]`).classList.add('active');
+                    });
+                });
+            }
         }
 
         function dragStarted(event, d) {
@@ -715,6 +921,9 @@
                 item.classList.remove('selected-branch');
             });
 
+            // Hide the branch panel
+            document.getElementById('branch-panel').classList.remove('visible');
+            
             // Simply call updateVisualization to redraw the entire graph
             updateVisualization();
         }
