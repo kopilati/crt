@@ -281,6 +281,14 @@
             overflow-x: auto;
             white-space: nowrap;
             scrollbar-width: thin;
+            -ms-overflow-style: none; /* IE and Edge */
+        }
+        .tabs::-webkit-scrollbar {
+            height: 4px;
+        }
+        .tabs::-webkit-scrollbar-thumb {
+            background-color: #ccc;
+            border-radius: 2px;
         }
         .tab {
             padding: 8px 15px;
@@ -317,14 +325,59 @@
             z-index: 1000;
             pointer-events: none;
         }
+        #editor-title {
+            margin: 0;
+            color: #fff;
+            font-size: 20px;
+            outline: none;
+            border-bottom: 1px solid transparent;
+            padding: 2px 4px;
+            transition: border-color 0.2s;
+        }
+        #editor-title:hover {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        #editor-title:focus {
+            border-bottom: 1px solid #fff;
+        }
+        .docs-dropdown {
+            padding: 4px 8px;
+            margin-right: 10px;
+            background: #3d3d3d;
+            color: #fff;
+            border: 1px solid #555;
+            border-radius: 4px;
+            outline: none;
+        }
+        .save-confirmation {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 4px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.3s, transform 0.3s;
+            z-index: 2000;
+        }
+        .save-confirmation.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
     </style>
 </head>
 <body>
     <div class="header">
-        <h1>CRT to Cypher Parser</h1>
+        <h1 id="editor-title" contenteditable="true" spellcheck="false">CRT to Cypher Parser</h1>
         <div>
             <button class="icon-button" onclick="toggleView()" title="Toggle View">
                 <span class="material-icons" id="view-toggle-icon">account_tree</span>
+            </button>
+            <button class="icon-button" onclick="saveToLocalStorage()" title="Save">
+                <span class="material-icons">save</span>
             </button>
         </div>
     </div>
@@ -365,6 +418,9 @@
             isVisualizationMode = !isVisualizationMode;
             
             if (isVisualizationMode) {
+                // Save content before switching to visualization
+                saveToLocalStorage();
+                
                 mainContent.classList.add('show-visualization');
                 icon.textContent = 'edit';
                 updateVisualization();
@@ -846,7 +902,7 @@
                     }
                 }
                 
-                // Add click handlers to tabs
+                // Add click handlers to tabs with auto-scrolling
                 document.querySelectorAll('.tab').forEach(tab => {
                     tab.addEventListener('click', function() {
                         // Remove active class from all tabs and contents
@@ -856,6 +912,24 @@
                         // Add active class to this tab and its content
                         this.classList.add('active');
                         document.querySelector(`.tab-content[data-path="${this.dataset.path}"]`).classList.add('active');
+                        
+                        // Auto-scroll the tab into view (centered if possible)
+                        const tabsContainer = document.querySelector('.tabs');
+                        const tabElement = this;
+                        
+                        // Calculate position to center the tab
+                        const containerWidth = tabsContainer.clientWidth;
+                        const tabWidth = tabElement.clientWidth;
+                        const tabLeft = tabElement.offsetLeft;
+                        
+                        // Center the tab in view
+                        const scrollPosition = tabLeft - (containerWidth / 2) + (tabWidth / 2);
+                        
+                        // Smooth scroll to position
+                        tabsContainer.scrollTo({
+                            left: Math.max(0, scrollPosition),
+                            behavior: 'smooth'
+                        });
                     });
                 });
             }
@@ -927,6 +1001,196 @@
             // Simply call updateVisualization to redraw the entire graph
             updateVisualization();
         }
+
+        // Initialize localStorage functionality
+        let autoSaveTimer;
+
+        function initLocalStorage() {
+            // Add event listener for beforeunload to save content
+            window.addEventListener('beforeunload', function() {
+                saveToLocalStorage();
+            });
+            
+            // Load saved documents list and populate dropdown
+            loadSavedDocumentsList();
+            
+            // Find and load the most recently edited document
+            loadMostRecentDocument();
+            
+            // Set up auto-save timer (save every 30 seconds if there are changes)
+            const textarea = document.getElementById('input');
+            const title = document.getElementById('editor-title');
+            
+            function setupAutoSave() {
+                if (autoSaveTimer) clearInterval(autoSaveTimer);
+                
+                autoSaveTimer = setInterval(() => {
+                    if (textarea.dataset.lastSaved !== textarea.value) {
+                        saveToLocalStorage();
+                        textarea.dataset.lastSaved = textarea.value;
+                    }
+                }, 30000); // 30 seconds
+            }
+            
+            // Track changes to content
+            textarea.addEventListener('input', () => {
+                setupAutoSave();
+            });
+            
+            // Track changes to title
+            title.addEventListener('input', () => {
+                setupAutoSave();
+            });
+            
+            // Initial setup
+            setupAutoSave();
+
+            // Save on blur (when editor loses focus)
+            document.getElementById('input').addEventListener('blur', saveToLocalStorage);
+            document.getElementById('editor-title').addEventListener('blur', saveToLocalStorage);
+        }
+
+        // Save current document to localStorage
+        function saveToLocalStorage() {
+            const title = document.getElementById('editor-title').innerText.trim();
+            const content = document.getElementById('input').value;
+            
+            // Don't save if title or content is empty
+            if (!title || !content) return;
+            
+            // Get existing documents or create new map
+            let savedDocs = JSON.parse(localStorage.getItem('savedCRTDocuments') || '{}');
+            
+            // Current timestamp
+            const timestamp = new Date().toISOString();
+            
+            // Add current document
+            savedDocs[title] = {
+                content: content,
+                lastEdited: timestamp
+            };
+            
+            // Save back to localStorage
+            localStorage.setItem('savedCRTDocuments', JSON.stringify(savedDocs));
+            
+            // Update the documents list
+            loadSavedDocumentsList();
+            
+            // Show a brief save confirmation
+            showSaveConfirmation();
+        }
+
+        // Load a document from localStorage
+        function loadFromLocalStorage(title) {
+            const savedDocs = JSON.parse(localStorage.getItem('savedCRTDocuments') || '{}');
+            
+            if (savedDocs[title]) {
+                document.getElementById('editor-title').innerText = title;
+                document.getElementById('input').value = savedDocs[title].content;
+                updateLineNumbers();
+            }
+        }
+
+        // Find and load the most recently edited document
+        function loadMostRecentDocument() {
+            const savedDocs = JSON.parse(localStorage.getItem('savedCRTDocuments') || '{}');
+            const titles = Object.keys(savedDocs);
+            
+            if (titles.length === 0) return;
+            
+            // Find the document with the most recent lastEdited timestamp
+            let mostRecentTitle = titles[0];
+            let mostRecentTime = new Date(savedDocs[mostRecentTitle].lastEdited || 0).getTime();
+            
+            for (let i = 1; i < titles.length; i++) {
+                const docTime = new Date(savedDocs[titles[i]].lastEdited || 0).getTime();
+                if (docTime > mostRecentTime) {
+                    mostRecentTime = docTime;
+                    mostRecentTitle = titles[i];
+                }
+            }
+            
+            // Load the most recent document
+            loadFromLocalStorage(mostRecentTitle);
+        }
+
+        // Load the list of saved documents
+        function loadSavedDocumentsList() {
+            const savedDocs = JSON.parse(localStorage.getItem('savedCRTDocuments') || '{}');
+            const titles = Object.keys(savedDocs);
+            
+            // Remove existing dropdown if it exists
+            const existingDropdown = document.getElementById('docs-dropdown');
+            if (existingDropdown) {
+                existingDropdown.remove();
+            }
+            
+            // Add a dropdown menu to the header for loading saved documents
+            if (titles.length > 0) {
+                const dropdown = document.createElement('select');
+                dropdown.id = 'docs-dropdown';
+                dropdown.className = 'docs-dropdown';
+                
+                const defaultOption = document.createElement('option');
+                defaultOption.value = '';
+                defaultOption.textContent = 'Load saved document...';
+                dropdown.appendChild(defaultOption);
+                
+                // Sort titles by last edited time (most recent first)
+                titles.sort((a, b) => {
+                    const timeA = new Date(savedDocs[a].lastEdited || 0).getTime();
+                    const timeB = new Date(savedDocs[b].lastEdited || 0).getTime();
+                    return timeB - timeA;
+                });
+                
+                titles.forEach(title => {
+                    const option = document.createElement('option');
+                    option.value = title;
+                    
+                    // Format the last edited date
+                    const lastEdited = savedDocs[title].lastEdited 
+                        ? new Date(savedDocs[title].lastEdited).toLocaleString()
+                        : 'Unknown';
+                        
+                    option.textContent = `${title} (${lastEdited})`;
+                    dropdown.appendChild(option);
+                });
+                
+                dropdown.addEventListener('change', function() {
+                    if (this.value) {
+                        loadFromLocalStorage(this.value);
+                        this.value = ''; // Reset dropdown
+                    }
+                });
+                
+                // Add dropdown to header
+                const headerButtons = document.querySelector('.header div');
+                headerButtons.prepend(dropdown);
+            }
+        }
+
+        // Show a brief save confirmation
+        function showSaveConfirmation() {
+            const confirmation = document.createElement('div');
+            confirmation.className = 'save-confirmation';
+            confirmation.textContent = 'Document saved';
+            document.body.appendChild(confirmation);
+            
+            setTimeout(() => {
+                confirmation.classList.add('show');
+                setTimeout(() => {
+                    confirmation.classList.remove('show');
+                    setTimeout(() => {
+                        document.body.removeChild(confirmation);
+                    }, 300);
+                }, 2000);
+            }, 10);
+        }
+
+        // Call init function on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            initLocalStorage();
+        });
     </script>
 </body>
 </html> 
