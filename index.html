@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>CRT to Cypher Parser</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background: #1e1e1e;
+            color: #d4d4d4;
+            overflow: hidden;
+        }
+        .header {
+            padding: 10px 20px;
+            background: #2d2d2d;
+            border-bottom: 1px solid #3d3d3d;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            z-index: 100;
+        }
+        .header h1 {
+            margin: 0;
+            color: #fff;
+            font-size: 20px;
+        }
+        .main-content {
+            flex: 1;
+            display: flex;
+            overflow: hidden;
+            position: relative;
+        }
+        .editor-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            display: flex;
+            transition: transform 0.3s ease;
+        }
+        .visualization-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            transform: translateX(100%);
+            transition: transform 0.3s ease;
+            background: #fff;
+        }
+        .show-visualization .editor-container {
+            transform: translateX(-100%);
+        }
+        .show-visualization .visualization-container {
+            transform: translateX(0);
+        }
+        .line-numbers {
+            padding: 10px;
+            background: #2d2d2d;
+            color: #858585;
+            text-align: right;
+            user-select: none;
+            border-right: 1px solid #3d3d3d;
+            min-width: 40px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 14px;
+            line-height: 1.5;
+            white-space: pre;
+        }
+        textarea {
+            flex: 1;
+            padding: 10px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 14px;
+            line-height: 1.5;
+            background: #1e1e1e;
+            color: #d4d4d4;
+            border: none;
+            resize: none;
+            outline: none;
+            tab-size: 4;
+        }
+        .icon-button {
+            background: transparent;
+            border: none;
+            color: #d4d4d4;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            transition: background-color 0.2s;
+        }
+        .icon-button:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        .icon-button .material-icons {
+            font-size: 24px;
+        }
+        /* Visualization styles from viz.html */
+        .node {
+            stroke: #fff;
+            stroke-width: 2px;
+        }
+        .node.start {
+            fill: #FFD700;
+        }
+        .node.normal {
+            fill: #E0F0FF;
+        }
+        .node.highlighted-primary {
+            stroke: #4a90e2;
+            stroke-width: 4px;
+            fill: #e0f0ff;
+        }
+        .node.highlighted-branch {
+            stroke: #4caf50;
+            stroke-width: 3px;
+        }
+        .node.faded {
+            opacity: 0.3;
+        }
+        .link {
+            stroke-width: 3px;
+            stroke-opacity: 0.6;
+        }
+        .link.IF {
+            stroke: blue;
+        }
+        .link.THEN {
+            stroke: black;
+        }
+        .link.AND {
+            stroke: darkgreen;
+        }
+        .link.highlighted {
+            stroke-width: 4px;
+            stroke-opacity: 1;
+        }
+        .link.faded {
+            opacity: 0.1;
+        }
+        .node-label {
+            font-size: 14px;
+            pointer-events: none;
+            text-anchor: middle;
+            dominant-baseline: central;
+        }
+        .link-label {
+            font-size: 12px;
+            font-weight: bold;
+            pointer-events: none;
+            text-anchor: middle;
+            dominant-baseline: text-after-edge;
+            fill: #333;
+            background: white;
+            padding: 2px;
+        }
+        .controls {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 15px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            width: 300px;
+            z-index: 1000;
+        }
+        .node-item {
+            padding: 8px;
+            border-bottom: 1px solid #eee;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: normal;
+            word-break: break-word;
+        }
+        .node-item:hover {
+            background-color: #f0f8ff;
+        }
+        .node-item.selected-primary {
+            background-color: #e0f0ff;
+            font-weight: bold;
+            border-left: 4px solid #4a90e2;
+        }
+        .node-item.selected-branch {
+            background-color: #e0ffe0;
+            border-left: 4px solid #4caf50;
+        }
+        .node-item.start {
+            font-weight: bold;
+            color: #333;
+            background-color: #fff4d4;
+        }
+        .node-item:last-child {
+            border-bottom: none;
+        }
+        .node-list {
+            overflow-y: auto;
+            max-height: 70vh;
+            margin-top: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 5px;
+            flex-grow: 1;
+        }
+        .branch-panel {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 15px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            width: 350px;
+            z-index: 1000;
+            display: none;
+            flex-direction: column;
+            max-height: calc(100vh - 40px);
+            overflow-y: auto;
+        }
+        .branch-panel.visible {
+            display: flex;
+        }
+        .tooltip {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 10px;
+            max-width: 300px;
+            z-index: 1000;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>CRT to Cypher Parser</h1>
+        <div>
+            <button class="icon-button" onclick="toggleView()" title="Toggle View">
+                <span class="material-icons" id="view-toggle-icon">account_tree</span>
+            </button>
+        </div>
+    </div>
+    <div class="main-content">
+        <div class="editor-container">
+            <div class="line-numbers" id="line-numbers"></div>
+            <textarea id="input" placeholder="Enter CRT content here..." spellcheck="false" wrap="off"></textarea>
+        </div>
+        <div class="visualization-container">
+            <svg width="100%" height="100%"></svg>
+            <div class="controls">
+                <input type="text" id="search-box" placeholder="Search nodes...">
+                <div class="node-list"></div>
+            </div>
+            <div class="branch-panel" id="branch-panel">
+                <div id="branch-content">
+                    <!-- Branch path will be populated here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import init, { parse_content } from './pkg/crt_to_cypher.js';
+
+        function updateLineNumbers() {
+            const textarea = document.getElementById('input');
+            const lineNumbers = document.getElementById('line-numbers');
+            const lines = textarea.value.split('\n').length;
+            lineNumbers.innerHTML = Array.from({length: lines}, (_, i) => i + 1).join('\n');
+            lineNumbers.scrollTop = textarea.scrollTop;
+        }
+
+        let isVisualizationMode = false;
+        window.toggleView = function() {
+            const mainContent = document.querySelector('.main-content');
+            const icon = document.getElementById('view-toggle-icon');
+            isVisualizationMode = !isVisualizationMode;
+            
+            if (isVisualizationMode) {
+                mainContent.classList.add('show-visualization');
+                icon.textContent = 'edit';
+                updateVisualization();
+            } else {
+                mainContent.classList.remove('show-visualization');
+                icon.textContent = 'account_tree';
+            }
+        };
+
+        function updateVisualization() {
+            const input = document.getElementById('input').value;
+            try {
+                const result = parse_content(input);
+                renderGraph(result.nodes, result.links);
+            } catch (error) {
+                console.error('Error parsing content:', error);
+            }
+        }
+
+        // Add these variables before your existing script code
+        const physics = {
+            default: {
+                linkDistance: 250,
+                chargeStrength: -1500,
+                centerStrength: 1,
+                xyStrength: 0.05,
+                alpha: 1,
+                alphaTarget: 0.3
+            },
+            branch: {
+                linkDistance: 150,
+                chargeStrength: -2000,
+                alpha: 0.5
+            }
+        };
+
+        let physicsEnabled = true;
+        let simulation;
+
+        // Replace your renderGraph function with this version
+        function renderGraph(inputNodes, inputLinks) {
+            // Create deep copies of the input data
+            const nodes = JSON.parse(JSON.stringify(inputNodes));
+            const links = JSON.parse(JSON.stringify(inputLinks));
+            
+            const container = document.querySelector('.visualization-container');
+            const width = container.clientWidth;
+            const height = container.clientHeight;
+            
+            const svg = d3.select('.visualization-container svg');
+            svg.selectAll("*").remove();
+            
+            // Add zoom behavior
+            const zoom = d3.zoom()
+                .scaleExtent([0.1, 4])
+                .on('zoom', (event) => {
+                    g.attr('transform', event.transform);
+                });
+
+            svg.call(zoom);
+            
+            // Create a group for graph elements
+            const g = svg.append('g');
+            
+            // Create arrow markers
+            const markerTypes = ['IF', 'THEN', 'AND'];
+            const markerColors = {
+                'IF': 'blue',
+                'THEN': 'black',
+                'AND': 'darkgreen'
+            };
+
+            svg.append('defs').selectAll('marker')
+                .data(markerTypes)
+                .enter()
+                .append('marker')
+                .attr('id', d => `arrow-${d}`)
+                .attr('viewBox', '0 -5 10 10')
+                .attr('refX', 35)
+                .attr('refY', 0)
+                .attr('markerWidth', 8)
+                .attr('markerHeight', 8)
+                .attr('orient', 'auto')
+                .append('path')
+                .attr('fill', d => markerColors[d])
+                .attr('d', 'M0,-5L10,0L0,5');
+
+            // Create the simulation
+            simulation = d3.forceSimulation(nodes)
+                .force('link', d3.forceLink(links).id(d => d.id).distance(physics.default.linkDistance))
+                .force('charge', d3.forceManyBody().strength(physics.default.chargeStrength))
+                .force('center', d3.forceCenter(width / 2, height / 2))
+                .force('x', d3.forceX(width / 2).strength(physics.default.xyStrength))
+                .force('y', d3.forceY(height / 2).strength(physics.default.xyStrength));
+
+            // Create the links
+            const link = g.append('g')
+                .selectAll('line')
+                .data(links)
+                .enter()
+                .append('line')
+                .attr('class', d => `link ${d.type}`)
+                .attr('marker-end', d => `url(#arrow-${d.type})`);
+
+            // Create link labels
+            const linkLabels = g.append('g')
+                .selectAll('text')
+                .data(links)
+                .enter()
+                .append('text')
+                .attr('class', 'link-label')
+                .text(d => d.type);
+
+            // Create node groups
+            const nodeGroup = g.append('g')
+                .selectAll('.node-group')
+                .data(nodes)
+                .enter()
+                .append('g')
+                .attr('class', 'node-group')
+                .call(d3.drag()
+                    .on('start', dragStarted)
+                    .on('drag', dragged)
+                    .on('end', dragEnded))
+                .on('click', focusOnNode);
+
+            // Create circles for nodes
+            const node = nodeGroup.append('circle')
+                .attr('class', d => `node ${d.type || 'normal'}`)
+                .attr('r', d => d.type === 'start' ? 50 : 40);
+
+            // Create labels for nodes
+            const nodeLabels = nodeGroup.append('text')
+                .attr('class', 'node-label')
+                .text(d => {
+                    const maxLength = 20;
+                    return d.text.length > maxLength ? d.text.substring(0, maxLength) + '...' : d.text;
+                });
+
+            // Update positions on each tick
+            simulation.on('tick', () => {
+                link
+                    .attr('x1', d => d.source.x)
+                    .attr('y1', d => d.source.y)
+                    .attr('x2', d => d.target.x)
+                    .attr('y2', d => d.target.y);
+
+                nodeGroup.attr('transform', d => `translate(${d.x},${d.y})`);
+
+                linkLabels
+                    .attr('x', d => (d.source.x + d.target.x) / 2)
+                    .attr('y', d => (d.source.y + d.target.y) / 2 - 5);
+            });
+
+            // Populate node list
+            populateNodeList(nodes);
+
+            // Add event listeners for controls
+            document.getElementById('search-box').addEventListener('input', () => searchNodes(nodes, links));
+        }
+
+        // Add these helper functions
+        function populateNodeList(nodes) {
+            const nodeList = document.querySelector('.node-list');
+            nodeList.innerHTML = '';
+            
+            const sortedNodes = [...nodes].sort((a, b) => {
+                if (a.type === 'start') return -1;
+                if (b.type === 'start') return 1;
+                return a.text.localeCompare(b.text);
+            });
+
+            sortedNodes.forEach(node => {
+                const nodeItem = document.createElement('div');
+                nodeItem.className = `node-item ${node.type || 'normal'}`;
+                nodeItem.dataset.id = node.id;
+                nodeItem.textContent = node.text;
+                nodeItem.addEventListener('click', () => focusOnNode(null, node));
+                nodeList.appendChild(nodeItem);
+            });
+        }
+
+        function focusOnNode(event, d) {
+            if (!d) return;
+
+            // Update the selected node in the list
+            document.querySelectorAll('.node-item').forEach(item => {
+                item.classList.remove('selected-primary');
+                item.classList.remove('selected-branch');
+            });
+
+            const listItem = document.querySelector(`.node-item[data-id="${d.id}"]`);
+            if (listItem) {
+                listItem.classList.add('selected-primary');
+                listItem.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+
+            // Find all reachable nodes from the selected node
+            const reachableNodes = new Set();
+            reachableNodes.add(d.id);
+
+            // Function to recursively find all nodes reachable through THEN and AND relationships
+            function findReachableNodes(nodeId) {
+                const outgoingLinks = links.filter(link => {
+                    const sourceId = typeof link.source === 'object' ? link.source.id : link.source;
+                    return sourceId === nodeId && (link.type === 'THEN' || link.type === 'AND');
+                });
+
+                outgoingLinks.forEach(link => {
+                    const targetId = typeof link.target === 'object' ? link.target.id : link.target;
+                    if (!reachableNodes.has(targetId)) {
+                        reachableNodes.add(targetId);
+                        findReachableNodes(targetId);
+                    }
+                });
+            }
+
+            // Start the recursive search from the selected node
+            findReachableNodes(d.id);
+
+            // Update node visibility
+            d3.selectAll('.node')
+                .classed('highlighted-primary', n => n.id === d.id)
+                .classed('highlighted-branch', n => n.id !== d.id && reachableNodes.has(n.id))
+                .classed('faded', n => !reachableNodes.has(n.id));
+
+            // Update link visibility
+            d3.selectAll('.link')
+                .classed('highlighted', l => {
+                    const sourceId = typeof l.source === 'object' ? l.source.id : l.source;
+                    const targetId = typeof l.target === 'object' ? l.target.id : l.target;
+                    return reachableNodes.has(sourceId) && reachableNodes.has(targetId);
+                })
+                .classed('faded', l => {
+                    const sourceId = typeof l.source === 'object' ? l.source.id : l.source;
+                    const targetId = typeof l.target === 'object' ? l.target.id : l.target;
+                    return !reachableNodes.has(sourceId) || !reachableNodes.has(targetId);
+                });
+
+            // Update node list highlighting
+            document.querySelectorAll('.node-item').forEach(item => {
+                const nodeId = parseInt(item.dataset.id);
+                item.classList.toggle('selected-primary', nodeId === d.id);
+                item.classList.toggle('selected-branch', nodeId !== d.id && reachableNodes.has(nodeId));
+            });
+        }
+
+        function dragStarted(event, d) {
+            if (!event.active && physicsEnabled) simulation.alphaTarget(0.3).restart();
+            d.fx = d.x;
+            d.fy = d.y;
+        }
+
+        function dragged(event, d) {
+            d.fx = event.x;
+            d.fy = event.y;
+        }
+
+        function dragEnded(event, d) {
+            if (!event.active && physicsEnabled) simulation.alphaTarget(0);
+        }
+
+        function searchNodes(nodes, links) {
+            const searchText = document.getElementById('search-box').value.toLowerCase();
+            document.querySelectorAll('.node-item').forEach(item => {
+                const matchesSearch = item.textContent.toLowerCase().includes(searchText);
+                item.style.display = matchesSearch ? 'block' : 'none';
+            });
+        }
+
+        async function initWasm() {
+            await init();
+            try {
+                const response = await fetch('CRT.neo');
+                const content = await response.text();
+                document.getElementById('input').value = content;
+                updateLineNumbers();
+            } catch (error) {
+                console.error('Error loading CRT.neo:', error);
+            }
+        }
+
+        initWasm();
+
+        const textarea = document.getElementById('input');
+        textarea.addEventListener('input', updateLineNumbers);
+        textarea.addEventListener('scroll', function(e) {
+            document.getElementById('line-numbers').scrollTop = e.target.scrollTop;
+        });
+        
+        textarea.addEventListener('keydown', function(e) {
+            if (e.key === 'Tab') {
+                e.preventDefault();
+                const start = this.selectionStart;
+                const end = this.selectionEnd;
+                this.value = this.value.substring(0, start) + '    ' + this.value.substring(end);
+                this.selectionStart = this.selectionEnd = start + 4;
+            }
+        });
+    </script>
+</body>
+</html> 

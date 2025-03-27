@@ -1,0 +1,61 @@
+-if-> we spent less time on reporting to show control 
+-then-> we can spend more time on understanding user needs 
+-then-> we have less rework during refinement 
+-then-> POs have ample time to prepare for sprints 
+-then-> we slice the deliveries as small as possible 
+-then-> we can meet Definition of ready for our PBIs 
+-then-> we document scope and objectives of our PBIs consistently 
+-then-> we can estimate PBIs consistently 
+-then-> we can estimate in a way that makes it possible to compare size 
+-and-> we expect the PBIs counted towards the teams performacne to meet definition of Done 
+-then-> we can use past performance to predeict future deliveries 
+-then-> we become predictable 
+-then-> we don't rush work to meet delivery dates 
+-then-> we won't be adding to the tech debt 
+-then-> the amount of impedements and unplanned work is stable or declining 
+-then-> past performance will be a better predictor of future performance and errs will be likely to under-estimate performance 
+-then-> we become predictable 
+
+-if-> we don't rush work to meet delivery dates 
+-then-> we don't take short cuts 
+-then-> we deliver higher quality 
+-then-> we have less rework 
+-then-> we will have a higher capacity for development 
+-then-> we increase throughput 
+-then-> we will increase value-delivery 
+
+-if-> we have a production like ad hoc test environment 
+-then-> we can execute tests against a known configuration regardless of development activities 
+-then-> we don't need code freezes 
+-then-> code freezes don't impact estimates 
+-then-> we become predictable 
+
+we don't need code freezes 
+-then-> we have less work in progress 
+
+we have less rework 
+-then-> we have less work in progress 
+
+we don't need code freezes 
+-then-> we will have a higher capacity for development 
+-then-> we spend more time on QA in the teams, without impacting deliveries 
+-then-> we deliver higher quality
+
+we have less rework 
+-then-> we will have more time to work on improving our processes 
+-then-> we will improve our processes 
+-then-> we will improve our value-delivery 
+
+we will improve our processes 
+-then-> we deliver higher quality 
+-if-> we document scope and objectives of our PBIs consistently 
+-and-> we scope features consistently 
+-then-> then we can use past sprint performance to predict deliveries in the next quarter 
+-then-> we become predictable 
+-then-> we increase trust 
+-then-> we spent less time on reporting to show control 
+-then-> we will spend more time working on value drivers 
+
+we slice the deliveries as small as possible 
+-then-> we have less work in progress 
+-then-> we increase throughput
