@@ -1,5 +1,5 @@
 [package]
-name = "crt_to_cypher"
+name = "crt-to-cypher"
 version = "0.1.0"
 edition = "2021"
 
@@ -20,4 +20,7 @@ console_error_panic_hook = "0.1"
 opt-level = 3
 lto = true
 codegen-units = 1
-panic = "abort" 
+panic = "abort"
+
+[package.metadata.wasm-pack.profile.release]
+wasm-opt = ["-Oz", "--enable-mutable-globals"] 

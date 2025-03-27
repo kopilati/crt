@@ -514,7 +514,9 @@
     </div>
 
     <script type="module">
-        import init, { parse_content } from './pkg/crt_to_cypher.js';
+        // Get the base URL from current path
+        const baseUrl = window.location.pathname.replace(/\/[^/]*$/, '/');
+        import init, { parse_content } from `${baseUrl}pkg/crt_to_cypher.js`;
 
         function updateLineNumbers() {
             const textarea = document.getElementById('input');
