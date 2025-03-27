@@ -125,6 +125,7 @@
         .node.highlighted-branch {
             stroke: #4caf50;
             stroke-width: 3px;
+            fill: #e0ffe0;
         }
         .node.faded {
             opacity: 0.3;
@@ -169,13 +170,16 @@
             position: absolute;
             top: 10px;
             left: 10px;
-            background: rgba(255, 255, 255, 0.9);
+            background: #ffffff;
             padding: 15px;
             border: 1px solid #ccc;
             border-radius: 5px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
             width: 300px;
             z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            max-height: calc(100vh - 40px);
         }
         .node-item {
             padding: 8px;
@@ -186,6 +190,8 @@
             text-overflow: ellipsis;
             white-space: normal;
             word-break: break-word;
+            background: #ffffff;
+            color: #333;
         }
         .node-item:hover {
             background-color: #f0f8ff;
@@ -215,6 +221,8 @@
             border-radius: 4px;
             padding: 5px;
             flex-grow: 1;
+            background: #ffffff;
+            color: #1e1e1e;
         }
         .branch-panel {
             position: absolute;
@@ -421,7 +429,15 @@
 
             // Create circles for nodes
             const node = nodeGroup.append('circle')
-                .attr('class', d => `node ${d.type || 'normal'}`)
+                .attr('class', d => {
+                    let classes = `node ${d.type || 'normal'}`;
+                    if (d.id === d.id) {
+                        classes += ' highlighted-primary';
+                    } else {
+                        classes += ' highlighted-branch';
+                    }
+                    return classes;
+                })
                 .attr('r', d => d.type === 'start' ? 50 : 40);
 
             // Create labels for nodes
@@ -489,7 +505,17 @@
 
         function focusOnNode(event, d) {
             if (!d) return;
-
+            
+            // Check if this node is already selected (by checking the node list)
+            const nodeItem = document.querySelector(`.node-item[data-id="${d.id}"]`);
+            const isAlreadySelected = nodeItem && nodeItem.classList.contains('selected-primary');
+            
+            // If the node is already selected, reset the graph
+            if (isAlreadySelected) {
+                resetGraph();
+                return;
+            }
+            
             // Get current simulation nodes and links
             const currentNodes = simulation.nodes();
             const currentLinks = simulation.force('link').links();
@@ -510,7 +536,6 @@
             const reachableNodes = new Set();
             reachableNodes.add(d.id);
 
-            // Function to recursively find all nodes reachable through THEN and AND relationships
             function findReachableNodes(nodeId) {
                 const outgoingLinks = currentLinks.filter(link => {
                     const sourceId = typeof link.source === 'object' ? link.source.id : link.source;
@@ -526,10 +551,9 @@
                 });
             }
 
-            // Start the recursive search from the selected node
             findReachableNodes(d.id);
 
-            // Filter nodes and links to only show reachable ones
+            // Filter nodes and links
             const filteredNodes = currentNodes.filter(node => reachableNodes.has(node.id));
             const filteredLinks = currentLinks.filter(link => {
                 const sourceId = typeof link.source === 'object' ? link.source.id : link.source;
@@ -537,36 +561,94 @@
                 return reachableNodes.has(sourceId) && reachableNodes.has(targetId);
             });
 
-            // Update the simulation with filtered data
-            simulation.nodes(filteredNodes);
-            simulation.force('link').links(filteredLinks);
-
-            // Redraw the graph with filtered data
+            // Clear the existing visualization
             const svg = d3.select('.visualization-container svg');
             const g = svg.select('g');
 
-            // Update links
-            const link = g.selectAll('.link')
-                .data(filteredLinks, d => `${d.source.id}-${d.target.id}`);
-            
-            link.exit().remove();
-            
-            // Update nodes
-            const nodeGroup = g.selectAll('.node-group')
-                .data(filteredNodes, d => d.id);
-            
-            nodeGroup.exit().remove();
+            // Remove all existing elements
+            g.selectAll('.link').remove();
+            g.selectAll('.link-label').remove();
+            g.selectAll('.node-group').remove();
 
-            // Highlight selected node
-            nodeGroup.selectAll('.node')
-                .classed('highlighted-primary', n => n.id === d.id)
-                .classed('highlighted-branch', n => n.id !== d.id);
+            // Create new elements with filtered data
+            // Links
+            const link = g.append('g')
+                .selectAll('line')
+                .data(filteredLinks)
+                .enter()
+                .append('line')
+                .attr('class', d => `link ${d.type}`)
+                .attr('marker-end', d => `url(#arrow-${d.type})`);
 
-            // Update node list highlighting
+            // Link labels
+            const linkLabels = g.append('g')
+                .selectAll('text')
+                .data(filteredLinks)
+                .enter()
+                .append('text')
+                .attr('class', 'link-label')
+                .text(d => d.type);
+
+            // Node groups
+            const nodeGroup = g.append('g')
+                .selectAll('.node-group')
+                .data(filteredNodes)
+                .enter()
+                .append('g')
+                .attr('class', 'node-group')
+                .call(d3.drag()
+                    .on('start', dragStarted)
+                    .on('drag', dragged)
+                    .on('end', dragEnded))
+                .on('click', focusOnNode);
+
+            // Circles for nodes - with simplified highlighting
+            nodeGroup.append('circle')
+                .attr('class', function(node) {
+                    // Simple class assignment - primary for selected node, branch for others
+                    if (node.id === d.id) {
+                        return `node ${node.type || 'normal'} highlighted-primary`;
+                    } else {
+                        return `node ${node.type || 'normal'} highlighted-branch`;
+                    }
+                })
+                .attr('r', d => d.type === 'start' ? 50 : 40);
+
+            // Labels for nodes
+            nodeGroup.append('text')
+                .attr('class', 'node-label')
+                .text(d => {
+                    const maxLength = 20;
+                    return d.text.length > maxLength ? d.text.substring(0, maxLength) + '...' : d.text;
+                });
+
+            // Update node list highlighting - simple approach
             document.querySelectorAll('.node-item').forEach(item => {
                 const nodeId = parseInt(item.dataset.id);
-                item.classList.toggle('selected-primary', nodeId === d.id);
-                item.classList.toggle('selected-branch', nodeId !== d.id && reachableNodes.has(nodeId));
+                if (nodeId === d.id) {
+                    item.classList.add('selected-primary');
+                } else if (reachableNodes.has(nodeId)) {
+                    item.classList.add('selected-branch');
+                }
+            });
+
+            // Update simulation
+            simulation.nodes(filteredNodes);
+            simulation.force('link').links(filteredLinks);
+
+            // Update positions on each tick
+            simulation.on('tick', () => {
+                link
+                    .attr('x1', d => d.source.x)
+                    .attr('y1', d => d.source.y)
+                    .attr('x2', d => d.target.x)
+                    .attr('y2', d => d.target.y);
+
+                nodeGroup.attr('transform', d => `translate(${d.x},${d.y})`);
+
+                linkLabels
+                    .attr('x', d => (d.source.x + d.target.x) / 2)
+                    .attr('y', d => (d.source.y + d.target.y) / 2 - 5);
             });
 
             // Restart the simulation
@@ -627,22 +709,14 @@
         });
 
         function resetGraph() {
-            // Get the original nodes and links
-            const originalNodes = JSON.parse(JSON.stringify(inputNodes));
-            const originalLinks = JSON.parse(JSON.stringify(inputLinks));
-
-            // Update the simulation with original data
-            simulation.nodes(originalNodes);
-            simulation.force('link').links(originalLinks);
-
-            // Redraw the graph
-            renderGraph(originalNodes, originalLinks);
-
             // Remove highlighting from node list
             document.querySelectorAll('.node-item').forEach(item => {
                 item.classList.remove('selected-primary');
                 item.classList.remove('selected-branch');
             });
+
+            // Simply call updateVisualization to redraw the entire graph
+            updateVisualization();
         }
     </script>
 </body>
