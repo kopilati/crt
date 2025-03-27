@@ -33,16 +33,43 @@ jobs:
       - name: Build WebAssembly
         run: wasm-pack build --target web --out-dir pkg
 
+      - name: Debug - List directories
+        run: |
+          echo "Current directory:"
+          ls -la
+          echo "pkg directory:"
+          ls -la pkg || echo "pkg directory not found"
+
       - name: Create dist directory
         run: |
           mkdir -p dist
-          cp index.html dist/
-          cp viz.html dist/
-          cp -r pkg dist/
-          cp -r css dist/ || true   # Copy CSS if it exists
-          cp -r js dist/ || true    # Copy JS if it exists
-          cp -r images dist/ || true # Copy images if it exists
-          cp *.neo dist/ || true    # Copy any .neo files if they exist
+          cp index.html dist/ || echo "index.html not found"
+          cp viz.html dist/ || echo "viz.html not found"
+          
+          # Ensure pkg directory exists and copy with verbose flag
+          if [ -d "pkg" ]; then
+            echo "Copying pkg directory..."
+            cp -rv pkg dist/
+            echo "pkg directory copied, checking dist/pkg:"
+            ls -la dist/pkg
+          else
+            echo "pkg directory not found!"
+          fi
+          
+          # Copy other resources as needed
+          cp -r css dist/ || echo "css directory not found"
+          cp -r js dist/ || echo "js directory not found"
+          cp -r images dist/ || echo "images directory not found"
+          cp *.neo dist/ || echo "No .neo files found"
+          
+          echo "Final dist directory contents:"
+          ls -la dist
+          
+          # If dist/pkg is empty or doesn't exist, try to find the pkg directory
+          if [ ! -d "dist/pkg" ] || [ -z "$(ls -A dist/pkg 2>/dev/null)" ]; then
+            echo "dist/pkg is missing or empty, searching for it..."
+            find . -type d -name "pkg" | xargs -I{} ls -la {}
+          fi
 
       - name: Deploy to GitHub Pages
         uses: JamesIves/github-pages-deploy-action@v4
@@ -50,4 +77,84 @@ jobs:
           folder: dist
           branch: gh-pages
           token: ${{ secrets.GITHUB_TOKEN }}  # Use the built-in token
-          clean: true  # Clean any existing files before deployment 
+          clean: true  # Clean any existing files before deployment
+
+# Alternative approach - Only use if the above doesn't work
+name: Build and Deploy
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          persist-credentials: true
+
+      - name: Setup Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+          target: wasm32-unknown-unknown
+
+      - name: Install wasm-pack
+        run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
+
+      - name: Build WebAssembly
+        run: wasm-pack build --target web --out-dir pkg
+
+      - name: Prepare deployment
+        run: |
+          # Create a directory for deployment
+          mkdir -p deploy
+          
+          # Copy all necessary files
+          cp index.html deploy/
+          cp viz.html deploy/ || true
+          cp -r pkg deploy/
+          cp -r css deploy/ || true
+          cp -r js deploy/ || true
+          cp -r images deploy/ || true
+          cp *.neo deploy/ || true
+          
+          # List contents to verify
+          echo "Files ready for deployment:"
+          ls -la deploy
+          echo "pkg directory contents:"
+          ls -la deploy/pkg || echo "pkg directory not found in deploy"
+
+      - name: Deploy to GitHub Pages
+        run: |
+          # Configure git
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "actions@github.com"
+          
+          # Create gh-pages branch if it doesn't exist
+          git fetch origin gh-pages || git branch gh-pages
+          
+          # Switch to gh-pages branch
+          git checkout gh-pages || git checkout -b gh-pages
+          
+          # Remove existing files (but keep .git)
+          find . -mindepth 1 -maxdepth 1 -not -name ".git" -exec rm -rf {} \;
+          
+          # Copy all deployment files
+          cp -r deploy/* .
+          rm -rf deploy
+          
+          # Commit and push changes
+          git add .
+          git commit -m "Deploy to GitHub Pages"
+          git push --set-upstream origin gh-pages --force 
