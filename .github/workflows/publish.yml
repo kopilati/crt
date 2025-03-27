@@ -31,18 +31,19 @@ jobs:
         run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
 
       - name: Build WebAssembly
-        run: wasm-pack build --target web --out-dir wasm
+        run: wasm-pack build --target web --out-dir pkg
 
       - name: Create dist directory
         run: |
           mkdir -p dist
           cp index.html dist/
           cp viz.html dist/
-          cp -r wasm dist/
+          cp -r pkg dist/
           cp -r css dist/ || true   # Copy CSS if it exists
           cp -r js dist/ || true    # Copy JS if it exists
           cp -r images dist/ || true # Copy images if it exists
           cp *.neo dist/ || true    # Copy any .neo files if they exist
+          ls -la dist/
 
       - name: Deploy to GitHub Pages
         uses: JamesIves/github-pages-deploy-action@v4
