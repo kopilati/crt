@@ -1,0 +1,984 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Graph Visualization</title>
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <style>
+    body { 
+      margin: 0;
+      font-family: Arial, sans-serif;
+      overflow: hidden;
+    }
+    .container {
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+    }
+    .node {
+      stroke: #fff;
+      stroke-width: 2px;
+    }
+    .node.start {
+      fill: #FFD700;
+    }
+    .node.normal {
+      fill: #E0F0FF;
+    }
+    .node.highlighted-primary {
+      stroke: #4a90e2;
+      stroke-width: 4px;
+      fill: #e0f0ff;
+    }
+    .node.highlighted-branch {
+      stroke: #4caf50;
+      stroke-width: 3px;
+    }
+    .node.faded {
+      opacity: 0.3;
+    }
+    .link {
+      stroke-width: 3px;
+      stroke-opacity: 0.6;
+    }
+    .link.IF {
+      stroke: blue;
+    }
+    .link.THEN {
+      stroke: black;
+    }
+    .link.AND {
+      stroke: darkgreen;
+    }
+    .link.highlighted {
+      stroke-width: 4px;
+      stroke-opacity: 1;
+    }
+    .link.faded {
+      opacity: 0.1;
+    }
+    .node-label {
+      font-size: 14px;
+      pointer-events: none;
+      text-anchor: middle;
+      dominant-baseline: central;
+    }
+    .link-label {
+      font-size: 12px;
+      font-weight: bold;
+      pointer-events: none;
+      text-anchor: middle;
+      dominant-baseline: text-after-edge;
+      fill: #333;
+      background: white;
+      padding: 2px;
+    }
+    .controls {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      background: rgba(255, 255, 255, 0.9);
+      padding: 15px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      width: 300px;
+      z-index: 1000;
+      display: flex;
+      flex-direction: column;
+      max-height: calc(100vh - 40px);
+    }
+    .controls h3 {
+      margin-top: 0;
+      margin-bottom: 10px;
+    }
+    .controls button {
+      margin: 5px;
+      padding: 6px 12px;
+      background: #f8f8f8;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .controls button:hover {
+      background: #e8e8e8;
+    }
+    .controls button.active {
+      background: #4CAF50;
+      color: white;
+      border-color: #3e8e41;
+    }
+    .control-section {
+      margin-bottom: 15px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #eee;
+    }
+    #search-box {
+      width: 100%;
+      margin: 5px 0;
+      padding: 5px;
+      box-sizing: border-box;
+    }
+    .tooltip {
+      position: absolute;
+      background: rgba(255, 255, 255, 0.9);
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      padding: 10px;
+      max-width: 300px;
+      z-index: 1000;
+      pointer-events: none;
+    }
+    .node-list {
+      overflow-y: auto;
+      max-height: 70vh;
+      margin-top: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      padding: 5px;
+      flex-grow: 1;
+    }
+    .node-item {
+      padding: 8px;
+      border-bottom: 1px solid #eee;
+      cursor: pointer;
+      transition: background-color 0.2s;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: normal; /* Allow text to wrap */
+      word-break: break-word; /* Break long words if needed */
+    }
+    .node-item:hover {
+      background-color: #f0f8ff;
+    }
+    .node-item.selected-primary {
+      background-color: #e0f0ff;
+      font-weight: bold;
+      border-left: 4px solid #4a90e2;
+    }
+    .node-item.selected-branch {
+      background-color: #e0ffe0;
+      border-left: 4px solid #4caf50;
+    }
+    .node-item.start {
+      font-weight: bold;
+      color: #333;
+      background-color: #fff4d4;
+    }
+    .node-item:last-child {
+      border-bottom: none;
+    }
+    .branch-panel {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: rgba(255, 255, 255, 0.9);
+      padding: 15px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      width: 350px;
+      z-index: 1000;
+      display: none;
+      flex-direction: column;
+      max-height: calc(100vh - 40px);
+      overflow-y: auto;
+    }
+    .branch-panel.visible {
+      display: flex;
+    }
+    .branch-panel h3 {
+      margin-top: 0;
+      margin-bottom: 15px;
+      color: #333;
+      text-align: center;
+      border-bottom: 1px solid #eee;
+      padding-bottom: 10px;
+    }
+    .branch-item {
+      padding: 10px;
+      margin-bottom: 5px;
+      border-radius: 4px;
+    }
+    .branch-node {
+      background-color: #e0ffe0;
+      border-left: 4px solid #4caf50;
+    }
+    .branch-node.primary {
+      font-weight: bold;
+      background-color: #d0e8ff;
+      border-left: 4px solid #4a90e2;
+    }
+    .branch-relationship {
+      background-color: #f8f8f8;
+      color: #666;
+      text-align: center;
+      font-size: 12px;
+      font-weight: bold;
+      padding: 5px;
+    }
+    .branch-if {
+      background-color: #fff4d4;
+      border-left: 4px solid #ffd700;
+      font-weight: bold;
+    }
+    .path-box {
+      margin-bottom: 15px;
+      padding: 8px;
+      border-radius: 6px;
+      box-shadow: 2px 3px 4px rgba(0,0,0,0.1);
+      background-color: rgba(255, 255, 255, 0.8);
+      border: 1px solid #eee;
+    }
+    .tabs {
+      display: flex;
+      margin-bottom: 15px;
+      border-bottom: 1px solid #ccc;
+      overflow-x: auto;
+      white-space: nowrap;
+      scrollbar-width: thin;
+      -ms-overflow-style: none; /* IE and Edge */
+    }
+    .tabs::-webkit-scrollbar {
+      height: 4px;
+    }
+    .tabs::-webkit-scrollbar-thumb {
+      background-color: #ccc;
+      border-radius: 2px;
+    }
+    .tab {
+      padding: 8px 15px;
+      cursor: pointer;
+      border: 1px solid #ccc;
+      border-bottom: none;
+      border-radius: 4px 4px 0 0;
+      margin-right: 5px;
+      background-color: #f5f5f5;
+    }
+    .tab.active {
+      background-color: #fff;
+      font-weight: bold;
+      border-bottom: 1px solid #fff;
+      margin-bottom: -1px;
+    }
+    .tab-content {
+      display: none;
+      padding: 15px;
+      border: 1px solid #eee;
+      border-radius: 0 0 5px 5px;
+      background-color: #fff;
+    }
+    .tab-content.active {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <div class="container"></div>
+  <div class="controls">
+    <h3>What if...</h3>
+    
+    <div class="control-section">
+      <input type="text" id="search-box" placeholder="Search nodes...">
+    </div>
+    
+    <div class="node-list" id="node-list">
+      <!-- Node list will be populated here -->
+    </div>
+    
+    <div class="control-section">
+      <button id="reset-view">Reset View</button>
+      <button id="toggle-physics">Pause Physics</button>
+    </div>
+  </div>
+  
+  <div class="branch-panel" id="branch-panel">
+    <div id="branch-content">
+      <!-- Branch path will be populated here -->
+    </div>
+  </div>
+
+  <script>
+    // Data
+    const originalNodes = [
+      { id: 0, text: "we spent less time on reporting to show control", type: "normal" },
+      { id: 1, text: "the amount of impedements and unplanned work is stable or declining", type: "normal" },
+      { id: 2, text: "we don't take short cuts", type: "normal" },
+      { id: 3, text: "we won't be adding to the tech debt", type: "normal" },
+      { id: 4, text: "POs have ample time to prepare for sprints", type: "normal" },
+      { id: 5, text: "we can estimate PBIs consistently", type: "normal" },
+      { id: 6, text: "then we can use past sprint performance to predict deliveries in the next quarter", type: "normal" },
+      { id: 7, text: "we spend more time on QA in the teams, without impacting deliveries", type: "normal" },
+      { id: 8, text: "we slice the deliveries as small as possible", type: "normal" },
+      { id: 9, text: "we can meet Definition of ready for our PBIs", type: "normal" },
+      { id: 10, text: "past performance will be a better predictor of future performance and errs will be likely to under-estimate performance", type: "normal" },
+      { id: 11, text: "we have less work in progress", type: "normal" },
+      { id: 12, text: "we can execute tests against a known configuration regardless of development activities", type: "normal" },
+      { id: 13, text: "code freezes don't impact estimates", type: "normal" },
+      { id: 14, text: "we become predictable", type: "normal" },
+      { id: 15, text: "we can spend more time on understanding user needs", type: "normal" },
+      { id: 16, text: "we don't need code freezes", type: "normal" },
+      { id: 17, text: "we will increase value-delivery", type: "normal" },
+      { id: 18, text: "we have less rework during refinement", type: "normal" },
+      { id: 19, text: "we will have more time to work on improving our processes", type: "normal" },
+      { id: 20, text: "we deliver higher quality", type: "normal" },
+      { id: 21, text: "we increase throughput", type: "normal" },
+      { id: 22, text: "we will improve our processes", type: "normal" },
+      { id: 23, text: "we scope features consistently", type: "normal" },
+      { id: 24, text: "we will have a higher capacity for development", type: "normal" },
+      { id: 25, text: "we expect the PBIs counted towards the teams performacne to meet definition of Done", type: "normal" },
+      { id: 26, text: "we will spend more time working on value drivers", type: "normal" },
+      { id: 27, text: "we have a production like ad hoc test environment", type: "normal" },
+      { id: 28, text: "we will improve our value-delivery", type: "normal" },
+      { id: 29, text: "IF", type: "start" },
+      { id: 30, text: "we can use past performance to predeict future deliveries", type: "normal" },
+      { id: 31, text: "we don't rush work to meet delivery dates", type: "normal" },
+      { id: 32, text: "we have less rework", type: "normal" },
+      { id: 33, text: "we can estimate in a way that makes it possible to compare size", type: "normal" },
+      { id: 34, text: "we will spend less time on firefighting", type: "normal" },
+      { id: 35, text: "we increase trust", type: "normal" },
+      { id: 36, text: "we document scope and objectives of our PBIs consistently", type: "normal" }
+    ];
+
+    const originalLinks = [
+      { source: 29, target: 0, type: "IF" },
+      { source: 0, target: 15, type: "THEN" },
+      { source: 15, target: 18, type: "THEN" },
+      { source: 18, target: 4, type: "THEN" },
+      { source: 4, target: 8, type: "THEN" },
+      { source: 8, target: 9, type: "THEN" },
+      { source: 9, target: 36, type: "THEN" },
+      { source: 36, target: 5, type: "THEN" },
+      { source: 5, target: 33, type: "THEN" },
+      { source: 33, target: 25, type: "AND" },
+      { source: 25, target: 30, type: "THEN" },
+      { source: 30, target: 14, type: "THEN" },
+      { source: 14, target: 31, type: "THEN" },
+      { source: 31, target: 3, type: "THEN" },
+      { source: 3, target: 1, type: "THEN" },
+      { source: 1, target: 10, type: "THEN" },
+      { source: 10, target: 14, type: "THEN" },
+      { source: 29, target: 31, type: "IF" },
+      { source: 31, target: 2, type: "THEN" },
+      { source: 2, target: 20, type: "THEN" },
+      { source: 20, target: 32, type: "THEN" },
+      { source: 32, target: 24, type: "THEN" },
+      { source: 24, target: 21, type: "THEN" },
+      { source: 21, target: 17, type: "THEN" },
+      { source: 29, target: 27, type: "IF" },
+      { source: 27, target: 12, type: "THEN" },
+      { source: 12, target: 16, type: "THEN" },
+      { source: 16, target: 13, type: "THEN" },
+      { source: 13, target: 14, type: "THEN" },
+      { source: 29, target: 16, type: "IF" },
+      { source: 16, target: 11, type: "THEN" },
+      { source: 29, target: 32, type: "IF" },
+      { source: 32, target: 11, type: "THEN" },
+      { source: 29, target: 16, type: "IF" },
+      { source: 16, target: 24, type: "THEN" },
+      { source: 24, target: 7, type: "THEN" },
+      { source: 7, target: 20, type: "THEN" },
+      { source: 29, target: 34, type: "IF" },
+      { source: 34, target: 19, type: "THEN" },
+      { source: 19, target: 22, type: "THEN" },
+      { source: 22, target: 28, type: "THEN" },
+      { source: 29, target: 22, type: "IF" },
+      { source: 22, target: 20, type: "THEN" },
+      { source: 29, target: 36, type: "IF" },
+      { source: 36, target: 23, type: "AND" },
+      { source: 23, target: 6, type: "THEN" },
+      { source: 6, target: 14, type: "THEN" },
+      { source: 14, target: 35, type: "THEN" },
+      { source: 35, target: 0, type: "THEN" },
+      { source: 0, target: 26, type: "THEN" },
+      { source: 29, target: 8, type: "IF" },
+      { source: 8, target: 11, type: "THEN" },
+      { source: 11, target: 21, type: "THEN" }
+    ];
+
+    // For filtering and highlighting
+    let nodes = [...originalNodes];
+    let links = [...originalLinks];
+    
+    // Physics configuration values
+    const physics = {
+      default: {
+        linkDistance: 250,
+        chargeStrength: -1500,
+        centerStrength: 1,
+        xyStrength: 0.05,
+        alpha: 1,
+        alphaTarget: 0.3
+      },
+      branch: {
+        linkDistance: 150,
+        chargeStrength: -2000,
+        alpha: 0.5
+      }
+    };
+    
+    // Setup
+    const container = document.querySelector('.container');
+    const width = container.clientWidth;
+    const height = container.clientHeight;
+    
+    // Create SVG element
+    const svg = d3.select('.container')
+      .append('svg')
+      .attr('width', width)
+      .attr('height', height);
+      
+    // Add zoom behavior
+    const zoom = d3.zoom()
+      .scaleExtent([0.1, 4])
+      .on('zoom', (event) => {
+        g.attr('transform', event.transform);
+      });
+
+    svg.call(zoom);
+    
+    // Create a group for graph elements
+    const g = svg.append('g');
+    
+    // Create a tooltip for showing full node text
+    const tooltip = d3.select('body').append('div')
+      .attr('class', 'tooltip')
+      .style('opacity', 0);
+      
+    // Create force simulation
+    const simulation = d3.forceSimulation(nodes)
+      .force('link', d3.forceLink(links).id(d => d.id).distance(physics.default.linkDistance))
+      .force('charge', d3.forceManyBody().strength(physics.default.chargeStrength))
+      .force('center', d3.forceCenter(width / 2, height / 2))
+      .force('x', d3.forceX(width / 2).strength(physics.default.xyStrength))
+      .force('y', d3.forceY(height / 2).strength(physics.default.xyStrength));
+    
+    // Create arrow markers for the links
+    const markerTypes = ['IF', 'THEN', 'AND'];
+    const markerColors = {
+      'IF': 'blue',
+      'THEN': 'black',
+      'AND': 'darkgreen'
+    };
+
+    svg.append('defs').selectAll('marker')
+      .data(markerTypes)
+      .enter()
+      .append('marker')
+      .attr('id', d => `arrow-${d}`)
+      .attr('viewBox', '0 -5 10 10')
+      .attr('refX', 35)
+      .attr('refY', 0)
+      .attr('markerWidth', 8)
+      .attr('markerHeight', 8)
+      .attr('orient', 'auto')
+      .append('path')
+      .attr('fill', d => markerColors[d])
+      .attr('d', 'M0,-5L10,0L0,5');
+
+    // Initialize elements for visualization
+    let nodeGroup, node, nodeLabels, link, linkLabels;
+
+    // Function to draw the force-directed layout
+    function drawForceDirected() {
+      // Clear previous graph
+      g.selectAll('*').remove();
+      
+      // Create the links
+      link = g.append('g')
+        .selectAll('line')
+        .data(links)
+        .enter()
+        .append('line')
+        .attr('class', d => `link ${d.type}`)
+        .attr('marker-end', d => `url(#arrow-${d.type})`);
+
+      // Create link labels
+      linkLabels = g.append('g')
+        .selectAll('text')
+        .data(links)
+        .enter()
+        .append('text')
+        .attr('class', 'link-label')
+        .text(d => d.type);
+
+      // Node group - contains circle and text
+      nodeGroup = g.append('g')
+        .selectAll('.node-group')
+        .data(nodes)
+        .enter()
+        .append('g')
+        .attr('class', 'node-group')
+        .call(d3.drag()
+          .on('start', dragStarted)
+          .on('drag', dragged)
+          .on('end', dragEnded))
+        .on('mouseover', function(event, d) {
+          tooltip.transition()
+            .duration(200)
+            .style('opacity', .9);
+          tooltip.html(d.text)
+            .style('left', (event.pageX + 10) + 'px')
+            .style('top', (event.pageY - 28) + 'px');
+        })
+        .on('mouseout', function() {
+          tooltip.transition()
+            .duration(500)
+            .style('opacity', 0);
+        })
+        .on('click', focusOnNode);
+
+      // Circles for nodes
+      node = nodeGroup.append('circle')
+        .attr('class', d => `node ${d.type}`)
+        .attr('r', d => d.type === 'start' ? 50 : 40);
+
+      // Labels for nodes
+      nodeLabels = nodeGroup.append('text')
+        .attr('class', 'node-label')
+        .text(d => {
+          // Truncate text if too long
+          const maxLength = 20;
+          return d.text.length > maxLength ? d.text.substring(0, maxLength) + '...' : d.text;
+        })
+        .style('font-size', '14px');
+
+      // Start the simulation
+      simulation.nodes(nodes);
+      simulation.force('link').links(links);
+      simulation.alpha(physics.default.alpha).restart();
+      
+      // Update the positions on each tick of the simulation
+      simulation.on('tick', () => {
+        link
+          .attr('x1', d => d.source.x)
+          .attr('y1', d => d.source.y)
+          .attr('x2', d => d.target.x)
+          .attr('y2', d => d.target.y);
+
+        nodeGroup.attr('transform', d => `translate(${d.x},${d.y})`);
+
+        linkLabels
+          .attr('x', d => (d.source.x + d.target.x) / 2)
+          .attr('y', d => (d.source.y + d.target.y) / 2 - 5);
+      });
+    }
+    
+    // Update the node list in the sidebar
+    function populateNodeList() {
+      const nodeList = document.getElementById('node-list');
+      nodeList.innerHTML = ''; // Clear existing list
+      
+      // Sort nodes alphabetically, but keep the "IF" node at the top
+      const sortedNodes = [...nodes].sort((a, b) => {
+        if (a.type === 'start') return -1;
+        if (b.type === 'start') return 1;
+        return a.text.localeCompare(b.text);
+      });
+      
+      sortedNodes.forEach(node => {
+        const nodeItem = document.createElement('div');
+        nodeItem.className = `node-item ${node.type}`;
+        nodeItem.dataset.id = node.id;
+        nodeItem.textContent = node.text; // Show full text, no truncation
+        
+        nodeItem.addEventListener('click', function() {
+          // Deselect if already selected
+          if (nodeItem.classList.contains('selected-primary')) {
+            nodeItem.classList.remove('selected-primary');
+            resetFocus();
+          } else {
+            // Remove selected classes from all nodes
+            document.querySelectorAll('.node-item').forEach(item => {
+              item.classList.remove('selected-primary');
+              item.classList.remove('selected-branch');
+            });
+            
+            // Select this node as primary
+            nodeItem.classList.add('selected-primary');
+            
+            // Apply focus
+            const selectedNode = nodes.find(n => n.id === parseInt(nodeItem.dataset.id));
+            if (selectedNode) {
+              focusOnNode(null, selectedNode);
+            }
+          }
+        });
+        
+        nodeList.appendChild(nodeItem);
+      });
+      
+      // Filter node list based on search
+      document.getElementById('search-box').addEventListener('input', function() {
+        const searchText = this.value.toLowerCase();
+        document.querySelectorAll('.node-item').forEach(item => {
+          const matchesSearch = item.textContent.toLowerCase().includes(searchText);
+          item.style.display = matchesSearch ? 'block' : 'none';
+        });
+      });
+    }
+    
+    // Function to highlight connected nodes based on depth
+    function focusOnNode(event, d) {
+      if (!d) return;
+      
+      // Update the selected node in the list
+      document.querySelectorAll('.node-item').forEach(item => {
+        item.classList.remove('selected-primary');
+        item.classList.remove('selected-branch');
+      });
+      
+      const listItem = document.querySelector(`.node-item[data-id="${d.id}"]`);
+      if (listItem) {
+        listItem.classList.add('selected-primary');
+        // Scroll to the item
+        listItem.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+      
+      const nodeIds = new Set();
+      const branchNodeIds = new Set(); // Separate set for branch nodes
+      const linkIds = new Set();
+      
+      // Add the clicked node
+      nodeIds.add(d.id);
+      
+      // No longer finding path from IF to selected node - we only care about downstream nodes
+
+      // Follow nodes through "THEN" relationships to find all possible paths
+      function findAllThenPaths(startNodeId, visited = new Set(), currentPath = []) {
+        visited.add(startNodeId);
+        
+        // Find all outgoing links from this node
+        const outgoingLinks = links.filter(link => {
+          const sourceId = typeof link.source === 'object' ? link.source.id : link.source;
+          return sourceId === startNodeId;
+        });
+        
+        // If no outgoing THEN links, this is the end of a path
+        const thenLinks = outgoingLinks.filter(link => link.type === "THEN");
+        if (thenLinks.length === 0) {
+          return [currentPath]; // Return current path as the only path
+        }
+        
+        // Collect all paths from all branches
+        let allPaths = [];
+        
+        // Follow each "THEN" relationship
+        for (const link of thenLinks) {
+          const targetId = typeof link.target === 'object' ? link.target.id : link.target;
+          
+          // Skip if we've already visited this node (avoid cycles)
+          if (visited.has(targetId)) continue;
+          
+          // Add node and link to tracking sets for graph rendering
+          branchNodeIds.add(targetId);
+          nodeIds.add(targetId);
+          linkIds.add(`${startNodeId}-${targetId}`);
+          
+          // Create the new path segment
+          const newPath = [
+            ...currentPath,
+            link,
+            nodes.find(n => n.id === targetId)
+          ];
+          
+          // Continue recursively following THEN relationships
+          // Use a new visited set to allow different paths to use same nodes
+          const pathsFromHere = findAllThenPaths(targetId, new Set([...visited]), newPath);
+          
+          // Add all paths from this branch
+          allPaths = [...allPaths, ...pathsFromHere];
+        }
+        
+        // If no valid paths were found (e.g., all led to cycles), return current path
+        return allPaths.length > 0 ? allPaths : [currentPath];
+      }
+      
+      // Start with the selected node
+      const selectedNode = nodes.find(n => n.id === d.id);
+      const initialPath = [selectedNode];
+      
+      // Find all paths starting from the selected node
+      const allPaths = findAllThenPaths(d.id, new Set([d.id]), initialPath);
+      
+      // Store current complete nodes and links before filtering
+      const allNodes = [...nodes];
+      const allLinks = [...links];
+      
+      // Filter nodes and links to only show the selected branch
+      nodes = allNodes.filter(n => nodeIds.has(n.id));
+      links = allLinks.filter(l => {
+        const sourceId = typeof l.source === 'object' ? l.source.id : l.source;
+        const targetId = typeof l.target === 'object' ? l.target.id : l.target;
+        return linkIds.has(`${sourceId}-${targetId}`);
+      });
+      
+      // Store the complete dataset to be restored on reset
+      if (!window._fullDataBackup) {
+        window._fullDataBackup = {
+          nodes: allNodes,
+          links: allLinks
+        };
+      }
+      
+      // Update the visualization with only the selected branch
+      drawForceDirected();
+      
+      // Now mark the branch nodes in the list
+      document.querySelectorAll('.node-item').forEach(item => {
+        const nodeId = parseInt(item.dataset.id);
+        if (branchNodeIds.has(nodeId)) {
+          item.classList.add('selected-branch');
+        }
+      });
+      
+      // Highlight primary and branch nodes in the visualization
+      d3.selectAll('.node')
+        .classed('highlighted-primary', n => n.id === d.id)
+        .classed('highlighted-branch', n => branchNodeIds.has(n.id));
+      
+      // Populate the branch panel
+      const branchPanel = document.getElementById('branch-panel');
+      const branchContent = document.getElementById('branch-content');
+      branchContent.innerHTML = '';
+      
+      // Make the branch panel visible
+      branchPanel.classList.add('visible');
+      
+      // Display all possible paths
+      if (allPaths.length > 0) {
+        // Create tabs container
+        const tabsContainer = document.createElement('div');
+        tabsContainer.className = 'tabs';
+        branchContent.appendChild(tabsContainer);
+        
+        // Tab content container
+        const tabContentsContainer = document.createElement('div');
+        branchContent.appendChild(tabContentsContainer);
+        
+        // Create tabs and content for each path
+        for (let pathIndex = 0; pathIndex < allPaths.length; pathIndex++) {
+          const path = allPaths[pathIndex];
+          
+          // If the path has at least the selected node
+          if (path.length > 0) {
+            // Create a tab for this path
+            const tab = document.createElement('div');
+            tab.className = 'tab';
+            if (pathIndex === 0) tab.classList.add('active');
+            tab.textContent = `${pathIndex + 1}`;
+            tab.dataset.path = pathIndex;
+            tabsContainer.appendChild(tab);
+            
+            // Create content container for this path
+            const tabContent = document.createElement('div');
+            tabContent.className = 'tab-content';
+            if (pathIndex === 0) tabContent.classList.add('active');
+            tabContent.dataset.path = pathIndex;
+            tabContentsContainer.appendChild(tabContent);
+            
+            // Add the IF title at the top of each tab content
+            const ifTitle = document.createElement('h3');
+            ifTitle.textContent = 'IF';
+            ifTitle.style.marginTop = '0';
+            ifTitle.style.marginBottom = '15px';
+            ifTitle.style.textAlign = 'center';
+            ifTitle.style.borderBottom = '1px solid #eee';
+            ifTitle.style.paddingBottom = '10px';
+            
+            // Insert the title at the beginning of the tab content
+            tabContent.insertBefore(ifTitle, tabContent.firstChild);
+            
+            // Add the selected node after the title
+            const selectedNodeDiv = document.createElement('div');
+            selectedNodeDiv.className = 'branch-item branch-node primary';
+            selectedNodeDiv.textContent = d.text;
+            tabContent.insertBefore(selectedNodeDiv, ifTitle.nextSibling);
+            
+            // Now add the rest of the path (relationships and nodes)
+            for (let i = 1; i < path.length; i++) {
+              const item = path[i];
+              
+              if (typeof item === 'object' && item.id !== undefined) {
+                // This is a node
+                const nodeDiv = document.createElement('div');
+                nodeDiv.className = 'branch-item branch-node';
+                nodeDiv.textContent = item.text;
+                tabContent.appendChild(nodeDiv);
+              } else if (item && item.type) {
+                // This is a relationship
+                const relDiv = document.createElement('div');
+                relDiv.className = 'branch-item branch-relationship';
+                relDiv.textContent = item.type;
+                tabContent.appendChild(relDiv);
+              }
+            }
+          }
+        }
+        
+        // Add click handlers to tabs
+        document.querySelectorAll('.tab').forEach(tab => {
+          tab.addEventListener('click', function() {
+            // Remove active class from all tabs and contents
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            
+            // Add active class to this tab and its content
+            this.classList.add('active');
+            document.querySelector(`.tab-content[data-path="${this.dataset.path}"]`).classList.add('active');
+            
+            // Scroll tab into view (centered if possible)
+            const tabsContainer = document.querySelector('.tabs');
+            const tabElement = this;
+            
+            // Calculate position to center the tab
+            const containerWidth = tabsContainer.clientWidth;
+            const tabWidth = tabElement.clientWidth;
+            const tabLeft = tabElement.offsetLeft;
+            
+            // Center the tab in view
+            const scrollPosition = tabLeft - (containerWidth / 2) + (tabWidth / 2);
+            
+            // Smooth scroll to position
+            tabsContainer.scrollTo({
+              left: Math.max(0, scrollPosition),
+              behavior: 'smooth'
+            });
+          });
+        });
+      }
+      
+      // Apply special physics to the selected branch
+      if (physicsEnabled) {
+        simulation.force('charge', d3.forceManyBody().strength(physics.branch.chargeStrength))
+          .force('link', d3.forceLink(links).id(d => d.id).distance(physics.branch.linkDistance))
+          .force('center', d3.forceCenter(width / 2, height / 2))
+          .alpha(physics.branch.alpha).restart();
+      }
+    }
+    
+    // Reset focus function
+    function resetFocus() {
+      // Restore all nodes and links from backup
+      if (window._fullDataBackup) {
+        nodes = window._fullDataBackup.nodes;
+        links = window._fullDataBackup.links;
+        window._fullDataBackup = null;
+      } else {
+        nodes = [...originalNodes];
+        links = [...originalLinks];
+      }
+      
+      // Remove selected class from all nodes in the list
+      document.querySelectorAll('.node-item').forEach(item => {
+        item.classList.remove('selected-primary');
+        item.classList.remove('selected-branch');
+      });
+      
+      // Hide the branch panel
+      document.getElementById('branch-panel').classList.remove('visible');
+      
+      // Redraw with all nodes and reset physics
+      drawForceDirected();
+      
+      // Reset physics to default
+      if (physicsEnabled) {
+        simulation.force('charge', d3.forceManyBody().strength(physics.default.chargeStrength));
+        simulation.force('link', d3.forceLink(links).id(d => d.id).distance(physics.default.linkDistance));
+        simulation.force('selected-repel', null); // Remove the special repulsion force
+        simulation.alpha(physics.default.alphaTarget).restart();
+      }
+    }
+    
+    // Initially draw the force-directed layout
+    drawForceDirected();
+    
+    // Populate the node list
+    populateNodeList();
+    
+    // Reset view button
+    document.getElementById('reset-view').addEventListener('click', function() {
+      svg.transition()
+        .duration(750)
+        .call(zoom.transform, d3.zoomIdentity);
+      resetFocus();
+    });
+    
+    // Toggle physics button
+    let physicsEnabled = true;
+    document.getElementById('toggle-physics').addEventListener('click', function() {
+      physicsEnabled = !physicsEnabled;
+      if (physicsEnabled) {
+        simulation.alpha(physics.default.alphaTarget).restart();
+        this.textContent = 'Pause Physics';
+      } else {
+        simulation.stop();
+        this.textContent = 'Resume Physics';
+      }
+    });
+    
+    // Search box
+    document.getElementById('search-box').addEventListener('input', searchNodes);
+    
+    // Function to filter by search text
+    function searchNodes() {
+      const searchText = document.getElementById('search-box').value.toLowerCase();
+      
+      if (searchText.trim() === '') {
+        // If search is empty, reset to original data
+        nodes = [...originalNodes];
+        links = [...originalLinks];
+      } else {
+        // Filter nodes containing search text
+        const matchingNodeIds = new Set(
+          originalNodes
+            .filter(n => n.text.toLowerCase().includes(searchText))
+            .map(n => n.id)
+        );
+        
+        // Add connected nodes
+        originalLinks.forEach(link => {
+          const sourceId = typeof link.source === 'object' ? link.source.id : link.source;
+          const targetId = typeof link.target === 'object' ? link.target.id : link.target;
+          
+          if (matchingNodeIds.has(sourceId)) matchingNodeIds.add(targetId);
+          if (matchingNodeIds.has(targetId)) matchingNodeIds.add(sourceId);
+        });
+        
+        // Filter nodes and links
+        nodes = originalNodes.filter(n => matchingNodeIds.has(n.id));
+        links = originalLinks.filter(link => {
+          const sourceId = typeof link.source === 'object' ? link.source.id : link.source;
+          const targetId = typeof link.target === 'object' ? link.target.id : link.target;
+          return matchingNodeIds.has(sourceId) && matchingNodeIds.has(targetId);
+        });
+      }
+      
+      // Update visualization
+      drawForceDirected();
+      
+      // Update node list
+      populateNodeList();
+    }
+    
+    // Drag functions
+    function dragStarted(event, d) {
+      if (!event.active && physicsEnabled) simulation.alphaTarget(0.3).restart();
+      d.fx = d.x;
+      d.fy = d.y;
+    }
+
+    function dragged(event, d) {
+      d.fx = event.x;
+      d.fy = event.y;
+    }
+
+    function dragEnded(event, d) {
+      if (!event.active && physicsEnabled) simulation.alphaTarget(0);
+      // Keep nodes fixed where user placed them
+      // d.fx = null;
+      // d.fy = null;
+    }
+  </script>
+</body>
+</html>

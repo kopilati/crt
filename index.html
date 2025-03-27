@@ -1,0 +1,1315 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>CRT to Cypher Parser</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background: #1e1e1e;
+            color: #d4d4d4;
+            overflow: hidden;
+        }
+        .header {
+            padding: 10px 20px;
+            background: #2d2d2d;
+            border-bottom: 1px solid #3d3d3d;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            z-index: 100;
+        }
+        .header-left {
+            display: flex;
+            align-items: center;
+        }
+        .header h1 {
+            margin: 0;
+            color: #fff;
+            font-size: 20px;
+        }
+        .main-content {
+            flex: 1;
+            display: flex;
+            overflow: hidden;
+            position: relative;
+        }
+        .editor-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            display: flex;
+            transition: transform 0.3s ease;
+        }
+        .visualization-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            transform: translateX(100%);
+            transition: transform 0.3s ease;
+            background: #fff;
+        }
+        .show-visualization .editor-container {
+            transform: translateX(-100%);
+        }
+        .show-visualization .visualization-container {
+            transform: translateX(0);
+        }
+        .line-numbers {
+            padding: 10px;
+            background: #2d2d2d;
+            color: #858585;
+            text-align: right;
+            user-select: none;
+            border-right: 1px solid #3d3d3d;
+            min-width: 40px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 14px;
+            line-height: 1.5;
+            white-space: pre;
+        }
+        textarea {
+            flex: 1;
+            padding: 10px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 14px;
+            line-height: 1.5;
+            background: #1e1e1e;
+            color: #d4d4d4;
+            border: none;
+            resize: none;
+            outline: none;
+            tab-size: 4;
+        }
+        .icon-button {
+            background: transparent;
+            border: none;
+            color: #d4d4d4;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            transition: background-color 0.2s;
+        }
+        .icon-button:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        .icon-button .material-icons {
+            font-size: 24px;
+        }
+        /* Visualization styles from viz.html */
+        .node {
+            stroke: #fff;
+            stroke-width: 2px;
+        }
+        .node.start {
+            fill: #FFD700;
+        }
+        .node.normal {
+            fill: #E0F0FF;
+        }
+        .node.highlighted-primary {
+            stroke: #4a90e2;
+            stroke-width: 4px;
+            fill: #e0f0ff;
+        }
+        .node.highlighted-branch {
+            stroke: #4caf50;
+            stroke-width: 3px;
+            fill: #e0ffe0;
+        }
+        .node.faded {
+            opacity: 0.3;
+        }
+        .link {
+            stroke-width: 3px;
+            stroke-opacity: 0.6;
+        }
+        .link.IF {
+            stroke: blue;
+        }
+        .link.THEN {
+            stroke: black;
+        }
+        .link.AND {
+            stroke: darkgreen;
+        }
+        .link.highlighted {
+            stroke-width: 4px;
+            stroke-opacity: 1;
+        }
+        .link.faded {
+            opacity: 0.1;
+        }
+        .node-label {
+            font-size: 14px;
+            pointer-events: none;
+            text-anchor: middle;
+            dominant-baseline: central;
+        }
+        .link-label {
+            font-size: 12px;
+            font-weight: bold;
+            pointer-events: none;
+            text-anchor: middle;
+            dominant-baseline: text-after-edge;
+            fill: #333;
+            background: white;
+            padding: 2px;
+        }
+        .controls {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: #ffffff;
+            padding: 15px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            width: 300px;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            max-height: calc(100vh - 40px);
+        }
+        .node-item {
+            padding: 8px;
+            border-bottom: 1px solid #eee;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: normal;
+            word-break: break-word;
+            background: #ffffff;
+            color: #333;
+        }
+        .node-item:hover {
+            background-color: #f0f8ff;
+        }
+        .node-item.selected-primary {
+            background-color: #e0f0ff;
+            font-weight: bold;
+            border-left: 4px solid #4a90e2;
+        }
+        .node-item.selected-branch {
+            background-color: #e0ffe0;
+            border-left: 4px solid #4caf50;
+        }
+        .node-item.start {
+            font-weight: bold;
+            color: #333;
+            background-color: #fff4d4;
+        }
+        .node-item:last-child {
+            border-bottom: none;
+        }
+        .node-list {
+            overflow-y: auto;
+            max-height: 70vh;
+            margin-top: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 5px;
+            flex-grow: 1;
+            background: #ffffff;
+            color: #1e1e1e;
+        }
+        .branch-panel {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #ffffff;
+            padding: 15px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            width: 350px;
+            z-index: 1000;
+            display: none;
+            flex-direction: column;
+            max-height: calc(100vh - 40px);
+            overflow-y: auto;
+            color: #1e1e1e;
+        }
+        .branch-panel.visible {
+            display: flex;
+        }
+        .branch-panel h3 {
+            margin-top: 0;
+            margin-bottom: 15px;
+            color: #333;
+            text-align: center;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+        }
+        .branch-item {
+            padding: 10px;
+            margin-bottom: 5px;
+            border-radius: 4px;
+        }
+        .branch-node {
+            background-color: #e0ffe0;
+            border-left: 4px solid #4caf50;
+        }
+        .branch-node.primary {
+            font-weight: bold;
+            background-color: #d0e8ff;
+            border-left: 4px solid #4a90e2;
+        }
+        .branch-relationship {
+            background-color: #f8f8f8;
+            color: #666;
+            text-align: center;
+            font-size: 12px;
+            font-weight: bold;
+            padding: 5px;
+        }
+        .tabs {
+            display: flex;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #ccc;
+            overflow-x: auto;
+            white-space: nowrap;
+            scrollbar-width: thin;
+            -ms-overflow-style: none; /* IE and Edge */
+        }
+        .tabs::-webkit-scrollbar {
+            height: 4px;
+        }
+        .tabs::-webkit-scrollbar-thumb {
+            background-color: #ccc;
+            border-radius: 2px;
+        }
+        .tab {
+            padding: 8px 15px;
+            cursor: pointer;
+            border: 1px solid #ccc;
+            border-bottom: none;
+            border-radius: 4px 4px 0 0;
+            margin-right: 5px;
+            background-color: #f5f5f5;
+        }
+        .tab.active {
+            background-color: #fff;
+            font-weight: bold;
+            border-bottom: 1px solid #fff;
+            margin-bottom: -1px;
+        }
+        .tab-content {
+            display: none;
+            padding: 15px;
+            border: 1px solid #eee;
+            border-radius: 0 0 5px 5px;
+            background-color: #fff;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .tooltip {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 10px;
+            max-width: 300px;
+            z-index: 1000;
+            pointer-events: none;
+        }
+        #editor-title {
+            margin: 0;
+            color: #fff;
+            font-size: 20px;
+            outline: none;
+            border-bottom: 1px solid transparent;
+            padding: 2px 4px;
+            transition: border-color 0.2s;
+        }
+        #editor-title:hover {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        #editor-title:focus {
+            border-bottom: 1px solid #fff;
+        }
+        .docs-dropdown {
+            padding: 4px 8px;
+            margin-right: 10px;
+            background: #3d3d3d;
+            color: #fff;
+            border: 1px solid #555;
+            border-radius: 4px;
+            outline: none;
+        }
+        .save-confirmation {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 4px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.3s, transform 0.3s;
+            z-index: 2000;
+        }
+        .save-confirmation.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: -300px;
+            width: 300px;
+            height: 100vh;
+            background: #2d2d2d;
+            z-index: 1000;
+            transition: left 0.3s ease;
+            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.2);
+            display: flex;
+            flex-direction: column;
+        }
+        .sidebar.open {
+            left: 0;
+        }
+        .sidebar-header {
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #3d3d3d;
+        }
+        .sidebar-header h3 {
+            margin: 0;
+            color: #fff;
+        }
+        .sidebar-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px 0;
+        }
+        .doc-item {
+            padding: 12px 15px;
+            border-bottom: 1px solid #3d3d3d;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .doc-item:hover {
+            background: #3d3d3d;
+        }
+        .doc-item-title {
+            font-weight: bold;
+            color: #fff;
+            margin-bottom: 5px;
+        }
+        .doc-item-date {
+            font-size: 12px;
+            color: #aaa;
+        }
+        .sidebar-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+            display: none;
+        }
+        .sidebar-overlay.open {
+            display: block;
+        }
+        .auto-save-indicator {
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+            background: rgba(76, 175, 80, 0.8);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            opacity: 0;
+            transition: opacity 0.5s;
+        }
+        .auto-save-indicator.visible {
+            opacity: 1;
+        }
+        .doc-item.current {
+            background: #4a4a4a;
+            cursor: default;
+            border-left: 4px solid #4CAF50;
+            padding-left: 11px; /* 15px - 4px border */
+        }
+        .doc-item.current .doc-item-title {
+            color: #fff;
+        }
+        .doc-item.current .doc-item-date {
+            color: #bbb;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-left">
+            <button class="icon-button menu-button" id="menu-button" title="Open Menu">
+                <span class="material-icons">menu</span>
+            </button>
+            <h1 id="editor-title" contenteditable="true" spellcheck="false">CRT to Cypher Parser</h1>
+        </div>
+        <div>
+            <button class="icon-button" onclick="toggleView()" title="Toggle View">
+                <span class="material-icons" id="view-toggle-icon">account_tree</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Add this sidebar menu -->
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <h3>Saved Documents</h3>
+            <button class="icon-button close-button" id="close-menu">
+                <span class="material-icons">close</span>
+            </button>
+        </div>
+        <div class="sidebar-content" id="saved-docs-list">
+            <!-- Saved documents will be listed here -->
+        </div>
+    </div>
+
+    <!-- Add an overlay for when the menu is open -->
+    <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+    <div class="main-content">
+        <div class="editor-container">
+            <div class="line-numbers" id="line-numbers"></div>
+            <textarea id="input" placeholder="Enter CRT content here..." spellcheck="false" wrap="off"></textarea>
+        </div>
+        <div class="visualization-container">
+            <svg width="100%" height="100%"></svg>
+            <div class="controls">
+                <input type="text" id="search-box" placeholder="Search nodes...">
+                <div class="node-list"></div>
+            </div>
+            <div class="branch-panel" id="branch-panel">
+                <div id="branch-content">
+                    <!-- Branch path will be populated here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        // Get the base URL from current path
+        const baseUrl = window.location.pathname.replace(/\/[^/]*$/, '/');
+        import init, { parse_content } from `${baseUrl}pkg/crt_to_cypher.js`;
+
+        function updateLineNumbers() {
+            const textarea = document.getElementById('input');
+            const lineNumbers = document.getElementById('line-numbers');
+            const lines = textarea.value.split('\n').length;
+            lineNumbers.innerHTML = Array.from({length: lines}, (_, i) => i + 1).join('\n');
+            lineNumbers.scrollTop = textarea.scrollTop;
+        }
+
+        let isVisualizationMode = false;
+        window.toggleView = function() {
+            const mainContent = document.querySelector('.main-content');
+            const icon = document.getElementById('view-toggle-icon');
+            isVisualizationMode = !isVisualizationMode;
+            
+            if (isVisualizationMode) {
+                // Save content before switching to visualization
+                saveToLocalStorage();
+                
+                mainContent.classList.add('show-visualization');
+                icon.textContent = 'edit';
+                updateVisualization();
+            } else {
+                mainContent.classList.remove('show-visualization');
+                icon.textContent = 'account_tree';
+            }
+        };
+
+        function updateVisualization() {
+            const input = document.getElementById('input').value;
+            try {
+                const result = parse_content(input);
+                renderGraph(result.nodes, result.links);
+            } catch (error) {
+                console.error('Error parsing content:', error);
+            }
+        }
+
+        // Add these variables before your existing script code
+        const physics = {
+            default: {
+                linkDistance: 250,
+                chargeStrength: -1500,
+                centerStrength: 1,
+                xyStrength: 0.05,
+                alpha: 1,
+                alphaTarget: 0.3
+            },
+            branch: {
+                linkDistance: 150,
+                chargeStrength: -2000,
+                alpha: 0.5
+            }
+        };
+
+        let physicsEnabled = true;
+        let simulation;
+
+        // Replace your renderGraph function with this version
+        function renderGraph(inputNodes, inputLinks) {
+            // Create deep copies of the input data
+            const nodes = JSON.parse(JSON.stringify(inputNodes));
+            const links = JSON.parse(JSON.stringify(inputLinks));
+            
+            const container = document.querySelector('.visualization-container');
+            const width = container.clientWidth;
+            const height = container.clientHeight;
+            
+            const svg = d3.select('.visualization-container svg');
+            svg.selectAll("*").remove();
+            
+            // Add zoom behavior
+            const zoom = d3.zoom()
+                .scaleExtent([0.1, 4])
+                .on('zoom', (event) => {
+                    g.attr('transform', event.transform);
+                });
+
+            svg.call(zoom);
+            
+            // Create a group for graph elements
+            const g = svg.append('g');
+            
+            // Create arrow markers
+            const markerTypes = ['IF', 'THEN', 'AND'];
+            const markerColors = {
+                'IF': 'blue',
+                'THEN': 'black',
+                'AND': 'darkgreen'
+            };
+
+            svg.append('defs').selectAll('marker')
+                .data(markerTypes)
+                .enter()
+                .append('marker')
+                .attr('id', d => `arrow-${d}`)
+                .attr('viewBox', '0 -5 10 10')
+                .attr('refX', 35)
+                .attr('refY', 0)
+                .attr('markerWidth', 8)
+                .attr('markerHeight', 8)
+                .attr('orient', 'auto')
+                .append('path')
+                .attr('fill', d => markerColors[d])
+                .attr('d', 'M0,-5L10,0L0,5');
+
+            // Create the simulation
+            simulation = d3.forceSimulation(nodes)
+                .force('link', d3.forceLink(links).id(d => d.id).distance(physics.default.linkDistance))
+                .force('charge', d3.forceManyBody().strength(physics.default.chargeStrength))
+                .force('center', d3.forceCenter(width / 2, height / 2))
+                .force('x', d3.forceX(width / 2).strength(physics.default.xyStrength))
+                .force('y', d3.forceY(height / 2).strength(physics.default.xyStrength));
+
+            // Create the links
+            const link = g.append('g')
+                .selectAll('line')
+                .data(links)
+                .enter()
+                .append('line')
+                .attr('class', d => `link ${d.type}`)
+                .attr('marker-end', d => `url(#arrow-${d.type})`);
+
+            // Create link labels
+            const linkLabels = g.append('g')
+                .selectAll('text')
+                .data(links)
+                .enter()
+                .append('text')
+                .attr('class', 'link-label')
+                .text(d => d.type);
+
+            // Create node groups
+            const nodeGroup = g.append('g')
+                .selectAll('.node-group')
+                .data(nodes)
+                .enter()
+                .append('g')
+                .attr('class', 'node-group')
+                .call(d3.drag()
+                    .on('start', dragStarted)
+                    .on('drag', dragged)
+                    .on('end', dragEnded))
+                .on('click', focusOnNode);
+
+            // Create circles for nodes
+            const node = nodeGroup.append('circle')
+                .attr('class', d => {
+                    let classes = `node ${d.type || 'normal'}`;
+                    if (d.id === d.id) {
+                        classes += ' highlighted-primary';
+                    } else {
+                        classes += ' highlighted-branch';
+                    }
+                    return classes;
+                })
+                .attr('r', d => d.type === 'start' ? 50 : 40);
+
+            // Create labels for nodes
+            const nodeLabels = nodeGroup.append('text')
+                .attr('class', 'node-label')
+                .text(d => {
+                    const maxLength = 20;
+                    return d.text.length > maxLength ? d.text.substring(0, maxLength) + '...' : d.text;
+                });
+
+            // Update positions on each tick
+            simulation.on('tick', () => {
+                link
+                    .attr('x1', d => d.source.x)
+                    .attr('y1', d => d.source.y)
+                    .attr('x2', d => d.target.x)
+                    .attr('y2', d => d.target.y);
+
+                nodeGroup.attr('transform', d => `translate(${d.x},${d.y})`);
+
+                linkLabels
+                    .attr('x', d => (d.source.x + d.target.x) / 2)
+                    .attr('y', d => (d.source.y + d.target.y) / 2 - 5);
+            });
+
+            // Populate node list
+            populateNodeList(nodes);
+
+            // Add event listeners for controls
+            document.getElementById('search-box').addEventListener('input', () => searchNodes(nodes, links));
+
+            // Store the input data globally
+            window.inputNodes = nodes;
+            window.inputLinks = links;
+        }
+
+        // Add these helper functions
+        function populateNodeList(nodes) {
+            const nodeList = document.querySelector('.node-list');
+            nodeList.innerHTML = '';
+            
+            const sortedNodes = [...nodes].sort((a, b) => {
+                if (a.type === 'start') return -1;
+                if (b.type === 'start') return 1;
+                return a.text.localeCompare(b.text);
+            });
+
+            sortedNodes.forEach(node => {
+                const nodeItem = document.createElement('div');
+                nodeItem.className = `node-item ${node.type || 'normal'}`;
+                nodeItem.dataset.id = node.id;
+                nodeItem.textContent = node.text;
+                nodeItem.addEventListener('click', function() {
+                    if (this.classList.contains('selected-primary')) {
+                        // If clicking selected node, reset the graph
+                        resetGraph();
+                    } else {
+                        // Otherwise, focus on the selected node
+                        focusOnNode(null, node);
+                    }
+                });
+                nodeList.appendChild(nodeItem);
+            });
+        }
+
+        function focusOnNode(event, d) {
+            if (!d) return;
+            
+            // Check if this node is already selected
+            const nodeItem = document.querySelector(`.node-item[data-id="${d.id}"]`);
+            const isAlreadySelected = nodeItem && nodeItem.classList.contains('selected-primary');
+            
+            // If the node is already selected, reset the graph
+            if (isAlreadySelected) {
+                resetGraph();
+                document.getElementById('branch-panel').classList.remove('visible');
+                return;
+            }
+            
+            // Get current simulation nodes and links
+            const currentNodes = simulation.nodes();
+            const currentLinks = simulation.force('link').links();
+            
+            // Update the selected node in the list
+            document.querySelectorAll('.node-item').forEach(item => {
+                item.classList.remove('selected-primary');
+                item.classList.remove('selected-branch');
+            });
+            
+            if (nodeItem) {
+                nodeItem.classList.add('selected-primary');
+                nodeItem.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+            
+            // Find all reachable nodes from the selected node
+            const reachableNodes = new Set();
+            reachableNodes.add(d.id);
+            
+            function findReachableNodes(nodeId) {
+                const outgoingLinks = currentLinks.filter(link => {
+                    const sourceId = typeof link.source === 'object' ? link.source.id : link.source;
+                    return sourceId === nodeId && (link.type === 'THEN' || link.type === 'AND');
+                });
+                
+                outgoingLinks.forEach(link => {
+                    const targetId = typeof link.target === 'object' ? link.target.id : link.target;
+                    if (!reachableNodes.has(targetId)) {
+                        reachableNodes.add(targetId);
+                        findReachableNodes(targetId);
+                    }
+                });
+            }
+            
+            findReachableNodes(d.id);
+            
+            // Filter nodes and links
+            const filteredNodes = currentNodes.filter(node => reachableNodes.has(node.id));
+            const filteredLinks = currentLinks.filter(link => {
+                const sourceId = typeof link.source === 'object' ? link.source.id : link.source;
+                const targetId = typeof link.target === 'object' ? link.target.id : link.target;
+                return reachableNodes.has(sourceId) && reachableNodes.has(targetId);
+            });
+            
+            // ----- Find all possible paths -----
+            const allPaths = findAllPaths(d, filteredNodes, filteredLinks);
+            
+            // ----- Populate the branch panel -----
+            populateBranchPanel(d, allPaths);
+            
+            // ----- Update the visualization -----
+            // Clear the existing visualization
+            const svg = d3.select('.visualization-container svg');
+            const g = svg.select('g');
+            
+            // Remove all existing elements
+            g.selectAll('.link').remove();
+            g.selectAll('.link-label').remove();
+            g.selectAll('.node-group').remove();
+            
+            // Create new elements with filtered data
+            // Links
+            const link = g.append('g')
+                .selectAll('line')
+                .data(filteredLinks)
+                .enter()
+                .append('line')
+                .attr('class', d => `link ${d.type}`)
+                .attr('marker-end', d => `url(#arrow-${d.type})`);
+            
+            // Link labels
+            const linkLabels = g.append('g')
+                .selectAll('text')
+                .data(filteredLinks)
+                .enter()
+                .append('text')
+                .attr('class', 'link-label')
+                .text(d => d.type);
+            
+            // Node groups
+            const nodeGroup = g.append('g')
+                .selectAll('.node-group')
+                .data(filteredNodes)
+                .enter()
+                .append('g')
+                .attr('class', 'node-group')
+                .call(d3.drag()
+                    .on('start', dragStarted)
+                    .on('drag', dragged)
+                    .on('end', dragEnded))
+                .on('click', focusOnNode);
+            
+            // Circles for nodes - with highlighting
+            nodeGroup.append('circle')
+                .attr('class', function(node) {
+                    if (node.id === d.id) {
+                        return `node ${node.type || 'normal'} highlighted-primary`;
+                    } else {
+                        return `node ${node.type || 'normal'} highlighted-branch`;
+                    }
+                })
+                .attr('r', d => d.type === 'start' ? 50 : 40);
+            
+            // Labels for nodes
+            nodeGroup.append('text')
+                .attr('class', 'node-label')
+                .text(d => {
+                    const maxLength = 20;
+                    return d.text.length > maxLength ? d.text.substring(0, maxLength) + '...' : d.text;
+                });
+            
+            // Update node list highlighting
+            document.querySelectorAll('.node-item').forEach(item => {
+                const nodeId = parseInt(item.dataset.id);
+                if (nodeId === d.id) {
+                    item.classList.add('selected-primary');
+                } else if (reachableNodes.has(nodeId)) {
+                    item.classList.add('selected-branch');
+                }
+            });
+            
+            // Update simulation
+            simulation.nodes(filteredNodes);
+            simulation.force('link').links(filteredLinks);
+            
+            // Update positions on each tick
+            simulation.on('tick', () => {
+                link
+                    .attr('x1', d => d.source.x)
+                    .attr('y1', d => d.source.y)
+                    .attr('x2', d => d.target.x)
+                    .attr('y2', d => d.target.y);
+            
+                nodeGroup.attr('transform', d => `translate(${d.x},${d.y})`);
+            
+                linkLabels
+                    .attr('x', d => (d.source.x + d.target.x) / 2)
+                    .attr('y', d => (d.source.y + d.target.y) / 2 - 5);
+            });
+            
+            // Restart the simulation
+            simulation.alpha(1).restart();
+        }
+
+        // Helper function to find all possible paths from the selected node
+        function findAllPaths(startNode, nodes, links) {
+            // Find all paths through THEN relationships
+            function findPathsFromNode(nodeId, visited = new Set(), currentPath = []) {
+                visited.add(nodeId);
+                
+                // Add current node to path
+                const node = nodes.find(n => n.id === nodeId);
+                currentPath.push(node);
+                
+                // Find all outgoing THEN links
+                const outgoingLinks = links.filter(link => {
+                    const sourceId = typeof link.source === 'object' ? link.source.id : link.source;
+                    return sourceId === nodeId && (link.type === 'THEN' || link.type === 'AND');
+                });
+                
+                // If no outgoing links, this is the end of a path
+                if (outgoingLinks.length === 0) {
+                    return [currentPath];
+                }
+                
+                let allPaths = [];
+                
+                // Follow each outgoing link
+                for (const link of outgoingLinks) {
+                    const targetId = typeof link.target === 'object' ? link.target.id : link.target;
+                    
+                    // Skip if we've visited this node (avoid cycles)
+                    if (visited.has(targetId)) continue;
+                    
+                    // Create a new path that includes this link
+                    const newPath = [...currentPath];
+                    newPath.push(link); // Add the link to the path
+                    
+                    // Continue from the target node
+                    const pathsFromHere = findPathsFromNode(targetId, new Set([...visited]), newPath);
+                    allPaths = [...allPaths, ...pathsFromHere];
+                }
+                
+                return allPaths.length > 0 ? allPaths : [currentPath];
+            }
+            
+            // Start from the selected node
+            return findPathsFromNode(startNode.id);
+        }
+
+        // Function to populate the branch panel with tabs for each path
+        function populateBranchPanel(selectedNode, allPaths) {
+            const branchPanel = document.getElementById('branch-panel');
+            const branchContent = document.getElementById('branch-content');
+            branchContent.innerHTML = '';
+            
+            // Make the branch panel visible
+            branchPanel.classList.add('visible');
+            
+            if (allPaths.length > 0) {
+                // Create tabs container
+                const tabsContainer = document.createElement('div');
+                tabsContainer.className = 'tabs';
+                branchContent.appendChild(tabsContainer);
+                
+                // Tab content container
+                const tabContentsContainer = document.createElement('div');
+                branchContent.appendChild(tabContentsContainer);
+                
+                // Create tabs and content for each path
+                for (let pathIndex = 0; pathIndex < allPaths.length; pathIndex++) {
+                    const path = allPaths[pathIndex];
+                    
+                    // Create a tab for this path
+                    const tab = document.createElement('div');
+                    tab.className = 'tab';
+                    if (pathIndex === 0) tab.classList.add('active');
+                    tab.textContent = `${pathIndex + 1}`;
+                    tab.dataset.path = pathIndex;
+                    tabsContainer.appendChild(tab);
+                    
+                    // Create content container for this path
+                    const tabContent = document.createElement('div');
+                    tabContent.className = 'tab-content';
+                    if (pathIndex === 0) tabContent.classList.add('active');
+                    tabContent.dataset.path = pathIndex;
+                    tabContentsContainer.appendChild(tabContent);
+                    
+                    // Add the IF title at the top
+                    const ifTitle = document.createElement('h3');
+                    ifTitle.textContent = 'IF';
+                    tabContent.appendChild(ifTitle);
+                    
+                    // Add the selected node
+                    const selectedNodeDiv = document.createElement('div');
+                    selectedNodeDiv.className = 'branch-item branch-node primary';
+                    selectedNodeDiv.textContent = selectedNode.text;
+                    tabContent.appendChild(selectedNodeDiv);
+                    
+                    // Process the path
+                    let lastItem = null;
+                    for (let i = 1; i < path.length; i++) {
+                        const item = path[i];
+                        
+                        // If it's a node
+                        if (item && item.id !== undefined) {
+                            // Add a node item
+                            const nodeDiv = document.createElement('div');
+                            nodeDiv.className = 'branch-item branch-node';
+                            nodeDiv.textContent = item.text;
+                            tabContent.appendChild(nodeDiv);
+                            lastItem = 'node';
+                        } 
+                        // If it's a link and the last item wasn't a relationship
+                        else if (item && item.type && lastItem !== 'relationship') {
+                            // Add a relationship item
+                            const relDiv = document.createElement('div');
+                            relDiv.className = 'branch-item branch-relationship';
+                            relDiv.textContent = item.type;
+                            tabContent.appendChild(relDiv);
+                            lastItem = 'relationship';
+                        }
+                    }
+                }
+                
+                // Add click handlers to tabs with auto-scrolling
+                document.querySelectorAll('.tab').forEach(tab => {
+                    tab.addEventListener('click', function() {
+                        // Remove active class from all tabs and contents
+                        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                        
+                        // Add active class to this tab and its content
+                        this.classList.add('active');
+                        document.querySelector(`.tab-content[data-path="${this.dataset.path}"]`).classList.add('active');
+                        
+                        // Auto-scroll the tab into view (centered if possible)
+                        const tabsContainer = document.querySelector('.tabs');
+                        const tabElement = this;
+                        
+                        // Calculate position to center the tab
+                        const containerWidth = tabsContainer.clientWidth;
+                        const tabWidth = tabElement.clientWidth;
+                        const tabLeft = tabElement.offsetLeft;
+                        
+                        // Center the tab in view
+                        const scrollPosition = tabLeft - (containerWidth / 2) + (tabWidth / 2);
+                        
+                        // Smooth scroll to position
+                        tabsContainer.scrollTo({
+                            left: Math.max(0, scrollPosition),
+                            behavior: 'smooth'
+                        });
+                    });
+                });
+            }
+        }
+
+        function dragStarted(event, d) {
+            if (!event.active && physicsEnabled) simulation.alphaTarget(0.3).restart();
+            d.fx = d.x;
+            d.fy = d.y;
+        }
+
+        function dragged(event, d) {
+            d.fx = event.x;
+            d.fy = event.y;
+        }
+
+        function dragEnded(event, d) {
+            if (!event.active && physicsEnabled) simulation.alphaTarget(0);
+        }
+
+        function searchNodes(nodes, links) {
+            const searchText = document.getElementById('search-box').value.toLowerCase();
+            document.querySelectorAll('.node-item').forEach(item => {
+                const matchesSearch = item.textContent.toLowerCase().includes(searchText);
+                item.style.display = matchesSearch ? 'block' : 'none';
+            });
+        }
+
+        async function initWasm() {
+            await init();
+            try {
+                const response = await fetch('CRT.neo');
+                const content = await response.text();
+                document.getElementById('input').value = content;
+                updateLineNumbers();
+            } catch (error) {
+                console.error('Error loading CRT.neo:', error);
+            }
+        }
+
+        initWasm();
+
+        const textarea = document.getElementById('input');
+        textarea.addEventListener('input', updateLineNumbers);
+        textarea.addEventListener('scroll', function(e) {
+            document.getElementById('line-numbers').scrollTop = e.target.scrollTop;
+        });
+        
+        textarea.addEventListener('keydown', function(e) {
+            if (e.key === 'Tab') {
+                e.preventDefault();
+                const start = this.selectionStart;
+                const end = this.selectionEnd;
+                this.value = this.value.substring(0, start) + '    ' + this.value.substring(end);
+                this.selectionStart = this.selectionEnd = start + 4;
+            }
+        });
+
+        function resetGraph() {
+            // Remove highlighting from node list
+            document.querySelectorAll('.node-item').forEach(item => {
+                item.classList.remove('selected-primary');
+                item.classList.remove('selected-branch');
+            });
+
+            // Hide the branch panel
+            document.getElementById('branch-panel').classList.remove('visible');
+            
+            // Simply call updateVisualization to redraw the entire graph
+            updateVisualization();
+        }
+
+        // Update localStorage functionality for auto-save and sidebar menu
+        function initLocalStorage() {
+            // Add an auto-save indicator
+            const autoSaveIndicator = document.createElement('div');
+            autoSaveIndicator.className = 'auto-save-indicator';
+            autoSaveIndicator.textContent = 'Saving...';
+            document.body.appendChild(autoSaveIndicator);
+            
+            // Set up auto-save timer (save every 2 seconds if there are changes)
+            const textarea = document.getElementById('input');
+            const title = document.getElementById('editor-title');
+            let lastContent = textarea.value;
+            let lastTitle = title.innerText;
+            
+            setInterval(() => {
+                if (textarea.value !== lastContent || title.innerText !== lastTitle) {
+                    saveToLocalStorage();
+                    lastContent = textarea.value;
+                    lastTitle = title.innerText;
+                    
+                    // Show auto-save indicator
+                    autoSaveIndicator.classList.add('visible');
+                    setTimeout(() => {
+                        autoSaveIndicator.classList.remove('visible');
+                    }, 1000);
+                }
+            }, 2000); // 2 seconds
+            
+            // Save when switching to visualization mode
+            const originalToggleView = window.toggleView;
+            window.toggleView = function() {
+                saveToLocalStorage();
+                originalToggleView();
+            };
+            
+            // Load saved documents list for the sidebar
+            updateSavedDocumentsList();
+            
+            // Find and load the most recently edited document
+            loadMostRecentDocument();
+            
+            // Set up menu button functionality
+            document.getElementById('menu-button').addEventListener('click', openSidebar);
+            document.getElementById('close-menu').addEventListener('click', closeSidebar);
+            document.getElementById('sidebar-overlay').addEventListener('click', closeSidebar);
+            
+            // Update sidebar when title changes
+            document.getElementById('editor-title').addEventListener('blur', function() {
+                if (document.getElementById('sidebar').classList.contains('open')) {
+                    updateSavedDocumentsList();
+                }
+            });
+        }
+
+        // Open sidebar menu
+        function openSidebar() {
+            document.getElementById('sidebar').classList.add('open');
+            document.getElementById('sidebar-overlay').classList.add('open');
+            updateSavedDocumentsList(); // Refresh the list when opening
+        }
+
+        // Close sidebar menu
+        function closeSidebar() {
+            document.getElementById('sidebar').classList.remove('open');
+            document.getElementById('sidebar-overlay').classList.remove('open');
+        }
+
+        // Update the list of saved documents in the sidebar
+        function updateSavedDocumentsList() {
+            const savedDocs = JSON.parse(localStorage.getItem('savedCRTDocuments') || '{}');
+            const docsListElement = document.getElementById('saved-docs-list');
+            docsListElement.innerHTML = '';
+            
+            // Get current document title
+            const currentTitle = document.getElementById('editor-title').innerText.trim();
+            
+            // Convert to array for sorting
+            const documents = Object.entries(savedDocs).map(([title, data]) => ({
+                title,
+                lastEdited: data.lastEdited || '0',
+                content: data.content,
+                isCurrent: title === currentTitle
+            }));
+            
+            // Sort by last edited (most recent first)
+            documents.sort((a, b) => new Date(b.lastEdited) - new Date(a.lastEdited));
+            
+            if (documents.length === 0) {
+                const emptyMsg = document.createElement('div');
+                emptyMsg.className = 'doc-item-empty';
+                emptyMsg.textContent = 'No saved documents yet';
+                emptyMsg.style.padding = '15px';
+                emptyMsg.style.color = '#aaa';
+                emptyMsg.style.textAlign = 'center';
+                docsListElement.appendChild(emptyMsg);
+                return;
+            }
+            
+            // Create document list items
+            documents.forEach(doc => {
+                const docItem = document.createElement('div');
+                docItem.className = doc.isCurrent ? 'doc-item current' : 'doc-item';
+                
+                const titleElement = document.createElement('div');
+                titleElement.className = 'doc-item-title';
+                titleElement.textContent = doc.title;
+                
+                const dateElement = document.createElement('div');
+                dateElement.className = 'doc-item-date';
+                dateElement.textContent = new Date(doc.lastEdited).toLocaleString();
+                
+                docItem.appendChild(titleElement);
+                docItem.appendChild(dateElement);
+                
+                // Add click handler only for non-current documents
+                if (!doc.isCurrent) {
+                    docItem.addEventListener('click', () => {
+                        loadFromLocalStorage(doc.title);
+                        closeSidebar();
+                    });
+                }
+                
+                docsListElement.appendChild(docItem);
+            });
+        }
+
+        // Save current document to localStorage
+        function saveToLocalStorage() {
+            const title = document.getElementById('editor-title').innerText.trim();
+            const content = document.getElementById('input').value;
+            
+            // Don't save if title or content is empty
+            if (!title || !content) return;
+            
+            // Get existing documents or create new map
+            let savedDocs = JSON.parse(localStorage.getItem('savedCRTDocuments') || '{}');
+            
+            // Current timestamp
+            const timestamp = new Date().toISOString();
+            
+            // Add current document
+            savedDocs[title] = {
+                content: content,
+                lastEdited: timestamp
+            };
+            
+            // Save back to localStorage
+            localStorage.setItem('savedCRTDocuments', JSON.stringify(savedDocs));
+        }
+
+        // Load a document from localStorage
+        function loadFromLocalStorage(title) {
+            const savedDocs = JSON.parse(localStorage.getItem('savedCRTDocuments') || '{}');
+            
+            if (savedDocs[title]) {
+                document.getElementById('editor-title').innerText = title;
+                document.getElementById('input').value = savedDocs[title].content;
+                updateLineNumbers();
+                
+                // Update the sidebar if it's open
+                if (document.getElementById('sidebar').classList.contains('open')) {
+                    updateSavedDocumentsList();
+                }
+            }
+        }
+
+        // Find and load the most recently edited document
+        function loadMostRecentDocument() {
+            const savedDocs = JSON.parse(localStorage.getItem('savedCRTDocuments') || '{}');
+            const titles = Object.keys(savedDocs);
+            
+            if (titles.length === 0) return;
+            
+            // Find the document with the most recent lastEdited timestamp
+            let mostRecentTitle = titles[0];
+            let mostRecentTime = new Date(savedDocs[mostRecentTitle].lastEdited || 0).getTime();
+            
+            for (let i = 1; i < titles.length; i++) {
+                const docTime = new Date(savedDocs[titles[i]].lastEdited || 0).getTime();
+                if (docTime > mostRecentTime) {
+                    mostRecentTime = docTime;
+                    mostRecentTitle = titles[i];
+                }
+            }
+            
+            // Load the most recent document
+            loadFromLocalStorage(mostRecentTitle);
+        }
+
+        // Call init function on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            initLocalStorage();
+        });
+    </script>
+</body>
+</html> 
