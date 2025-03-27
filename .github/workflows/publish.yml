@@ -44,7 +44,7 @@ jobs:
           cp -r js dist/ || true    # Copy JS if it exists
           cp -r images dist/ || true # Copy images if it exists
           cp *.neo dist/ || true    # Copy any .neo files if they exist
-          ls -la dist/
+          ls -la dist/pkg/
 
       - name: Deploy to GitHub Pages
         uses: JamesIves/github-pages-deploy-action@v4
