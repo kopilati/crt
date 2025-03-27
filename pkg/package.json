@@ -1,0 +1,15 @@
+{
+  "name": "crt-to-cypher",
+  "type": "module",
+  "version": "0.1.0",
+  "files": [
+    "crt_to_cypher_bg.wasm",
+    "crt_to_cypher.js",
+    "crt_to_cypher.d.ts"
+  ],
+  "main": "crt_to_cypher.js",
+  "types": "crt_to_cypher.d.ts",
+  "sideEffects": [
+    "./snippets/*"
+  ]
+}
