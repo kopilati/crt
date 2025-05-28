@@ -196,6 +196,46 @@
             word-break: break-word;
             background: #ffffff;
             color: #333;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .node-text {
+            flex: 1;
+            margin-right: 8px;
+        }
+        .metrics-container {
+            display: flex;
+            gap: 4px;
+            flex-shrink: 0;
+        }
+        .reachability-count {
+            background: #4CAF50;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: bold;
+            min-width: 20px;
+            text-align: center;
+            flex-shrink: 0;
+        }
+        .uniqueness-count {
+            background: #2196F3;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: bold;
+            min-width: 20px;
+            text-align: center;
+            flex-shrink: 0;
+        }
+        .node-item.start .reachability-count {
+            background: #FF9800;
+        }
+        .node-item.start .uniqueness-count {
+            background: #9C27B0;
         }
         .node-item:hover {
             background-color: #f0f8ff;
@@ -667,15 +707,7 @@
 
             // Create circles for nodes
             const node = nodeGroup.append('circle')
-                .attr('class', d => {
-                    let classes = `node ${d.type || 'normal'}`;
-                    if (d.id === d.id) {
-                        classes += ' highlighted-primary';
-                    } else {
-                        classes += ' highlighted-branch';
-                    }
-                    return classes;
-                })
+                .attr('class', d => `node ${d.type || 'normal'}`)
                 .attr('r', d => d.type === 'start' ? 50 : 40);
 
             // Create labels for nodes
@@ -701,25 +733,205 @@
                     .attr('y', d => (d.source.y + d.target.y) / 2 - 5);
             });
 
-            // Populate node list
-            populateNodeList(nodes);
+            // Store the input data globally FIRST
+            window.inputNodes = nodes;
+            window.inputLinks = links;
+
+            // Populate node list (now that links are available)
+            populateNodeList(nodes, links);
 
             // Add event listeners for controls
             document.getElementById('search-box').addEventListener('input', () => searchNodes(nodes, links));
+        }
 
-            // Store the input data globally
-            window.inputNodes = nodes;
-            window.inputLinks = links;
+        // Add function to calculate reachability metrics
+        function calculateReachabilityMetrics(nodes, links) {
+            console.log('calculateReachabilityMetrics called with:', {
+                nodeCount: nodes.length,
+                linkCount: links.length,
+                sampleNode: nodes[0],
+                sampleLink: links[0]
+            });
+            
+            const reachabilityMap = new Map();
+            
+            nodes.forEach(node => {
+                const reachableNodes = new Set();
+                reachableNodes.add(node.id);
+                
+                function findReachableNodes(nodeId) {
+                    const outgoingLinks = links.filter(link => {
+                        const sourceId = typeof link.source === 'object' ? link.source.id : link.source;
+                        const isMatch = sourceId === nodeId && (link.type === 'THEN' || link.type === 'AND');
+                        return isMatch;
+                    });
+                    
+                    console.log(`Node ${nodeId} has ${outgoingLinks.length} outgoing THEN/AND links`);
+                    
+                    outgoingLinks.forEach(link => {
+                        const targetId = typeof link.target === 'object' ? link.target.id : link.target;
+                        if (!reachableNodes.has(targetId)) {
+                            reachableNodes.add(targetId);
+                            findReachableNodes(targetId);
+                        }
+                    });
+                }
+                
+                findReachableNodes(node.id);
+                // Subtract 1 to exclude the node itself from the count
+                const count = reachableNodes.size - 1;
+                console.log(`Node ${node.id} (${node.text.substring(0, 20)}...) can reach ${count} nodes`);
+                reachabilityMap.set(node.id, count);
+            });
+            
+            return reachabilityMap;
+        }
+
+        // Add function to calculate uniqueness metrics (nodes not reachable from higher-ranked nodes)
+        function calculateUniquenessMetrics(nodes, links, reachabilityMap) {
+            const uniquenessMap = new Map();
+            
+            // Sort nodes by reachability (descending) to establish ranking
+            const sortedByReachability = [...nodes].sort((a, b) => {
+                const aReach = reachabilityMap.get(a.id) || 0;
+                const bReach = reachabilityMap.get(b.id) || 0;
+                return bReach - aReach;
+            });
+            
+            nodes.forEach(node => {
+                // Find all nodes that can reach this node
+                const nodesThatCanReachThis = new Set();
+                
+                // Check each other node to see if it can reach this node
+                nodes.forEach(otherNode => {
+                    if (otherNode.id === node.id) return; // Skip self
+                    
+                    // Calculate what this other node can reach
+                    const reachableFromOther = new Set();
+                    reachableFromOther.add(otherNode.id);
+                    
+                    function findReachableFromNode(nodeId) {
+                        const outgoingLinks = links.filter(link => {
+                            const sourceId = typeof link.source === 'object' ? link.source.id : link.source;
+                            return sourceId === nodeId && (link.type === 'THEN' || link.type === 'AND');
+                        });
+                        
+                        outgoingLinks.forEach(link => {
+                            const targetId = typeof link.target === 'object' ? link.target.id : link.target;
+                            if (!reachableFromOther.has(targetId)) {
+                                reachableFromOther.add(targetId);
+                                findReachableFromNode(targetId);
+                            }
+                        });
+                    }
+                    
+                    findReachableFromNode(otherNode.id);
+                    
+                    // If this other node can reach our target node, add it to the set
+                    if (reachableFromOther.has(node.id)) {
+                        nodesThatCanReachThis.add(otherNode.id);
+                    }
+                });
+                
+                // Now find how many nodes this node can reach that are NOT reachable from higher-ranked nodes
+                const thisNodeCanReach = new Set();
+                thisNodeCanReach.add(node.id);
+                
+                function findReachableFromThisNode(nodeId) {
+                    const outgoingLinks = links.filter(link => {
+                        const sourceId = typeof link.source === 'object' ? link.source.id : link.source;
+                        return sourceId === nodeId && (link.type === 'THEN' || link.type === 'AND');
+                    });
+                    
+                    outgoingLinks.forEach(link => {
+                        const targetId = typeof link.target === 'object' ? link.target.id : link.target;
+                        if (!thisNodeCanReach.has(targetId)) {
+                            thisNodeCanReach.add(targetId);
+                            findReachableFromThisNode(targetId);
+                        }
+                    });
+                }
+                
+                findReachableFromThisNode(node.id);
+                
+                // Find higher-ranked nodes (those with higher or equal reachability)
+                const higherRankedNodes = sortedByReachability.filter(n => {
+                    const nReach = reachabilityMap.get(n.id) || 0;
+                    const nodeReach = reachabilityMap.get(node.id) || 0;
+                    return n.id !== node.id && nReach >= nodeReach;
+                });
+                
+                // Find what all higher-ranked nodes can reach combined
+                const reachableFromHigherRanked = new Set();
+                
+                higherRankedNodes.forEach(higherNode => {
+                    const reachableFromHigher = new Set();
+                    reachableFromHigher.add(higherNode.id);
+                    
+                    function findReachableFromHigher(nodeId) {
+                        const outgoingLinks = links.filter(link => {
+                            const sourceId = typeof link.source === 'object' ? link.source.id : link.source;
+                            return sourceId === nodeId && (link.type === 'THEN' || link.type === 'AND');
+                        });
+                        
+                        outgoingLinks.forEach(link => {
+                            const targetId = typeof link.target === 'object' ? link.target.id : link.target;
+                            if (!reachableFromHigher.has(targetId)) {
+                                reachableFromHigher.add(targetId);
+                                findReachableFromHigher(targetId);
+                            }
+                        });
+                    }
+                    
+                    findReachableFromHigher(higherNode.id);
+                    
+                    // Add all reachable nodes to the combined set
+                    reachableFromHigher.forEach(id => reachableFromHigherRanked.add(id));
+                });
+                
+                // Count nodes that this node can reach but higher-ranked nodes cannot
+                let uniqueReachableCount = 0;
+                thisNodeCanReach.forEach(reachableId => {
+                    if (reachableId !== node.id && !reachableFromHigherRanked.has(reachableId)) {
+                        uniqueReachableCount++;
+                    }
+                });
+                
+                console.log(`Node ${node.id} (${node.text.substring(0, 20)}...) has ${uniqueReachableCount} unique reachable nodes`);
+                uniquenessMap.set(node.id, uniqueReachableCount);
+            });
+            
+            return uniquenessMap;
         }
 
         // Add these helper functions
-        function populateNodeList(nodes) {
+        function populateNodeList(nodes, links = null) {
             const nodeList = document.querySelector('.node-list');
             nodeList.innerHTML = '';
             
+            // Calculate reachability metrics using the original input links
+            const linksToUse = window.inputLinks || links || [];
+            console.log('populateNodeList - linksToUse:', linksToUse);
+            console.log('populateNodeList - window.inputLinks:', window.inputLinks);
+            console.log('populateNodeList - links parameter:', links);
+            
+            const reachabilityMap = calculateReachabilityMetrics(nodes, linksToUse);
+            const uniquenessMap = calculateUniquenessMetrics(nodes, linksToUse, reachabilityMap);
+            
+            // Sort nodes by reachability count (descending), then by type (start first), then alphabetically
             const sortedNodes = [...nodes].sort((a, b) => {
-                if (a.type === 'start') return -1;
-                if (b.type === 'start') return 1;
+                // First, prioritize start nodes
+                if (a.type === 'start' && b.type !== 'start') return -1;
+                if (b.type === 'start' && a.type !== 'start') return 1;
+                
+                // Then sort by reachability count (descending)
+                const aReachability = reachabilityMap.get(a.id) || 0;
+                const bReachability = reachabilityMap.get(b.id) || 0;
+                if (aReachability !== bReachability) {
+                    return bReachability - aReachability;
+                }
+                
+                // Finally, sort alphabetically
                 return a.text.localeCompare(b.text);
             });
 
@@ -727,7 +939,34 @@
                 const nodeItem = document.createElement('div');
                 nodeItem.className = `node-item ${node.type || 'normal'}`;
                 nodeItem.dataset.id = node.id;
-                nodeItem.textContent = node.text;
+                
+                // Create the content with both metrics
+                const reachabilityCount = reachabilityMap.get(node.id) || 0;
+                const uniquenessCount = uniquenessMap.get(node.id) || 0;
+                
+                const textSpan = document.createElement('span');
+                textSpan.className = 'node-text';
+                textSpan.textContent = node.text;
+                
+                const metricsContainer = document.createElement('div');
+                metricsContainer.className = 'metrics-container';
+                
+                const reachabilitySpan = document.createElement('span');
+                reachabilitySpan.className = 'reachability-count';
+                reachabilitySpan.textContent = reachabilityCount;
+                reachabilitySpan.title = 'Total reachable nodes';
+                
+                const uniquenessSpan = document.createElement('span');
+                uniquenessSpan.className = 'uniqueness-count';
+                uniquenessSpan.textContent = uniquenessCount;
+                uniquenessSpan.title = 'Unique reachable nodes (not reachable from higher-ranked nodes)';
+                
+                metricsContainer.appendChild(reachabilitySpan);
+                metricsContainer.appendChild(uniquenessSpan);
+                
+                nodeItem.appendChild(textSpan);
+                nodeItem.appendChild(metricsContainer);
+                
                 nodeItem.addEventListener('click', function() {
                     if (this.classList.contains('selected-primary')) {
                         // If clicking selected node, reset the graph
