@@ -107,7 +107,8 @@ pub fn parse_content(content: &str) -> Result<JsValue, JsValue> {
     }
 
     let links_array = Array::new();
-    let mut seen_if_terms: BTreeSet<Leaf> = BTreeSet::new();
+    let mut source_terms: BTreeSet<Leaf> = BTreeSet::new();
+    let mut target_terms: BTreeSet<Leaf> = BTreeSet::new();
 
     for link in crt.links.values() {
         let mut from_terms = flatten_expr(&link.from);
@@ -118,9 +119,16 @@ pub fn parse_content(content: &str) -> Result<JsValue, JsValue> {
         to_terms.sort();
         to_terms.dedup();
 
-        for leaf in &from_terms {
-            seen_if_terms.insert(leaf.clone());
-        }
+        from_terms
+            .iter()
+            .for_each(|leaf| {
+                source_terms.insert(leaf.clone());
+            });
+        to_terms
+            .iter()
+            .for_each(|leaf| {
+                target_terms.insert(leaf.clone());
+            });
 
         let relation_type = if matches!(link.from, Expr::And(_)) {
             "AND"
@@ -144,7 +152,10 @@ pub fn parse_content(content: &str) -> Result<JsValue, JsValue> {
         }
     }
 
-    for leaf in seen_if_terms {
+    for leaf in source_terms.iter() {
+        if target_terms.contains(leaf) {
+            continue;
+        }
         push_link(
             &links_array,
             JsValue::from_str("IF"),
@@ -177,4 +188,3 @@ pub fn get_relationship_count(content: &str) -> usize {
         .map(|crt| crt.links.len())
         .unwrap_or(0)
 }
-

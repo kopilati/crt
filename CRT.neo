@@ -1,61 +1,75 @@
--if-> we spent less time on reporting to show control 
--then-> we can spend more time on understanding user needs 
--then-> we have less rework during refinement 
--then-> POs have ample time to prepare for sprints 
--then-> we slice the deliveries as small as possible 
--then-> we can meet Definition of ready for our PBIs 
--then-> we document scope and objectives of our PBIs consistently 
--then-> we can estimate PBIs consistently 
--then-> we can estimate in a way that makes it possible to compare size 
--and-> we expect the PBIs counted towards the teams performacne to meet definition of Done 
--then-> we can use past performance to predeict future deliveries 
--then-> we become predictable 
--then-> we don't rush work to meet delivery dates 
--then-> we won't be adding to the tech debt 
--then-> the amount of impedements and unplanned work is stable or declining 
--then-> past performance will be a better predictor of future performance and errs will be likely to under-estimate performance 
--then-> we become predictable 
 
--if-> we don't rush work to meet delivery dates 
--then-> we don't take short cuts 
--then-> we deliver higher quality 
--then-> we have less rework 
--then-> we will have a higher capacity for development 
--then-> we increase throughput 
--then-> we will increase value-delivery 
+Entities
+E1. Excessive time spent on reporting to show control
+E2. Insufficient time spent on understanding user needs
+E3. Significant rework during refinement
+E4. POs often lack time to prepare for sprints
+E5. Deliveries are in large slices
+E6. Many PBIs do not meet Definition of Ready
+E7. PBIs scope and objectives documented inconsistently
+E8. PBIs estimated inconsistently
+E9. Estimates do not allow comparison of PBI sizes
+E10. PBIs counted toward performance often do not meet Definition of Done
+E11. Past performance cannot reliably predict future deliveries
+E12. Delivery is unpredictable
+E13. Work is rushed to meet delivery dates
+E14. Technical debt keeps growing
+E15. Impediments and unplanned work keep increasing or remain volatile
+E16. Past performance poorly predicts future performance and tends to over-estimate capability
+E17. We often take short-cuts
+E18. We deliver low quality
+E19. We have high levels of rework
+E20. Effective development capacity is low
+E21. Throughput is low
+E22. Value-delivery is low
+E23. We lack a production-like ad-hoc test environment
+E24. We cannot test against a stable known configuration
+E25. We often need code freezes
+E26. Code freezes distort or invalidate estimates
+E27. We have excessive work-in-progress
+E28. We spend insufficient time on QA in the teams or QA delays deliveries
+E29. We have little time to work on improving our processes
+E30. Our processes remain sub-optimal
+E31. Stakeholder trust in our delivery is low
+E32. We spend little time working on value-driving work
+E33. We scope features inconsistently
 
--if-> we have a production like ad hoc test environment 
--then-> we can execute tests against a known configuration regardless of development activities 
--then-> we don't need code freezes 
--then-> code freezes don't impact estimates 
--then-> we become predictable 
+Links
+L1. E1 → E2
+L2. E2 → E3
+L3. E3 → E4
+L4. E4 → E5
+L5. E5 → E6
+L6. E6 → E7
+L7. E7 → E8
+L8. E8 → E9
+L9. (E9 AND E10) → E11
+L10. E11 → E12
+L11. E12 → E13
+L12. E13 → E14
+L13. E14 → E15
+L14. E15 → E16
+L15. E16 → E12        // feedback loop
 
-we don't need code freezes 
--then-> we have less work in progress 
+L16. E13 → E17
+L17. E17 → E18
+L18. E18 → E19
+L19. E19 → E20
+L20. E20 → E21
+L21. E21 → E22
 
-we have less rework 
--then-> we have less work in progress 
+L22. E23 → E24
+L23. E24 → E25
+L24. E25 → E26
+L25. E26 → E12
 
-we don't need code freezes 
--then-> we will have a higher capacity for development 
--then-> we spend more time on QA in the teams, without impacting deliveries 
--then-> we deliver higher quality
+L26. NOT E25 → NOT E27
+L27. NOT E19 → NOT E27
 
-we have less rework 
--then-> we will have more time to work on improving our processes 
--then-> we will improve our processes 
--then-> we will improve our value-delivery 
+L28. NOT E25 → NOT E28 → NOT E18
+L29. NOT E19 → NOT E29 → NOT E30 → NOT E18 → NOT E22
 
-we will improve our processes 
--then-> we deliver higher quality 
--if-> we document scope and objectives of our PBIs consistently 
--and-> we scope features consistently 
--then-> then we can use past sprint performance to predict deliveries in the next quarter 
--then-> we become predictable 
--then-> we increase trust 
--then-> we spent less time on reporting to show control 
--then-> we will spend more time working on value drivers 
+L30. (NOT E33 AND NOT E7) → NOT E11 → NOT E12 → NOT E31 → NOT E1 → NOT E32
 
-we slice the deliveries as small as possible 
--then-> we have less work in progress 
--then-> we increase throughput
+L31. E5 → E27
+L32. E19 → E27
