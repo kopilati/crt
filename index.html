@@ -138,6 +138,11 @@
             stroke-width: 3px;
             stroke-opacity: 0.6;
         }
+        .link.negated {
+            stroke: #d9534f;
+            stroke-dasharray: 6 3;
+            stroke-opacity: 0.9;
+        }
         .link.IF {
             stroke: blue;
         }
@@ -169,6 +174,9 @@
             fill: #333;
             background: white;
             padding: 2px;
+        }
+        .link-label.negated {
+            fill: #d9534f;
         }
         .controls {
             position: absolute;
@@ -680,7 +688,7 @@
                 .data(links)
                 .enter()
                 .append('line')
-                .attr('class', d => `link ${d.type}`)
+                .attr('class', d => `link ${d.type}${d.negated ? ' negated' : ''}`)
                 .attr('marker-end', d => `url(#arrow-${d.type})`);
 
             // Create link labels
@@ -689,8 +697,8 @@
                 .data(links)
                 .enter()
                 .append('text')
-                .attr('class', 'link-label')
-                .text(d => d.type);
+                .attr('class', d => `link-label${d.negated ? ' negated' : ''}`)
+                .text(d => d.label || d.type);
 
             // Create node groups
             const nodeGroup = g.append('g')
@@ -1061,17 +1069,17 @@
                 .data(filteredLinks)
                 .enter()
                 .append('line')
-                .attr('class', d => `link ${d.type}`)
+                .attr('class', d => `link ${d.type}${d.negated ? ' negated' : ''}`)
                 .attr('marker-end', d => `url(#arrow-${d.type})`);
-            
+
             // Link labels
             const linkLabels = g.append('g')
                 .selectAll('text')
                 .data(filteredLinks)
                 .enter()
                 .append('text')
-                .attr('class', 'link-label')
-                .text(d => d.type);
+                .attr('class', d => `link-label${d.negated ? ' negated' : ''}`)
+                .text(d => d.label || d.type);
             
             // Node groups
             const nodeGroup = g.append('g')

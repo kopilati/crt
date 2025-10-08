@@ -1,65 +1,180 @@
-use wasm_bindgen::prelude::*;
+use std::collections::BTreeSet;
+
 use js_sys::{Array, Object, Reflect};
+use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsValue;
-use crate::parser::{parse_neo_content, Relationship};
+
+use crate::parser::{parse_crt, Expr};
+
+#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
+struct Leaf {
+    id: u32,
+    negated: bool,
+}
+
+fn flatten_expr(expr: &Expr) -> Vec<Leaf> {
+    let mut leaves = Vec::new();
+    flatten_expr_inner(expr, false, &mut leaves);
+    leaves
+}
+
+fn flatten_expr_inner(expr: &Expr, mut negated: bool, out: &mut Vec<Leaf>) {
+    match expr {
+        Expr::EntityRef(id) => out.push(Leaf {
+            id: *id,
+            negated,
+        }),
+        Expr::Not(inner) => {
+            negated = !negated;
+            flatten_expr_inner(inner, negated, out);
+        }
+        Expr::And(items) => {
+            for item in items {
+                flatten_expr_inner(item, negated, out);
+            }
+        }
+    }
+}
+
+fn push_link(
+    links_array: &Array, 
+    source: JsValue,
+    target: JsValue,
+    rel_type: &str,
+    source_negated: bool,
+    target_negated: bool,
+) -> Result<(), JsValue> {
+    let link_obj = Object::new();
+
+    let class_type = JsValue::from_str(rel_type);
+    let label = if target_negated {
+        format!("{rel_type} NOT")
+    } else {
+        rel_type.to_string()
+    };
+    let negated = source_negated || target_negated;
+
+    Reflect::set(&link_obj, &JsValue::from_str("source"), &source)?;
+    Reflect::set(&link_obj, &JsValue::from_str("target"), &target)?;
+    Reflect::set(&link_obj, &JsValue::from_str("type"), &class_type)?;
+    Reflect::set(&link_obj, &JsValue::from_str("label"), &JsValue::from_str(&label))?;
+    Reflect::set(&link_obj, &JsValue::from_str("negated"), &JsValue::from_bool(negated))?;
+    Reflect::set(
+        &link_obj,
+        &JsValue::from_str("sourceNegated"),
+        &JsValue::from_bool(source_negated),
+    )?;
+    Reflect::set(
+        &link_obj,
+        &JsValue::from_str("targetNegated"),
+        &JsValue::from_bool(target_negated),
+    )?;
+
+    links_array.push(&link_obj);
+    Ok(())
+}
 
 // WebAssembly entry point for parsing content
 #[wasm_bindgen]
 pub fn parse_content(content: &str) -> Result<JsValue, JsValue> {
-    // Parse content using the regular Rust function
-    let (nodes, relationships) = parse_neo_content(content);
-    
-    // Convert nodes to a JavaScript array
+    let crt = parse_crt(content).map_err(|e| JsValue::from_str(&e.to_string()))?;
+
     let nodes_array = Array::new();
-    for (i, node) in nodes.iter().enumerate() {
+    let start_node = Object::new();
+    Reflect::set(&start_node, &JsValue::from_str("id"), &JsValue::from_str("IF"))?;
+    Reflect::set(&start_node, &JsValue::from_str("text"), &JsValue::from_str("IF"))?;
+    Reflect::set(&start_node, &JsValue::from_str("type"), &JsValue::from_str("start"))?;
+    nodes_array.push(&start_node);
+
+    for entity in crt.entities.values() {
         let node_obj = Object::new();
-        let node_type = if node == "IF" { "start" } else { "normal" };
-        
-        Reflect::set(&node_obj, &JsValue::from_str("id"), &JsValue::from_f64(i as f64))?;
-        Reflect::set(&node_obj, &JsValue::from_str("text"), &JsValue::from_str(node))?;
-        Reflect::set(&node_obj, &JsValue::from_str("type"), &JsValue::from_str(node_type))?;
-        
+        Reflect::set(
+            &node_obj,
+            &JsValue::from_str("id"),
+            &JsValue::from_f64(entity.id as f64),
+        )?;
+        Reflect::set(
+            &node_obj,
+            &JsValue::from_str("text"),
+            &JsValue::from_str(&entity.text),
+        )?;
+        Reflect::set(
+            &node_obj,
+            &JsValue::from_str("type"),
+            &JsValue::from_str("normal"),
+        )?;
         nodes_array.push(&node_obj);
     }
-    
-    // Create a map from node text to index for creating links
-    let node_indices: std::collections::HashMap<&String, usize> = nodes.iter()
-        .enumerate()
-        .map(|(i, node)| (node, i))
-        .collect();
-    
-    // Convert relationships to a JavaScript array of links
+
     let links_array = Array::new();
-    for rel in relationships.iter() {
-        if let (Some(&source), Some(&target)) = (node_indices.get(&rel.from()), node_indices.get(&rel.to())) {
-            let link_obj = Object::new();
-            
-            Reflect::set(&link_obj, &JsValue::from_str("source"), &JsValue::from_f64(source as f64))?;
-            Reflect::set(&link_obj, &JsValue::from_str("target"), &JsValue::from_f64(target as f64))?;
-            Reflect::set(&link_obj, &JsValue::from_str("type"), &JsValue::from_str(&rel.rel_type()))?;
-            
-            links_array.push(&link_obj);
+    let mut seen_if_terms: BTreeSet<Leaf> = BTreeSet::new();
+
+    for link in crt.links.values() {
+        let mut from_terms = flatten_expr(&link.from);
+        let mut to_terms = flatten_expr(&link.to);
+
+        from_terms.sort();
+        from_terms.dedup();
+        to_terms.sort();
+        to_terms.dedup();
+
+        for leaf in &from_terms {
+            seen_if_terms.insert(leaf.clone());
+        }
+
+        let relation_type = if matches!(link.from, Expr::And(_)) {
+            "AND"
+        } else {
+            "THEN"
+        };
+
+        for source in &from_terms {
+            let source_id = JsValue::from_f64(source.id as f64);
+            for target in &to_terms {
+                let target_id = JsValue::from_f64(target.id as f64);
+                push_link(
+                    &links_array,
+                    source_id.clone(),
+                    target_id,
+                    relation_type,
+                    source.negated,
+                    target.negated,
+                )?;
+            }
         }
     }
-    
-    // Create a result object with nodes and links
+
+    for leaf in seen_if_terms {
+        push_link(
+            &links_array,
+            JsValue::from_str("IF"),
+            JsValue::from_f64(leaf.id as f64),
+            "IF",
+            false,
+            leaf.negated,
+        )?;
+    }
+
     let result = Object::new();
     Reflect::set(&result, &JsValue::from_str("nodes"), &nodes_array)?;
     Reflect::set(&result, &JsValue::from_str("links"), &links_array)?;
-    
+
     Ok(result.into())
 }
 
 // Utility function to get node count
 #[wasm_bindgen]
 pub fn get_node_count(content: &str) -> usize {
-    let (nodes, _) = parse_neo_content(content);
-    nodes.len()
+    parse_crt(content)
+        .map(|crt| crt.entities.len())
+        .unwrap_or(0)
 }
 
 // Utility function to get relationship count
 #[wasm_bindgen]
 pub fn get_relationship_count(content: &str) -> usize {
-    let (_, relationships) = parse_neo_content(content);
-    relationships.len()
-} 
+    parse_crt(content)
+        .map(|crt| crt.links.len())
+        .unwrap_or(0)
+}
+
