@@ -8,6 +8,13 @@
     <style>
 :root {
     --tab-bar-height: 54px;
+    --crt-header-height: 0px;
+    --accent-color: #4a6ef5;
+    --accent-soft: rgba(74, 110, 245, 0.22);
+    --surface-elevated: #1f1f1f;
+    --surface-raised: #242424;
+    --border-color: #333;
+    --text-muted: #a6a6a6;
 }
         body {
             font-family: Arial, sans-serif;
@@ -284,7 +291,14 @@
     min-height: 0;
     transition: transform 0.3s ease;
 }
-.edit-tab-content#dora-tab,
+.edit-tab-content#dora-tab {
+    flex-direction: column;
+    align-items: center;
+    padding: 36px 32px 40px;
+    gap: 32px;
+    overflow-y: auto;
+    color: #d4d4d4;
+}
 .edit-tab-content#time-tab {
     flex-direction: column;
     padding: 20px;
@@ -292,52 +306,218 @@
     overflow-y: auto;
     color: #d4d4d4;
 }
-.dora-metrics-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 16px;
-}
-.dora-card {
-    border: 1px solid #333;
-    border-radius: 8px;
-    padding: 16px;
-    background: #242424;
+.dora-content {
+    width: min(960px, 100%);
+    margin: 0 auto;
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 32px;
+    align-items: stretch;
 }
-.dora-card h4 {
+.dora-table-card,
+.westrum-card {
+    background: var(--surface-elevated);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: 28px 32px;
+    box-shadow: 0 18px 32px rgba(0, 0, 0, 0.35);
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+.dora-card-header {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+.dora-card-header h2 {
     margin: 0;
-    font-size: 15px;
-    color: #fff;
+    font-size: 22px;
+    letter-spacing: 0.4px;
 }
-.dora-card p {
+.dora-card-header p {
     margin: 0;
-    font-size: 12px;
-    color: #999;
+    color: var(--text-muted);
+    font-size: 13px;
 }
-.dora-select {
-    background: #1e1e1e;
-    color: #d4d4d4;
-    border: 1px solid #3a3a3a;
-    border-radius: 6px;
-    padding: 6px 10px;
-}
-.westrum-scale {
-    border: 1px solid #333;
-    border-radius: 8px;
-    padding: 18px;
-    background: #242424;
-}
-.westrum-scale h3 {
-    margin: 0 0 8px;
-}
-.westrum-scale input[type="range"] {
+.dora-table {
+    display: grid;
     width: 100%;
+    grid-template-columns: minmax(220px, 1.15fr) repeat(4, minmax(0, 1fr));
+    grid-auto-rows: minmax(52px, auto);
+    background: var(--surface-raised);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    overflow: hidden;
 }
-.westrum-label {
+.dora-table-header {
+    padding: 12px;
+    background: #2f2f2f;
     font-weight: bold;
-    color: #8ab4ff;
+    text-transform: uppercase;
+    font-size: 12px;
+    letter-spacing: 0.6px;
+    text-align: center;
+    border-right: 1px solid var(--border-color);
+    color: #bbb;
+}
+.dora-table-header:first-child {
+    background: transparent;
+    text-align: left;
+}
+.dora-table-header:last-child {
+    border-right: none;
+}
+.dora-metric {
+    padding: 14px;
+    border-top: 1px solid var(--border-color);
+    border-right: 1px solid var(--border-color);
+    color: #fff;
+    font-weight: 600;
+    font-size: 13px;
+    background: #202020;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    line-height: 1.4;
+}
+.dora-table .dora-metric:first-of-type {
+    border-top: none;
+}
+.dora-table .dora-cell:nth-of-type(-n+4) {
+    border-top: none;
+}
+.dora-cell {
+    border: none;
+    background: #1c1c1c;
+    color: #d4d4d4;
+    border-top: 1px solid var(--border-color);
+    border-right: 1px solid var(--border-color);
+    padding: 14px 16px;
+    text-align: center;
+    font-size: 13px;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+    line-height: 1.4;
+    word-break: break-word;
+}
+.dora-cell:focus-visible {
+    outline: 2px solid #7ea0ff;
+    outline-offset: -2px;
+}
+.dora-cell:last-child {
+    border-right: none;
+}
+.dora-cell:hover {
+    background: #2a2a2a;
+}
+.dora-cell.active {
+    background: var(--accent-soft);
+    color: #fff;
+    box-shadow: inset 0 0 0 1px var(--accent-color);
+    font-weight: 600;
+}
+.westrum-card-header {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+.westrum-card-header h3 {
+    margin: 0;
+    font-size: 20px;
+}
+.westrum-card-header p {
+    margin: 6px 0 0;
+    color: var(--text-muted);
+    font-size: 13px;
+    max-width: 520px;
+}
+.westrum-label-pill {
+    padding: 6px 16px;
+    border-radius: 999px;
+    background: rgba(78, 110, 245, 0.2);
+    color: #b5c6ff;
+    font-weight: 600;
+    font-size: 13px;
+    letter-spacing: 0.4px;
+}
+.westrum-slider-wrap {
+    padding: 0 6px 12px;
+}
+.westrum-slider-wrap input[type="range"] {
+    width: 100%;
+    -webkit-appearance: none;
+    appearance: none;
+    height: 6px;
+    border-radius: 999px;
+    background: linear-gradient(90deg, rgba(74, 110, 245, 0.25), rgba(74, 110, 245, 0.65));
+    outline: none;
+    cursor: pointer;
+}
+.westrum-slider-wrap input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #fff;
+    border: 2px solid var(--accent-color);
+    box-shadow: 0 0 0 3px rgba(74, 110, 245, 0.2);
+    transition: transform 0.2s ease;
+}
+.westrum-slider-wrap input[type="range"]::-moz-range-thumb {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #fff;
+    border: 2px solid var(--accent-color);
+    box-shadow: 0 0 0 3px rgba(74, 110, 245, 0.2);
+    transition: transform 0.2s ease;
+}
+.westrum-slider-wrap input[type="range"]::-webkit-slider-thumb:hover,
+.westrum-slider-wrap input[type="range"]::-moz-range-thumb:hover {
+    transform: scale(1.05);
+}
+.westrum-scale-steps {
+    display: grid;
+    width: 100%;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: 12px;
+}
+.westrum-step {
+    background: #252525;
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 12px 14px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    color: #d4d4d4;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
+    min-height: 82px;
+}
+.westrum-step:hover {
+    border-color: rgba(126, 160, 255, 0.6);
+}
+.westrum-step.active {
+    border-color: var(--accent-color);
+    background: var(--accent-soft);
+    box-shadow: inset 0 0 0 1px rgba(126, 160, 255, 0.6);
+}
+.westrum-step-index {
+    font-size: 12px;
+    font-weight: 600;
+    opacity: 0.7;
+}
+.westrum-step-text {
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1.35;
 }
 .time-allocation-section {
     border: 1px solid #333;
@@ -892,55 +1072,86 @@
                 </div>
             </div>
             <div class="edit-tab-content" id="dora-tab">
-                <h2>DORA Metrics Overview</h2>
-                <p style="margin: 0 0 12px; color: #aaa;">Assess each metric using industry benchmark tiers.</p>
-                <div class="dora-metrics-grid">
-                    <div class="dora-card">
-                        <h4>Deployment Frequency</h4>
-                        <p>How often does your team successfully deploy to production?</p>
-                        <select class="dora-select" id="dora-deployment-frequency">
-                            <option value="elite">Elite (On-demand, multiple deploys per day)</option>
-                            <option value="high">High (Between once per day and once per week)</option>
-                            <option value="medium">Medium (Between once per week and once per month)</option>
-                            <option value="low">Low (Fewer than once per month)</option>
-                        </select>
+                <div class="dora-content">
+                    <div class="dora-table-card">
+                        <div class="dora-card-header">
+                            <h2>DORA Metrics Overview</h2>
+                            <p>Assess each metric against industry benchmark tiers to understand your current delivery capability.</p>
+                        </div>
+                        <div class="dora-table">
+                            <div class="dora-table-header"></div>
+                            <div class="dora-table-header">Low</div>
+                            <div class="dora-table-header">Medium</div>
+                            <div class="dora-table-header">High</div>
+                            <div class="dora-table-header">Elite</div>
+
+                            <div class="dora-metric" data-metric="deployment_frequency">Deployment Frequency</div>
+                            <button type="button" class="dora-cell" data-metric="deployment_frequency" data-tier="low">Fewer than once per month</button>
+                            <button type="button" class="dora-cell" data-metric="deployment_frequency" data-tier="medium">1 per week – 1 per month</button>
+                            <button type="button" class="dora-cell" data-metric="deployment_frequency" data-tier="high">1 per day – 1 per week</button>
+                            <button type="button" class="dora-cell" data-metric="deployment_frequency" data-tier="elite">On-demand, multiple per day</button>
+
+                            <div class="dora-metric" data-metric="lead_time">Lead Time for Changes</div>
+                            <button type="button" class="dora-cell" data-metric="lead_time" data-tier="low">&gt; 1 month</button>
+                            <button type="button" class="dora-cell" data-metric="lead_time" data-tier="medium">1 week – 1 month</button>
+                            <button type="button" class="dora-cell" data-metric="lead_time" data-tier="high">1 day – 1 week</button>
+                            <button type="button" class="dora-cell" data-metric="lead_time" data-tier="elite">&lt; 1 day</button>
+
+                            <div class="dora-metric" data-metric="change_failure">Change Failure Rate</div>
+                            <button type="button" class="dora-cell" data-metric="change_failure" data-tier="low">&gt; 45%</button>
+                            <button type="button" class="dora-cell" data-metric="change_failure" data-tier="medium">31% – 45%</button>
+                            <button type="button" class="dora-cell" data-metric="change_failure" data-tier="high">15% – 30%</button>
+                            <button type="button" class="dora-cell" data-metric="change_failure" data-tier="elite">&lt; 15%</button>
+
+                            <div class="dora-metric" data-metric="mttr">MTTR (Restore Service)</div>
+                            <button type="button" class="dora-cell" data-metric="mttr" data-tier="low">&gt; 1 week</button>
+                            <button type="button" class="dora-cell" data-metric="mttr" data-tier="medium">1 day – 1 week</button>
+                            <button type="button" class="dora-cell" data-metric="mttr" data-tier="high">1 – 24 hours</button>
+                            <button type="button" class="dora-cell" data-metric="mttr" data-tier="elite">&lt; 1 hour</button>
+                        </div>
                     </div>
-                    <div class="dora-card">
-                        <h4>Lead Time for Changes</h4>
-                        <p>Time from code committed to code running in production.</p>
-                        <select class="dora-select" id="dora-lead-time">
-                            <option value="elite">Elite (&lt; 1 day)</option>
-                            <option value="high">High (1 day – 1 week)</option>
-                            <option value="medium">Medium (1 week – 1 month)</option>
-                            <option value="low">Low (&gt; 1 month)</option>
-                        </select>
+                    <div class="westrum-card">
+                        <div class="westrum-card-header">
+                            <div>
+                                <h3>Westrum Organizational Culture</h3>
+                                <p>Where does your team sit on the Westrum spectrum from Pathological to Generative?</p>
+                            </div>
+                            <div class="westrum-label-pill" id="westrum-scale-label">Calculative (4)</div>
+                        </div>
+                        <div class="westrum-slider-wrap" aria-hidden="true">
+                            <input type="range" id="westrum-scale" min="1" max="7" step="0.1" value="4">
+                        </div>
+                        <div class="westrum-scale-steps" id="westrum-scale-steps" role="group" aria-label="Westrum scale">
+                            <button type="button" class="westrum-step" data-value="1">
+                                <span class="westrum-step-index">1</span>
+                                <span class="westrum-step-text">Pathological</span>
+                            </button>
+                            <button type="button" class="westrum-step" data-value="2">
+                                <span class="westrum-step-index">2</span>
+                                <span class="westrum-step-text">Power-Oriented</span>
+                            </button>
+                            <button type="button" class="westrum-step" data-value="3">
+                                <span class="westrum-step-index">3</span>
+                                <span class="westrum-step-text">Rule-Oriented</span>
+                            </button>
+                            <button type="button" class="westrum-step" data-value="4">
+                                <span class="westrum-step-index">4</span>
+                                <span class="westrum-step-text">Calculative</span>
+                            </button>
+                            <button type="button" class="westrum-step" data-value="5">
+                                <span class="westrum-step-index">5</span>
+                                <span class="westrum-step-text">Collaborative</span>
+                            </button>
+                            <button type="button" class="westrum-step" data-value="6">
+                                <span class="westrum-step-index">6</span>
+                                <span class="westrum-step-text">Learning-Oriented</span>
+                            </button>
+                            <button type="button" class="westrum-step" data-value="7">
+                                <span class="westrum-step-index">7</span>
+                                <span class="westrum-step-text">Generative</span>
+                            </button>
+                        </div>
                     </div>
-                    <div class="dora-card">
-                        <h4>Change Failure Rate</h4>
-                        <p>Percent of deployments causing degraded service that require remediation.</p>
-                        <select class="dora-select" id="dora-change-failure">
-                            <option value="elite">Elite (&lt; 15%)</option>
-                            <option value="high">High (15% – 30%)</option>
-                            <option value="medium">Medium (31% – 45%)</option>
-                            <option value="low">Low (&gt; 45%)</option>
-                        </select>
-                    </div>
-                    <div class="dora-card">
-                        <h4>MTTR (Restore Service)</h4>
-                        <p>How long to restore service after an incident or defect.</p>
-                        <select class="dora-select" id="dora-mttr">
-                            <option value="elite">Elite (&lt; 1 hour)</option>
-                            <option value="high">High (1 – 24 hours)</option>
-                            <option value="medium">Medium (1 day – 1 week)</option>
-                            <option value="low">Low (&gt; 1 week)</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="westrum-scale">
-                    <h3>Westrum Organizational Culture</h3>
-                    <p style="margin: 0 0 12px; color: #aaa;">Rate your culture from <strong>Pathological (1)</strong> to <strong>Generative (7)</strong>.</p>
-                    <input type="range" id="westrum-scale" min="1" max="7" step="1" value="4">
-                    <div>Selected: <span class="westrum-label" id="westrum-scale-label"></span></div>
                 </div>
             </div>
             <div class="edit-tab-content" id="time-tab">
@@ -1159,6 +1370,9 @@
             }
             setRefineButtonState(refineButtonIntendedDisabled);
             setViewToggleEnabled(viewToggleIntended);
+            if (activeEditTab === 'dora') {
+                updateWestrumScaleLabel();
+            }
             const menuButton = document.getElementById('menu-button');
             if (menuButton) {
                 menuButton.disabled = activeEditTab !== 'crt';
@@ -1193,8 +1407,21 @@
             const slider = document.getElementById('westrum-scale');
             const label = document.getElementById('westrum-scale-label');
             if (!slider || !label) return;
-            const value = Number(slider.value) || 1;
-            label.textContent = `${WESTRUM_LEVELS[value] ?? 'Unknown'} (${value})`;
+            const rawValue = Number(slider.value) || 1;
+            const min = Number(slider.min) || 1;
+            const max = Number(slider.max) || 7;
+            const range = Math.max(max - min, 1);
+            const nearest = Math.min(max, Math.max(min, Math.round(rawValue)));
+            const descriptor = WESTRUM_LEVELS[nearest] ?? 'Unknown';
+            label.textContent = `${descriptor} (${rawValue.toFixed(1)})`;
+            slider.setAttribute('aria-valuetext', `${descriptor} (${rawValue.toFixed(1)})`);
+            const percent = ((rawValue - min) / range) * 100;
+            slider.style.background = `linear-gradient(90deg, var(--accent-color) ${percent}%, rgba(255, 255, 255, 0.08) ${percent}%)`;
+            document.querySelectorAll('.westrum-step').forEach((step) => {
+                const match = Number(step.dataset.value) === nearest;
+                step.classList.toggle('active', match);
+                step.setAttribute('aria-pressed', match ? 'true' : 'false');
+            });
         }
 
         function clampPercentage(value) {
@@ -1227,6 +1454,43 @@
             }
         }
 
+        function initializeDoraTable() {
+            const groups = new Map();
+            document.querySelectorAll('.dora-cell').forEach((cell) => {
+                const metric = cell.dataset.metric;
+                const tier = cell.dataset.tier;
+                if (!metric || !tier) {
+                    return;
+                }
+                if (!groups.has(metric)) {
+                    groups.set(metric, []);
+                }
+                cell.classList.remove('active');
+                groups.get(metric).push(cell);
+                cell.addEventListener('click', () => {
+                    groups.get(metric).forEach((btn) => btn.classList.remove('active'));
+                    cell.classList.add('active');
+                    doraSelections[metric] = tier;
+                });
+            });
+
+        }
+
+        function initializeWestrumScale() {
+            const slider = document.getElementById('westrum-scale');
+            if (!slider) return;
+            const steps = document.querySelectorAll('.westrum-step');
+            steps.forEach((step) => {
+                step.addEventListener('click', () => {
+                    slider.value = step.dataset.value;
+                    updateWestrumScaleLabel();
+                });
+            });
+            slider.addEventListener('input', updateWestrumScaleLabel);
+            slider.addEventListener('change', updateWestrumScaleLabel);
+            updateWestrumScaleLabel();
+        }
+
         function setRefineButtonState(disabled) {
             const button = document.getElementById('refine-button');
             if (!button) return;
@@ -1244,6 +1508,7 @@
         let selectedLinkAdditions = new Set();
         let refineEntityMap = new Map();
         let refineLinkMap = new Map();
+        const doraSelections = {};
 
         function toArray(value) {
             if (Array.isArray(value)) return value;
@@ -2502,17 +2767,15 @@
             button.addEventListener('click', () => setActiveEditTab(button.dataset.editTab));
         });
         applyActiveEditTab();
-        const westrumSlider = document.getElementById('westrum-scale');
-        if (westrumSlider) {
-            westrumSlider.addEventListener('input', updateWestrumScaleLabel);
-            westrumSlider.addEventListener('change', updateWestrumScaleLabel);
-        }
-        updateWestrumScaleLabel();
         document.querySelectorAll('[data-time-category]').forEach((input) => {
             input.addEventListener('input', updateTimeAllocationSummary);
             input.addEventListener('change', updateTimeAllocationSummary);
         });
         updateTimeAllocationSummary();
+        initializeWestrumScale();
+        initializeDoraTable();
+        window.getDoraSelections = () => ({ ...doraSelections });
+        window.getWestrumScore = () => Number(document.getElementById('westrum-scale')?.value ?? 0);
 
         const textarea = document.getElementById('input');
         textarea.addEventListener('input', updateLineNumbers);
