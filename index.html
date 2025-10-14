@@ -6,6 +6,16 @@
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <style>
+:root {
+    --tab-bar-height: 54px;
+    --crt-header-height: 0px;
+    --accent-color: #4a6ef5;
+    --accent-soft: rgba(74, 110, 245, 0.22);
+    --surface-elevated: #1f1f1f;
+    --surface-raised: #242424;
+    --border-color: #333;
+    --text-muted: #a6a6a6;
+}
         body {
             font-family: Arial, sans-serif;
             margin: 0;
@@ -17,20 +27,26 @@
             color: #d4d4d4;
             overflow: hidden;
         }
-        .header {
+        .crt-panel-header {
+            display: none;
             padding: 10px 20px;
             background: #2d2d2d;
             border-bottom: 1px solid #3d3d3d;
-            display: flex;
             align-items: center;
             justify-content: space-between;
             z-index: 100;
+        }
+        .main-content.crt-active .crt-panel-header {
+            display: flex;
+        }
+        .main-content.crt-active {
+            --crt-header-height: 56px;
         }
         .header-left {
             display: flex;
             align-items: center;
         }
-        .header h1 {
+        .crt-panel-header h1 {
             margin: 0;
             color: #fff;
             font-size: 20px;
@@ -38,21 +54,168 @@
         .main-content {
             flex: 1;
             display: flex;
+            flex-direction: column;
             overflow: hidden;
             position: relative;
         }
-        .editor-container {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
+        .crt-actions {
             display: flex;
-            transition: transform 0.3s ease;
+            align-items: center;
+            gap: 6px;
+        }
+.editor-container {
+    position: absolute;
+    top: calc(var(--tab-bar-height) + var(--crt-header-height));
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    flex-direction: column;
+}
+.edit-tabs {
+    display: flex;
+    gap: 8px;
+    padding: 8px 16px;
+    align-items: center;
+    background: #1e1e1e;
+    border-bottom: 1px solid #2f2f2f;
+    position: relative;
+    z-index: 2;
+    height: var(--tab-bar-height);
+    box-sizing: border-box;
+}
+.edit-tab-button {
+    background: #2a2a2a;
+    border: 1px solid #3a3a3a;
+    color: #d4d4d4;
+    padding: 6px 14px;
+    border-radius: 6px 6px 0 0;
+    cursor: pointer;
+    font-size: 13px;
+    letter-spacing: 0.3px;
+}
+.edit-tab-button:hover {
+    background: #323232;
+}
+.edit-tab-button.active {
+    background: #363636;
+    border-bottom-color: #1e1e1e;
+    color: #fff;
+}
+.edit-tab-content {
+    display: none;
+    flex: 1;
+    overflow: hidden;
+}
+.edit-tab-content.active {
+    display: flex;
+}
+.editor-container .text-editor-wrapper {
+    display: flex;
+    flex: 1;
+    background: #1e1e1e;
+}
+.editor-container .text-editor-wrapper.hidden {
+    display: none;
+}
+.editor-container .refine-view {
+    flex: 1;
+    display: none;
+    flex-direction: column;
+    background: #1e1e1e;
+    color: #d4d4d4;
+}
+.editor-container.show-refine .text-editor-wrapper {
+    display: none;
+}
+.editor-container.show-refine .refine-view {
+    display: flex;
+}
+        .refine-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 16px;
+            border-bottom: 1px solid #3d3d3d;
+            background: #252525;
+        }
+        .refine-grid {
+            flex: 1;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            padding: 16px;
+            overflow: auto;
+        }
+        .refine-column {
+            background: #202020;
+            border: 1px solid #333;
+            border-radius: 6px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .refine-column h3 {
+            margin: 0;
+            padding: 10px 14px;
+            font-size: 14px;
+            background: #292929;
+            border-bottom: 1px solid #333;
+        }
+        .refine-text {
+            padding: 12px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 13px;
+            line-height: 1.45;
+            white-space: pre-wrap;
+            overflow: auto;
+            flex: 1;
+            margin: 0;
+            background: transparent;
+            color: #d4d4d4;
+        }
+        .refine-actions {
+            padding: 12px 14px;
+            border-bottom: 1px solid #333;
+            font-size: 13px;
+            color: #bbb;
+        }
+        .refine-list {
+            padding: 10px 14px;
+            overflow-y: auto;
+            flex: 1;
+        }
+        .refine-entity-item,
+        .refine-link-item {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            padding: 8px;
+            border: 1px solid #3a3a3a;
+            border-radius: 6px;
+            margin-bottom: 8px;
+            background: #262626;
+        }
+        .refine-item-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .refine-item-id {
+            font-weight: bold;
+            color: #8ab4ff;
+        }
+        .refine-item-text {
+            font-size: 13px;
+            color: #dcdcdc;
+        }
+        .refine-item-meta {
+            font-size: 12px;
+            color: #aaa;
         }
         .visualization-container {
             position: absolute;
-            top: 0;
+            top: calc(var(--tab-bar-height) + var(--crt-header-height));
             left: 0;
             right: 0;
             bottom: 0;
@@ -60,7 +223,7 @@
             transition: transform 0.3s ease;
             background: #fff;
         }
-        .show-visualization .editor-container {
+        .show-visualization .crt-workspace {
             transform: translateX(-100%);
         }
         .show-visualization .visualization-container {
@@ -107,9 +270,297 @@
         .icon-button:hover {
             background: rgba(255, 255, 255, 0.1);
         }
-        .icon-button .material-icons {
-            font-size: 24px;
+        .icon-button:disabled,
+        .icon-button.disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
         }
+.icon-button .material-icons {
+    font-size: 24px;
+}
+.edit-tab-content#crt-tab {
+    flex-direction: column;
+    overflow: hidden;
+}
+.crt-panel-header {
+    flex: 0 0 auto;
+}
+.crt-workspace {
+    flex: 1 1 auto;
+    display: flex;
+    min-height: 0;
+    transition: transform 0.3s ease;
+}
+.edit-tab-content#dora-tab {
+    flex-direction: column;
+    align-items: center;
+    padding: 36px 32px 40px;
+    gap: 32px;
+    overflow-y: auto;
+    color: #d4d4d4;
+}
+.edit-tab-content#time-tab {
+    flex-direction: column;
+    padding: 20px;
+    gap: 24px;
+    overflow-y: auto;
+    color: #d4d4d4;
+}
+.dora-content {
+    width: min(960px, 100%);
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+    align-items: stretch;
+}
+.dora-table-card,
+.westrum-card {
+    background: var(--surface-elevated);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: 28px 32px;
+    box-shadow: 0 18px 32px rgba(0, 0, 0, 0.35);
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+.dora-card-header {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+.dora-card-header h2 {
+    margin: 0;
+    font-size: 22px;
+    letter-spacing: 0.4px;
+}
+.dora-card-header p {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: 13px;
+}
+.dora-table {
+    display: grid;
+    width: 100%;
+    grid-template-columns: minmax(220px, 1.15fr) repeat(4, minmax(0, 1fr));
+    grid-auto-rows: minmax(52px, auto);
+    background: var(--surface-raised);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    overflow: hidden;
+}
+.dora-table-header {
+    padding: 12px;
+    background: #2f2f2f;
+    font-weight: bold;
+    text-transform: uppercase;
+    font-size: 12px;
+    letter-spacing: 0.6px;
+    text-align: center;
+    border-right: 1px solid var(--border-color);
+    color: #bbb;
+}
+.dora-table-header:first-child {
+    background: transparent;
+    text-align: left;
+}
+.dora-table-header:last-child {
+    border-right: none;
+}
+.dora-metric {
+    padding: 14px;
+    border-top: 1px solid var(--border-color);
+    border-right: 1px solid var(--border-color);
+    color: #fff;
+    font-weight: 600;
+    font-size: 13px;
+    background: #202020;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    line-height: 1.4;
+}
+.dora-table .dora-metric:first-of-type {
+    border-top: none;
+}
+.dora-table .dora-cell:nth-of-type(-n+4) {
+    border-top: none;
+}
+.dora-cell {
+    border: none;
+    background: #1c1c1c;
+    color: #d4d4d4;
+    border-top: 1px solid var(--border-color);
+    border-right: 1px solid var(--border-color);
+    padding: 14px 16px;
+    text-align: center;
+    font-size: 13px;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+    line-height: 1.4;
+    word-break: break-word;
+}
+.dora-cell:focus-visible {
+    outline: 2px solid #7ea0ff;
+    outline-offset: -2px;
+}
+.dora-cell:last-child {
+    border-right: none;
+}
+.dora-cell:hover {
+    background: #2a2a2a;
+}
+.dora-cell.active {
+    background: var(--accent-soft);
+    color: #fff;
+    box-shadow: inset 0 0 0 1px var(--accent-color);
+    font-weight: 600;
+}
+.westrum-card-header {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+.westrum-card-header h3 {
+    margin: 0;
+    font-size: 20px;
+}
+.westrum-card-header p {
+    margin: 6px 0 0;
+    color: var(--text-muted);
+    font-size: 13px;
+    max-width: 520px;
+}
+.westrum-label-pill {
+    padding: 6px 16px;
+    border-radius: 999px;
+    background: rgba(78, 110, 245, 0.2);
+    color: #b5c6ff;
+    font-weight: 600;
+    font-size: 13px;
+    letter-spacing: 0.4px;
+}
+.westrum-slider-wrap {
+    padding: 0 6px 12px;
+}
+.westrum-slider-wrap input[type="range"] {
+    width: 100%;
+    -webkit-appearance: none;
+    appearance: none;
+    height: 6px;
+    border-radius: 999px;
+    background: linear-gradient(90deg, rgba(74, 110, 245, 0.25), rgba(74, 110, 245, 0.65));
+    outline: none;
+    cursor: pointer;
+}
+.westrum-slider-wrap input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #fff;
+    border: 2px solid var(--accent-color);
+    box-shadow: 0 0 0 3px rgba(74, 110, 245, 0.2);
+    transition: transform 0.2s ease;
+}
+.westrum-slider-wrap input[type="range"]::-moz-range-thumb {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #fff;
+    border: 2px solid var(--accent-color);
+    box-shadow: 0 0 0 3px rgba(74, 110, 245, 0.2);
+    transition: transform 0.2s ease;
+}
+.westrum-slider-wrap input[type="range"]::-webkit-slider-thumb:hover,
+.westrum-slider-wrap input[type="range"]::-moz-range-thumb:hover {
+    transform: scale(1.05);
+}
+.westrum-scale-steps {
+    display: grid;
+    width: 100%;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: 12px;
+}
+.westrum-step {
+    background: #252525;
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 12px 14px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    color: #d4d4d4;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
+    min-height: 82px;
+}
+.westrum-step:hover {
+    border-color: rgba(126, 160, 255, 0.6);
+}
+.westrum-step.active {
+    border-color: var(--accent-color);
+    background: var(--accent-soft);
+    box-shadow: inset 0 0 0 1px rgba(126, 160, 255, 0.6);
+}
+.westrum-step-index {
+    font-size: 12px;
+    font-weight: 600;
+    opacity: 0.7;
+}
+.westrum-step-text {
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1.35;
+}
+.time-allocation-section {
+    border: 1px solid #333;
+    border-radius: 8px;
+    background: #242424;
+    padding: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+.time-allocation-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 12px;
+}
+.time-allocation-item {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    background: #1f1f1f;
+    border: 1px solid #333;
+    border-radius: 6px;
+    padding: 12px;
+}
+.time-allocation-item label {
+    font-size: 13px;
+    color: #bbb;
+}
+.time-allocation-item input[type="number"] {
+    background: #151515;
+    border: 1px solid #3a3a3a;
+    border-radius: 4px;
+    padding: 6px 8px;
+    color: #e0e0e0;
+}
+.time-allocation-summary {
+    font-size: 14px;
+    color: #bbb;
+}
+.time-allocation-summary.error {
+    color: #ff8a80;
+    font-weight: bold;
+}
         /* Visualization styles from viz.html */
         .node {
             stroke: #fff;
@@ -497,6 +948,35 @@
         .auto-save-indicator.visible {
             opacity: 1;
         }
+        .refine-spinner {
+            position: fixed;
+            top: 15px;
+            right: 15px;
+            background: rgba(0, 0, 0, 0.8);
+            color: #fff;
+            padding: 10px 14px;
+            border-radius: 6px;
+            display: none;
+            align-items: center;
+            gap: 8px;
+            z-index: 1500;
+            font-size: 14px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+        }
+        .refine-spinner.visible {
+            display: flex;
+        }
+        .refine-spinner .spinner-icon {
+            width: 18px;
+            height: 18px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top-color: #fff;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
         .doc-item.current {
             background: #4a4a4a;
             cursor: default;
@@ -512,20 +992,6 @@
     </style>
 </head>
 <body>
-    <div class="header">
-        <div class="header-left">
-            <button class="icon-button menu-button" id="menu-button" title="Open Menu">
-                <span class="material-icons">menu</span>
-            </button>
-            <h1 id="editor-title" contenteditable="true" spellcheck="false">CRT to Cypher Parser</h1>
-        </div>
-        <div>
-            <button class="icon-button" onclick="toggleView()" title="Toggle View">
-                <span class="material-icons" id="view-toggle-icon">account_tree</span>
-            </button>
-        </div>
-    </div>
-
     <!-- Add this sidebar menu -->
     <div class="sidebar" id="sidebar">
         <div class="sidebar-header">
@@ -541,11 +1007,182 @@
 
     <!-- Add an overlay for when the menu is open -->
     <div class="sidebar-overlay" id="sidebar-overlay"></div>
+    <div class="refine-spinner" id="refine-spinner">
+        <div class="spinner-icon"></div>
+        <span>Refining…</span>
+    </div>
 
-    <div class="main-content">
+    <div class="main-content crt-active">
+        <div class="edit-tabs">
+            <button class="edit-tab-button active" data-edit-tab="crt" id="crt-tab-button">CRT</button>
+            <button class="edit-tab-button" data-edit-tab="dora" id="dora-tab-button">DORA Metrics</button>
+            <button class="edit-tab-button" data-edit-tab="time" id="time-tab-button">Time Allocation</button>
+        </div>
+        <div class="crt-panel-header">
+            <div class="header-left">
+                <button class="icon-button menu-button" id="menu-button" title="Open Menu">
+                    <span class="material-icons">menu</span>
+                </button>
+                <h1 id="editor-title" contenteditable="true" spellcheck="false">CRT to Cypher Parser</h1>
+            </div>
+            <div class="crt-actions">
+                <button class="icon-button" id="refine-button" onclick="runRefinement()" title="Refine">
+                    <span class="material-icons">auto_fix_high</span>
+                </button>
+                <button class="icon-button" id="view-toggle-button" onclick="toggleView()" title="Toggle View">
+                    <span class="material-icons" id="view-toggle-icon">account_tree</span>
+                </button>
+            </div>
+        </div>
         <div class="editor-container">
-            <div class="line-numbers" id="line-numbers"></div>
-            <textarea id="input" placeholder="Enter CRT content here..." spellcheck="false" wrap="off"></textarea>
+            <div class="edit-tab-content active" id="crt-tab">
+                <div class="crt-workspace">
+                <div class="text-editor-wrapper" id="text-editor-wrapper">
+                    <div class="line-numbers" id="line-numbers"></div>
+                    <textarea id="input" placeholder="Enter CRT content here..." spellcheck="false" wrap="off"></textarea>
+                </div>
+                <div class="refine-view" id="refine-view">
+                    <div class="refine-header">
+                        <h2>Refinement Preview</h2>
+                        <div>
+                            <button class="icon-button" onclick="applySelectedAdditions()" id="apply-selected-button" title="Add selected suggestions to the editor">
+                                <span class="material-icons">playlist_add_check</span>
+                            </button>
+                            <button class="icon-button" onclick="applyAllAdditions()" id="apply-all-button" title="Add all suggested entities and links">
+                                <span class="material-icons">playlist_add</span>
+                            </button>
+                            <button class="icon-button" onclick="closeRefineView()" title="Close refinement view">
+                                <span class="material-icons">close</span>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="refine-grid">
+                        <div class="refine-column">
+                            <h3>Current CRT</h3>
+                            <pre class="refine-text" id="refine-current-text"></pre>
+                        </div>
+                        <div class="refine-column">
+                            <h3>Suggested Additions</h3>
+                            <div class="refine-actions" id="refine-summary"></div>
+                            <div class="refine-list" id="refine-entities-list"></div>
+                            <div class="refine-list" id="refine-links-list"></div>
+                        </div>
+                    </div>
+                </div>
+                </div>
+            </div>
+            <div class="edit-tab-content" id="dora-tab">
+                <div class="dora-content">
+                    <div class="dora-table-card">
+                        <div class="dora-card-header">
+                            <h2>DORA Metrics Overview</h2>
+                            <p>Assess each metric against industry benchmark tiers to understand your current delivery capability.</p>
+                        </div>
+                        <div class="dora-table">
+                            <div class="dora-table-header"></div>
+                            <div class="dora-table-header">Low</div>
+                            <div class="dora-table-header">Medium</div>
+                            <div class="dora-table-header">High</div>
+                            <div class="dora-table-header">Elite</div>
+
+                            <div class="dora-metric" data-metric="deployment_frequency">Deployment Frequency</div>
+                            <button type="button" class="dora-cell" data-metric="deployment_frequency" data-tier="low">Fewer than once per month</button>
+                            <button type="button" class="dora-cell" data-metric="deployment_frequency" data-tier="medium">1 per week – 1 per month</button>
+                            <button type="button" class="dora-cell" data-metric="deployment_frequency" data-tier="high">1 per day – 1 per week</button>
+                            <button type="button" class="dora-cell" data-metric="deployment_frequency" data-tier="elite">On-demand, multiple per day</button>
+
+                            <div class="dora-metric" data-metric="lead_time">Lead Time for Changes</div>
+                            <button type="button" class="dora-cell" data-metric="lead_time" data-tier="low">&gt; 1 month</button>
+                            <button type="button" class="dora-cell" data-metric="lead_time" data-tier="medium">1 week – 1 month</button>
+                            <button type="button" class="dora-cell" data-metric="lead_time" data-tier="high">1 day – 1 week</button>
+                            <button type="button" class="dora-cell" data-metric="lead_time" data-tier="elite">&lt; 1 day</button>
+
+                            <div class="dora-metric" data-metric="change_failure">Change Failure Rate</div>
+                            <button type="button" class="dora-cell" data-metric="change_failure" data-tier="low">&gt; 45%</button>
+                            <button type="button" class="dora-cell" data-metric="change_failure" data-tier="medium">31% – 45%</button>
+                            <button type="button" class="dora-cell" data-metric="change_failure" data-tier="high">15% – 30%</button>
+                            <button type="button" class="dora-cell" data-metric="change_failure" data-tier="elite">&lt; 15%</button>
+
+                            <div class="dora-metric" data-metric="mttr">MTTR (Restore Service)</div>
+                            <button type="button" class="dora-cell" data-metric="mttr" data-tier="low">&gt; 1 week</button>
+                            <button type="button" class="dora-cell" data-metric="mttr" data-tier="medium">1 day – 1 week</button>
+                            <button type="button" class="dora-cell" data-metric="mttr" data-tier="high">1 – 24 hours</button>
+                            <button type="button" class="dora-cell" data-metric="mttr" data-tier="elite">&lt; 1 hour</button>
+                        </div>
+                    </div>
+                    <div class="westrum-card">
+                        <div class="westrum-card-header">
+                            <div>
+                                <h3>Westrum Organizational Culture</h3>
+                                <p>Where does your team sit on the Westrum spectrum from Pathological to Generative?</p>
+                            </div>
+                            <div class="westrum-label-pill" id="westrum-scale-label">Calculative (4)</div>
+                        </div>
+                        <div class="westrum-slider-wrap" aria-hidden="true">
+                            <input type="range" id="westrum-scale" min="1" max="7" step="0.1" value="4">
+                        </div>
+                        <div class="westrum-scale-steps" id="westrum-scale-steps" role="group" aria-label="Westrum scale">
+                            <button type="button" class="westrum-step" data-value="1">
+                                <span class="westrum-step-index">1</span>
+                                <span class="westrum-step-text">Pathological</span>
+                            </button>
+                            <button type="button" class="westrum-step" data-value="2">
+                                <span class="westrum-step-index">2</span>
+                                <span class="westrum-step-text">Power-Oriented</span>
+                            </button>
+                            <button type="button" class="westrum-step" data-value="3">
+                                <span class="westrum-step-index">3</span>
+                                <span class="westrum-step-text">Rule-Oriented</span>
+                            </button>
+                            <button type="button" class="westrum-step" data-value="4">
+                                <span class="westrum-step-index">4</span>
+                                <span class="westrum-step-text">Calculative</span>
+                            </button>
+                            <button type="button" class="westrum-step" data-value="5">
+                                <span class="westrum-step-index">5</span>
+                                <span class="westrum-step-text">Collaborative</span>
+                            </button>
+                            <button type="button" class="westrum-step" data-value="6">
+                                <span class="westrum-step-index">6</span>
+                                <span class="westrum-step-text">Learning-Oriented</span>
+                            </button>
+                            <button type="button" class="westrum-step" data-value="7">
+                                <span class="westrum-step-index">7</span>
+                                <span class="westrum-step-text">Generative</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="edit-tab-content" id="time-tab">
+                <h2>Team Time Allocation</h2>
+                <p style="margin: 0; color: #aaa;">Distribute 100% of your available capacity across focus areas.</p>
+                <div class="time-allocation-section">
+                    <div class="time-allocation-list">
+                        <div class="time-allocation-item">
+                            <label for="time-meetings">Meetings (%)</label>
+                            <input type="number" id="time-meetings" data-time-category="meetings" min="0" max="100" step="1" value="20">
+                        </div>
+                        <div class="time-allocation-item">
+                            <label for="time-unplanned">Unplanned / Interruptions (%)</label>
+                            <input type="number" id="time-unplanned" data-time-category="unplanned" min="0" max="100" step="1" value="15">
+                        </div>
+                        <div class="time-allocation-item">
+                            <label for="time-bugs">Bug Fixing (%)</label>
+                            <input type="number" id="time-bugs" data-time-category="bugs" min="0" max="100" step="1" value="15">
+                        </div>
+                        <div class="time-allocation-item">
+                            <label for="time-tech-debt">Tech Debt &amp; Improvements (%)</label>
+                            <input type="number" id="time-tech-debt" data-time-category="tech_debt" min="0" max="100" step="1" value="20">
+                        </div>
+                        <div class="time-allocation-item">
+                            <label for="time-features">Feature Development (%)</label>
+                            <input type="number" id="time-features" data-time-category="features" min="0" max="100" step="1" value="30">
+                        </div>
+                    </div>
+                    <div class="time-allocation-summary" id="time-allocation-summary">Remaining capacity: -0%</div>
+                </div>
+            </div>
         </div>
         <div class="visualization-container">
             <svg width="100%" height="100%"></svg>
@@ -564,12 +1201,57 @@
     <script type="module">
         import init, { parse_content } from './pkg/crt_to_cypher.js';
 
+        function sanitizeBaseUrl(url) {
+            if (!url) return null;
+            return url.endsWith('/') ? url.slice(0, -1) : url;
+        }
+
+        function resolveBackendBaseUrl() {
+            const stored = sanitizeBaseUrl(localStorage.getItem('crtBackendUrl'));
+            if (stored) return stored;
+
+            const globalOverride = sanitizeBaseUrl(window.CRT_BACKEND_URL);
+            if (globalOverride) return globalOverride;
+
+            const { protocol, hostname, port } = window.location;
+            const defaultPort = '8080';
+
+            if (protocol === 'file:') {
+                return `http://localhost:${defaultPort}`;
+            }
+
+            if (protocol === 'http:' || protocol === 'https:') {
+                if (port) {
+                    return `${protocol}//${hostname}:${port}`;
+                }
+                return `${protocol}//${hostname}:${defaultPort}`;
+            }
+
+            return `http://localhost:${defaultPort}`;
+        }
+
+        let backendBaseUrl = resolveBackendBaseUrl();
+
+        window.setBackendBaseUrl = function(url) {
+            const cleaned = sanitizeBaseUrl(url);
+            if (cleaned) {
+                localStorage.setItem('crtBackendUrl', cleaned);
+                backendBaseUrl = cleaned;
+                console.info('CRT backend URL set to', backendBaseUrl);
+            } else {
+                localStorage.removeItem('crtBackendUrl');
+                backendBaseUrl = resolveBackendBaseUrl();
+                console.info('CRT backend URL reset to', backendBaseUrl);
+            }
+        };
+
         function updateLineNumbers() {
             const textarea = document.getElementById('input');
             const lineNumbers = document.getElementById('line-numbers');
             const lines = textarea.value.split('\n').length;
             lineNumbers.innerHTML = Array.from({length: lines}, (_, i) => i + 1).join('\n');
             lineNumbers.scrollTop = textarea.scrollTop;
+            scheduleViewToggleValidation();
         }
 
         window.onerror = function(message, source, lineno, colno, error) {
@@ -578,7 +1260,60 @@
         };
 
         let isVisualizationMode = false;
+        let wasmReady = false;
+        let viewToggleIsEnabled = false;
+        let viewToggleValidationTimer = null;
+        let viewToggleIntended = false;
+        let activeEditTab = 'crt';
+        let lastRefinedContent = null;
+        let isRefining = false;
+        let refineButtonIntendedDisabled = false;
+        function setViewToggleEnabled(enabled) {
+            const button = document.getElementById('view-toggle-button');
+            viewToggleIntended = Boolean(enabled);
+            const effective = viewToggleIntended && activeEditTab === 'crt';
+            viewToggleIsEnabled = effective;
+            if (button) {
+                button.disabled = !effective;
+                button.classList.toggle('disabled', !effective);
+            }
+        }
+
+        function scheduleViewToggleValidation() {
+            if (viewToggleValidationTimer) {
+                clearTimeout(viewToggleValidationTimer);
+            }
+            viewToggleValidationTimer = setTimeout(updateViewToggleState, 200);
+        }
+
+        function updateViewToggleState() {
+            viewToggleValidationTimer = null;
+            if (!wasmReady || activeEditTab !== 'crt') {
+                return;
+            }
+            const content = document.getElementById('input').value;
+            try {
+                parse_content(content);
+                setViewToggleEnabled(true);
+            } catch (error) {
+                setViewToggleEnabled(false);
+            }
+        }
+
+        setViewToggleEnabled(false);
+
+        function exitVisualizationMode() {
+            const mainContent = document.querySelector('.main-content');
+            const icon = document.getElementById('view-toggle-icon');
+            mainContent.classList.remove('show-visualization');
+            icon.textContent = 'account_tree';
+            isVisualizationMode = false;
+        }
+
         window.toggleView = function() {
+            if (!isVisualizationMode && !viewToggleIsEnabled) {
+                return;
+            }
             const mainContent = document.querySelector('.main-content');
             const icon = document.getElementById('view-toggle-icon');
             isVisualizationMode = !isVisualizationMode;
@@ -586,13 +1321,13 @@
             if (isVisualizationMode) {
                 // Save content before switching to visualization
                 saveToLocalStorage();
+                window.closeRefineView?.();
                 
                 mainContent.classList.add('show-visualization');
                 icon.textContent = 'edit';
                 updateVisualization();
             } else {
-                mainContent.classList.remove('show-visualization');
-                icon.textContent = 'account_tree';
+                exitVisualizationMode();
             }
         };
 
@@ -600,11 +1335,698 @@
             const input = document.getElementById('input').value;
             try {
                 const result = parse_content(input);
+                setViewToggleEnabled(true);
                 renderGraph(result.nodes, result.links);
             } catch (error) {
                 console.error('Error parsing content:', error);
+                setViewToggleEnabled(false);
+                if (isVisualizationMode) {
+                    exitVisualizationMode();
+                }
             }
         }
+
+        function applyActiveEditTab() {
+            document.querySelectorAll('.edit-tab-button').forEach((button) => {
+                const target = button.dataset.editTab;
+                const isActive = target === activeEditTab;
+                button.classList.toggle('active', isActive);
+            });
+            document.querySelectorAll('.edit-tab-content').forEach((section) => {
+                const isActive = section.id === `${activeEditTab}-tab` || (activeEditTab === 'crt' && section.id === 'crt-tab');
+                section.classList.toggle('active', isActive);
+            });
+            const mainContent = document.querySelector('.main-content');
+            if (mainContent) {
+                mainContent.classList.toggle('crt-active', activeEditTab === 'crt');
+            }
+            if (activeEditTab !== 'crt') {
+                if (isVisualizationMode) {
+                    exitVisualizationMode();
+                }
+                window.closeRefineView?.();
+            } else {
+                scheduleViewToggleValidation();
+            }
+            setRefineButtonState(refineButtonIntendedDisabled);
+            setViewToggleEnabled(viewToggleIntended);
+            if (activeEditTab === 'dora') {
+                updateWestrumScaleLabel();
+            }
+            const menuButton = document.getElementById('menu-button');
+            if (menuButton) {
+                menuButton.disabled = activeEditTab !== 'crt';
+                menuButton.classList.toggle('disabled', activeEditTab !== 'crt');
+            }
+            if (activeEditTab !== 'crt') {
+                closeSidebar();
+            }
+        }
+
+        function setActiveEditTab(tab) {
+            const allowed = new Set(['crt', 'dora', 'time']);
+            const nextTab = allowed.has(tab) ? tab : 'crt';
+            if (nextTab === activeEditTab) {
+                return;
+            }
+            activeEditTab = nextTab;
+            applyActiveEditTab();
+        }
+
+        const WESTRUM_LEVELS = {
+            1: 'Pathological',
+            2: 'Power-Oriented',
+            3: 'Rule-Oriented',
+            4: 'Calculative',
+            5: 'Collaborative',
+            6: 'Learning-Oriented',
+            7: 'Generative',
+        };
+
+        function updateWestrumScaleLabel() {
+            const slider = document.getElementById('westrum-scale');
+            const label = document.getElementById('westrum-scale-label');
+            if (!slider || !label) return;
+            const rawValue = Number(slider.value) || 1;
+            const min = Number(slider.min) || 1;
+            const max = Number(slider.max) || 7;
+            const range = Math.max(max - min, 1);
+            const nearest = Math.min(max, Math.max(min, Math.round(rawValue)));
+            const descriptor = WESTRUM_LEVELS[nearest] ?? 'Unknown';
+            label.textContent = `${descriptor} (${rawValue.toFixed(1)})`;
+            slider.setAttribute('aria-valuetext', `${descriptor} (${rawValue.toFixed(1)})`);
+            const percent = ((rawValue - min) / range) * 100;
+            slider.style.background = `linear-gradient(90deg, var(--accent-color) ${percent}%, rgba(255, 255, 255, 0.08) ${percent}%)`;
+            document.querySelectorAll('.westrum-step').forEach((step) => {
+                const match = Number(step.dataset.value) === nearest;
+                step.classList.toggle('active', match);
+                step.setAttribute('aria-pressed', match ? 'true' : 'false');
+            });
+        }
+
+        function clampPercentage(value) {
+            if (Number.isNaN(value)) return 0;
+            return Math.max(0, Math.min(100, Math.round(value)));
+        }
+
+        function updateTimeAllocationSummary() {
+            const inputs = document.querySelectorAll('[data-time-category]');
+            let total = 0;
+            inputs.forEach((input) => {
+                const numeric = clampPercentage(Number(input.value));
+                if (numeric !== Number(input.value)) {
+                    input.value = numeric;
+                }
+                total += numeric;
+            });
+            const remaining = 100 - total;
+            const summary = document.getElementById('time-allocation-summary');
+            if (!summary) return;
+            if (remaining === 0) {
+                summary.textContent = 'Perfect allocation: 100% of capacity assigned.';
+                summary.classList.remove('error');
+            } else if (remaining > 0) {
+                summary.textContent = `Remaining capacity: ${remaining}%`;
+                summary.classList.remove('error');
+            } else {
+                summary.textContent = `Over-allocated by ${Math.abs(remaining)}%`;
+                summary.classList.add('error');
+            }
+        }
+
+        function initializeDoraTable() {
+            const groups = new Map();
+            document.querySelectorAll('.dora-cell').forEach((cell) => {
+                const metric = cell.dataset.metric;
+                const tier = cell.dataset.tier;
+                if (!metric || !tier) {
+                    return;
+                }
+                if (!groups.has(metric)) {
+                    groups.set(metric, []);
+                }
+                cell.classList.remove('active');
+                groups.get(metric).push(cell);
+                cell.addEventListener('click', () => {
+                    groups.get(metric).forEach((btn) => btn.classList.remove('active'));
+                    cell.classList.add('active');
+                    doraSelections[metric] = tier;
+                });
+            });
+
+        }
+
+        function initializeWestrumScale() {
+            const slider = document.getElementById('westrum-scale');
+            if (!slider) return;
+            const steps = document.querySelectorAll('.westrum-step');
+            steps.forEach((step) => {
+                step.addEventListener('click', () => {
+                    slider.value = step.dataset.value;
+                    updateWestrumScaleLabel();
+                });
+            });
+            slider.addEventListener('input', updateWestrumScaleLabel);
+            slider.addEventListener('change', updateWestrumScaleLabel);
+            updateWestrumScaleLabel();
+        }
+
+        function setRefineButtonState(disabled) {
+            const button = document.getElementById('refine-button');
+            if (!button) return;
+            refineButtonIntendedDisabled = disabled;
+            const effective = disabled || activeEditTab !== 'crt';
+            button.disabled = effective;
+            button.classList.toggle('disabled', effective);
+        }
+
+        let lastRefineResult = null;
+        let lastRefineOriginal = '';
+        let availableRefineEntities = [];
+        let availableRefineLinks = [];
+        let selectedEntityAdditions = new Set();
+        let selectedLinkAdditions = new Set();
+        let refineEntityMap = new Map();
+        let refineLinkMap = new Map();
+        const doraSelections = {};
+
+        function toArray(value) {
+            if (Array.isArray(value)) return value;
+            if (value && typeof value === 'object') return Object.values(value);
+            return [];
+        }
+
+        function normalizeEntity(entity) {
+            if (!entity) return null;
+            const idRaw = entity.id || entity.entity_id || entity.name;
+            if (!idRaw) return null;
+            const text = entity.text ?? entity.description ?? '';
+            const added = entity.added !== undefined ? Boolean(entity.added) : false;
+            return {
+                ...entity,
+                id: String(idRaw),
+                text,
+                added,
+            };
+        }
+
+        function normalizeEntities(list) {
+            return toArray(list)
+                .map(normalizeEntity)
+                .filter(Boolean);
+        }
+
+        function deriveLineFromLink(link) {
+            if (link.line) return link.line;
+            if (Array.isArray(link.expressions) && link.expressions.length) {
+                return `${link.id || ''}. ${link.expressions.join(' -> ')}`.trim();
+            }
+            if (link.text) return link.text;
+            return String(link.id || '');
+        }
+
+        function normalizeLink(link) {
+            if (!link) return null;
+            const idRaw = link.id || link.link_id || link.name;
+            if (!idRaw) return null;
+            const entities = toArray(link.entities).map(String);
+            const sourceEntities = toArray(link.source_entities).map(String);
+            const targetEntities = toArray(link.target_entities).map(String);
+
+            const fromValue = link.from ?? link.source ?? link.source_entity;
+            if (fromValue) {
+                const val = String(fromValue);
+                sourceEntities.push(val);
+                entities.push(val);
+            }
+            const toValue = link.to ?? link.target ?? link.target_entity;
+            if (toValue) {
+                const val = String(toValue);
+                targetEntities.push(val);
+                entities.push(val);
+            }
+
+            const added = link.added !== undefined ? Boolean(link.added) : false;
+            const unique = (arr) => Array.from(new Set(arr.filter(Boolean)));
+            return {
+                ...link,
+                id: String(idRaw),
+                line: deriveLineFromLink({ ...link, id: String(idRaw) }),
+                entities: unique(entities),
+                source_entities: unique(sourceEntities),
+                target_entities: unique(targetEntities),
+                added,
+            };
+        }
+
+        function normalizeLinks(list) {
+            return toArray(list)
+                .map(normalizeLink)
+                .filter(Boolean);
+        }
+
+        function showRefineView() {
+            document.querySelector('.editor-container').classList.add('show-refine');
+        }
+
+        function hideRefineView() {
+            document.querySelector('.editor-container').classList.remove('show-refine');
+        }
+
+        function getCurrentEntityIds(content) {
+            const ids = new Set();
+            const lines = content.split('\n');
+            let inEntities = false;
+            for (const raw of lines) {
+                const line = raw.trim();
+                if (!inEntities) {
+                    if (line.toLowerCase() === 'entities') {
+                        inEntities = true;
+                    }
+                    continue;
+                }
+                if (line.toLowerCase() === 'links') {
+                    break;
+                }
+                if (!line) continue;
+                const match = line.match(/^(E\d+)\./i);
+                if (match) {
+                    ids.add(match[1]);
+                }
+            }
+            return ids;
+        }
+
+        function getCurrentLinkIds(content) {
+            const ids = new Set();
+            const lines = content.split('\n');
+            let inLinks = false;
+            for (const raw of lines) {
+                const line = raw.trim();
+                if (!inLinks) {
+                    if (line.toLowerCase() === 'links') {
+                        inLinks = true;
+                    }
+                    continue;
+                }
+                if (!line) continue;
+                const match = line.match(/^(L\d+)\./i);
+                if (match) {
+                    ids.add(match[1]);
+                }
+            }
+            return ids;
+        }
+
+        function formatEntityLine(entity) {
+            if (!entity || !entity.id || !entity.text) return null;
+            return `${entity.id}. ${entity.text}`;
+        }
+
+        function ensureSectionIndices(lines) {
+            const entitiesIdx = lines.findIndex(line => line.trim().toLowerCase() === 'entities');
+            const linksIdx = lines.findIndex(line => line.trim().toLowerCase() === 'links');
+            return { entitiesIdx, linksIdx };
+        }
+
+        function insertEntities(content, entityIds) {
+            if (!entityIds.length) return content;
+            const lines = content.split('\n');
+            const { entitiesIdx, linksIdx } = ensureSectionIndices(lines);
+            if (entitiesIdx === -1 || linksIdx === -1 || linksIdx <= entitiesIdx) {
+                alert('Could not locate Entities/Links sections in the CRT.');
+                return content;
+            }
+            const insertionIdx = linksIdx;
+            const newLines = [];
+            for (const id of entityIds) {
+                const entity = refineEntityMap.get(id);
+                const line = formatEntityLine(entity);
+                if (line) {
+                    newLines.push(line);
+                }
+            }
+            if (!newLines.length) return content;
+
+            const hasBlankBeforeLinks = lines[insertionIdx - 1] !== undefined && lines[insertionIdx - 1].trim() === '';
+            const insertArray = hasBlankBeforeLinks ? newLines : [...newLines, ''];
+            lines.splice(insertionIdx, 0, ...insertArray);
+            return lines.join('\n');
+        }
+
+        function insertLinks(content, linkIds) {
+            if (!linkIds.length) return content;
+            const lines = content.split('\n');
+            const { entitiesIdx, linksIdx } = ensureSectionIndices(lines);
+            if (linksIdx === -1 || linksIdx <= entitiesIdx) {
+                alert('Could not locate Links section in the CRT.');
+                return content;
+            }
+
+            const linkLines = [];
+            for (const id of linkIds) {
+                const link = refineLinkMap.get(id);
+                if (link && link.line) {
+                    linkLines.push(link.line);
+                }
+            }
+            if (!linkLines.length) return content;
+
+            let insertionIdx = lines.length;
+            while (insertionIdx > linksIdx + 1 && lines[insertionIdx - 1].trim() === '') {
+                insertionIdx--;
+            }
+            lines.splice(insertionIdx, 0, ...linkLines);
+            return lines.join('\n');
+        }
+
+        function renderRefinePreview(originalText, response) {
+            lastRefineOriginal = originalText;
+            lastRefineResult = response;
+            const currentText = document.getElementById('input').value;
+            const currentEntities = getCurrentEntityIds(currentText);
+            const currentLinks = getCurrentLinkIds(currentText);
+
+            refineEntityMap = new Map();
+            refineLinkMap = new Map();
+
+            const restatement = response?.['CRT Restatement'] || {};
+            const allEntities = normalizeEntities(restatement.Entities);
+            const allLinks = normalizeLinks(restatement.Links);
+
+            allEntities.forEach(entity => {
+                if (entity && entity.id) {
+                    refineEntityMap.set(entity.id, entity);
+                }
+            });
+            allLinks.forEach(link => {
+                if (link && link.id) {
+                    refineLinkMap.set(link.id, link);
+                }
+            });
+
+            const entityIdPattern = /^E\d+$/;
+            const usedEntityIds = new Set(currentEntities);
+            availableRefineEntities = allEntities.filter(entity => {
+                if (!entity || !entity.id || entity.added !== true) {
+                    return false;
+                }
+                if (!entityIdPattern.test(entity.id)) {
+                    console.warn('Skipping invalid entity id from refinement:', entity.id);
+                    return false;
+                }
+                if (usedEntityIds.has(entity.id)) {
+                    return false;
+                }
+                usedEntityIds.add(entity.id);
+                return true;
+            });
+
+            const knownEntityIds = new Set([...currentEntities, ...availableRefineEntities.map(e => e.id)]);
+
+            availableRefineLinks = allLinks.filter(link => {
+                if (!link || !link.id || link.added !== true || currentLinks.has(link.id)) {
+                    return false;
+                }
+
+                const allEntitiesInLink = new Set([
+                    ...(Array.isArray(link.entities) ? link.entities : []),
+                    ...(Array.isArray(link.source_entities) ? link.source_entities : []),
+                    ...(Array.isArray(link.target_entities) ? link.target_entities : []),
+                ]);
+
+                for (const entityId of allEntitiesInLink) {
+                    if (entityId && (!entityIdPattern.test(entityId) || !knownEntityIds.has(entityId))) {
+                        console.warn('Skipping link due to unknown entity reference:', link.id, entityId);
+                        return false;
+                    }
+                }
+
+                return true;
+            });
+
+            selectedEntityAdditions = new Set(availableRefineEntities.map(entity => entity.id));
+            selectedLinkAdditions = new Set(availableRefineLinks.map(link => link.id));
+
+            document.getElementById('refine-current-text').textContent = currentText;
+
+            updateRefineSummary();
+            renderEntitySuggestions();
+            renderLinkSuggestions();
+            showRefineView();
+            document.getElementById('refine-view').scrollTop = 0;
+        }
+
+        function updateRefineSummary() {
+            const summary = document.getElementById('refine-summary');
+            const entityCount = availableRefineEntities.length;
+            const linkCount = availableRefineLinks.length;
+            if (!entityCount && !linkCount) {
+                summary.textContent = 'No new entities or links were suggested.';
+            } else {
+                summary.textContent = `${entityCount} new ${entityCount === 1 ? 'entity' : 'entities'} and ${linkCount} new ${linkCount === 1 ? 'link' : 'links'} available.`;
+            }
+            document.getElementById('apply-selected-button').disabled = entityCount === 0 && linkCount === 0;
+            document.getElementById('apply-all-button').disabled = entityCount === 0 && linkCount === 0;
+        }
+
+        function renderEntitySuggestions() {
+            const container = document.getElementById('refine-entities-list');
+            container.innerHTML = '';
+            if (!availableRefineEntities.length) {
+                const empty = document.createElement('div');
+                empty.className = 'refine-item-meta';
+                empty.textContent = 'No new entities in this refinement.';
+                container.appendChild(empty);
+                return;
+            }
+
+            availableRefineEntities.forEach(entity => {
+                const item = document.createElement('div');
+                item.className = 'refine-entity-item';
+
+                const header = document.createElement('label');
+                header.className = 'refine-item-header';
+
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.value = entity.id;
+                checkbox.checked = selectedEntityAdditions.has(entity.id);
+                checkbox.addEventListener('change', () => {
+                    if (checkbox.checked) {
+                        selectedEntityAdditions.add(entity.id);
+                    } else {
+                        selectedEntityAdditions.delete(entity.id);
+                    }
+                });
+
+                const idSpan = document.createElement('span');
+                idSpan.className = 'refine-item-id';
+                idSpan.textContent = entity.id;
+
+                header.appendChild(checkbox);
+                header.appendChild(idSpan);
+
+                const textSpan = document.createElement('div');
+                textSpan.className = 'refine-item-text';
+                textSpan.textContent = entity.text || '';
+
+                item.appendChild(header);
+                item.appendChild(textSpan);
+
+                const linksForEntity = availableRefineLinks.filter(link => {
+                    const involved = new Set([
+                        ...(Array.isArray(link.entities) ? link.entities : []),
+                        ...(Array.isArray(link.source_entities) ? link.source_entities : []),
+                        ...(Array.isArray(link.target_entities) ? link.target_entities : []),
+                    ]);
+                    return involved.has(entity.id);
+                });
+                if (linksForEntity.length) {
+                    const meta = document.createElement('div');
+                    meta.className = 'refine-item-meta';
+                    const linkIds = linksForEntity.map(link => link.id).join(', ');
+                    meta.textContent = `Associated links: ${linkIds}`;
+                    item.appendChild(meta);
+                }
+                container.appendChild(item);
+            });
+        }
+
+        function renderLinkSuggestions() {
+            const container = document.getElementById('refine-links-list');
+            container.innerHTML = '';
+            if (!availableRefineLinks.length) {
+                const empty = document.createElement('div');
+                empty.className = 'refine-item-meta';
+                empty.textContent = 'No new links in this refinement.';
+                container.appendChild(empty);
+                return;
+            }
+
+            availableRefineLinks.forEach(link => {
+                const item = document.createElement('div');
+                item.className = 'refine-link-item';
+
+                const header = document.createElement('label');
+                header.className = 'refine-item-header';
+
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.value = link.id;
+                checkbox.checked = selectedLinkAdditions.has(link.id);
+                checkbox.addEventListener('change', () => {
+                    if (checkbox.checked) {
+                        selectedLinkAdditions.add(link.id);
+                    } else {
+                        selectedLinkAdditions.delete(link.id);
+                    }
+                });
+
+                const idSpan = document.createElement('span');
+                idSpan.className = 'refine-item-id';
+                idSpan.textContent = link.id;
+
+                header.appendChild(checkbox);
+                header.appendChild(idSpan);
+
+                const textSpan = document.createElement('div');
+                textSpan.className = 'refine-item-text';
+                textSpan.textContent = link.line || '';
+
+                item.appendChild(header);
+                item.appendChild(textSpan);
+                container.appendChild(item);
+            });
+        }
+
+        window.runRefinement = async function() {
+            if (isRefining) return;
+            const content = document.getElementById('input').value;
+            if (!content.trim()) {
+                alert('Please provide CRT content before refining.');
+                return;
+            }
+
+            isRefining = true;
+            setRefineButtonState(true);
+            const spinner = document.getElementById('refine-spinner');
+            if (spinner) spinner.classList.add('visible');
+
+            try {
+                const response = await fetch(`${backendBaseUrl}/api/refine`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ content })
+                });
+
+                if (!response.ok) {
+                    const message = await response.text();
+                    alert(`Refinement failed: ${message || response.statusText}`);
+                    return;
+                }
+
+                const data = await response.json();
+                lastRefineResult = data;
+                renderRefinePreview(content, data);
+            } catch (error) {
+                console.error('Refinement request failed', error);
+                alert(`Refinement failed: ${error.message || error}`);
+            } finally {
+                isRefining = false;
+                setRefineButtonState(false);
+                if (spinner) spinner.classList.remove('visible');
+            }
+        };
+
+        window.closeRefineView = function() {
+            hideRefineView();
+            lastRefineResult = null;
+            availableRefineEntities = [];
+            availableRefineLinks = [];
+            selectedEntityAdditions = new Set();
+            selectedLinkAdditions = new Set();
+        };
+
+        function gatherEntitiesForLinks(linkIds) {
+            const ids = new Set();
+            linkIds.forEach(id => {
+                const link = refineLinkMap.get(id);
+                if (!link) return;
+                [
+                    ...(Array.isArray(link.entities) ? link.entities : []),
+                    ...(Array.isArray(link.source_entities) ? link.source_entities : []),
+                    ...(Array.isArray(link.target_entities) ? link.target_entities : []),
+                ].forEach(entityId => {
+                    if (entityId) {
+                        ids.add(entityId);
+                    }
+                });
+            });
+            return ids;
+        }
+
+        function applyAdditions(entityIds, linkIds) {
+            if (!entityIds.length && !linkIds.length) {
+                alert('No entities or links selected to add.');
+                return;
+            }
+
+            const textarea = document.getElementById('input');
+            let content = textarea.value;
+            const currentEntities = getCurrentEntityIds(content);
+            const currentLinks = getCurrentLinkIds(content);
+
+            const entitiesToAdd = entityIds.filter(id => !currentEntities.has(id));
+            content = insertEntities(content, entitiesToAdd);
+
+            const linksToAdd = linkIds.filter(id => !currentLinks.has(id));
+            content = insertLinks(content, linksToAdd);
+
+            textarea.value = content;
+            updateLineNumbers();
+            saveToLocalStorage();
+
+            if (lastRefineResult) {
+                renderRefinePreview(content, lastRefineResult);
+            }
+        }
+
+        window.applySelectedAdditions = function() {
+            if (!lastRefineResult) return;
+            const finalEntitySet = new Set(selectedEntityAdditions);
+            const finalLinkSet = new Set(selectedLinkAdditions);
+
+            // Automatically include links associated with selected entities
+            availableRefineLinks.forEach(link => {
+                const involved = new Set([
+                    ...(Array.isArray(link.entities) ? link.entities : []),
+                    ...(Array.isArray(link.source_entities) ? link.source_entities : []),
+                    ...(Array.isArray(link.target_entities) ? link.target_entities : []),
+                ]);
+                for (const entityId of finalEntitySet) {
+                    if (involved.has(entityId)) {
+                        finalLinkSet.add(link.id);
+                        break;
+                    }
+                }
+            });
+
+            // Ensure entities for selected links are added
+            const extraEntities = gatherEntitiesForLinks(finalLinkSet);
+            extraEntities.forEach(id => finalEntitySet.add(id));
+
+            applyAdditions(Array.from(finalEntitySet), Array.from(finalLinkSet));
+        };
+
+        window.applyAllAdditions = function() {
+            if (!lastRefineResult) return;
+            const allEntityIds = availableRefineEntities.map(entity => entity.id);
+            const allLinkIds = availableRefineLinks.map(link => link.id);
+            const combinedEntities = new Set(allEntityIds);
+            gatherEntitiesForLinks(new Set(allLinkIds)).forEach(id => combinedEntities.add(id));
+            applyAdditions(Array.from(combinedEntities), allLinkIds);
+        };
 
         // Add these variables before your existing script code
         const physics = {
@@ -1260,7 +2682,9 @@
                             // Add a relationship item
                             const relDiv = document.createElement('div');
                             relDiv.className = 'branch-item branch-relationship';
-                            relDiv.textContent = item.type;
+                            const relLabel = item.label
+                                || `${item.type}${item.targetNegated ? ' NOT' : ''}`;
+                            relDiv.textContent = relLabel;
                             tabContent.appendChild(relDiv);
                             lastItem = 'relationship';
                         }
@@ -1325,6 +2749,7 @@
 
         async function initWasm() {
             await init();
+            wasmReady = true;
             try {
                 const response = await fetch('CRT.neo');
                 const content = await response.text();
@@ -1332,10 +2757,25 @@
                 updateLineNumbers();
             } catch (error) {
                 console.error('Error loading CRT.neo:', error);
+                scheduleViewToggleValidation();
             }
         }
 
         initWasm();
+
+        document.querySelectorAll('.edit-tab-button').forEach((button) => {
+            button.addEventListener('click', () => setActiveEditTab(button.dataset.editTab));
+        });
+        applyActiveEditTab();
+        document.querySelectorAll('[data-time-category]').forEach((input) => {
+            input.addEventListener('input', updateTimeAllocationSummary);
+            input.addEventListener('change', updateTimeAllocationSummary);
+        });
+        updateTimeAllocationSummary();
+        initializeWestrumScale();
+        initializeDoraTable();
+        window.getDoraSelections = () => ({ ...doraSelections });
+        window.getWestrumScore = () => Number(document.getElementById('westrum-scale')?.value ?? 0);
 
         const textarea = document.getElementById('input');
         textarea.addEventListener('input', updateLineNumbers);
