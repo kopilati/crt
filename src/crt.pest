@@ -14,6 +14,7 @@ blankline  =  { WHITESPACE* ~ COMMENT? ~ NEWLINE+ }     // a line with only ws a
 
 // ---------- file ----------
 file       = { SOI
+               ~ blankline*
                ~ WHITESPACE* ~ "Entities" ~ eol+
                ~ ( entity_line | blankline )*
                ~ WHITESPACE* ~ "Links"    ~ eol+
@@ -26,12 +27,9 @@ text        = @{ (!NEWLINE ~ ANY)+ }  // captures the entity label (comment, if 
 
 // ---------- links ----------
 link_line   = { WHITESPACE* ~ "L" ~ ID ~ "." ~ WHITESPACE*
-                ~ expr ~ WHITESPACE* ~ ARROW ~ WHITESPACE* ~ expr
-                ~ eol }
+                ~ expr ~ ( WHITESPACE* ~ ARROW ~ WHITESPACE* ~ expr )+
+                ~ WHITESPACE* ~ eol }
 
-// ---------- expressions (AND / NOT / parentheses, no OR) ----------
-expr       =  { and_expr }
-and_expr   =  { not_expr ~ ( WHITESPACE+ ~ "AND" ~ WHITESPACE+ ~ not_expr )* }
-not_expr   =  { ( "NOT" ~ WHITESPACE+ )? ~ primary }
-primary    =  { entity_ref | "(" ~ WHITESPACE* ~ expr ~ WHITESPACE* ~ ")" }
+// ---------- expressions (captured as raw text, parsed in Rust) ----------
+expr       = @{ ( !ARROW ~ !NEWLINE ~ ANY )+ }
 entity_ref =  { "E" ~ ID }

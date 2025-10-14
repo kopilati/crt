@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "crt-agents-service"
+version = "0.1.0"
+description = "FastAPI backend that proxies OpenAI agents for CRT workflows."
+requires-python = ">=3.9"
+dependencies = [
+    "fastapi>=0.110",
+    "uvicorn[standard]>=0.29",
+    "openai>=2.3.0",
+    "python-dotenv>=1.0",
+    "pydantic>=2.0",
+    "fastapi>=0.111",
+    "uvicorn>=0.30",
+    "PyYAML>=6.0"
+]
+
+[tool.setuptools.package-dir]
+"" = "src"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+crt_agents = ["config/*.yml", "config/*.yaml"]
+
+[project.scripts]
+crt-agents-service = "crt_agents.main:run"

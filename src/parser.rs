@@ -1,8 +1,8 @@
 use anyhow::{anyhow, Result};
 use pest::iterators::Pair;
 use pest::Parser;
+use std::borrow::Cow;
 use std::collections::BTreeMap;
-
 
 #[cfg(target_arch = "wasm32")]
 use wasm_bindgen::prelude::*;
@@ -54,8 +54,6 @@ impl Relationship {
     }
 }
 
-
-
 #[derive(pest_derive::Parser)]
 #[grammar = "crt.pest"] // put the grammar file at src/crt.pest
 struct CRTParser;
@@ -75,10 +73,171 @@ pub enum Expr {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
+enum Token {
+    Entity(u32),
+    Not,
+    And,
+    LParen,
+    RParen,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Link {
     pub id: u32,
-    pub from: Expr,
-    pub to: Expr,
+    pub segments: Vec<Expr>,
+}
+
+fn tokenize_expr(input: &str) -> Result<Vec<Token>> {
+    let mut tokens = Vec::new();
+    let mut chars = input.chars().peekable();
+
+    while let Some(&ch) = chars.peek() {
+        match ch {
+            ' ' | '\t' => {
+                chars.next();
+            }
+            '(' => {
+                chars.next();
+                tokens.push(Token::LParen);
+            }
+            ')' => {
+                chars.next();
+                tokens.push(Token::RParen);
+            }
+            'N' | 'n' => {
+                let mut buf = String::new();
+                while let Some(&c) = chars.peek() {
+                    if c.is_ascii_alphabetic() {
+                        buf.push(c);
+                        chars.next();
+                    } else {
+                        break;
+                    }
+                }
+                if buf.eq_ignore_ascii_case("NOT") {
+                    tokens.push(Token::Not);
+                } else {
+                    return Err(anyhow!("Unexpected identifier '{buf}' in expression"));
+                }
+            }
+            'A' | 'a' => {
+                let mut buf = String::new();
+                while let Some(&c) = chars.peek() {
+                    if c.is_ascii_alphabetic() {
+                        buf.push(c);
+                        chars.next();
+                    } else {
+                        break;
+                    }
+                }
+                if buf.eq_ignore_ascii_case("AND") {
+                    tokens.push(Token::And);
+                } else {
+                    return Err(anyhow!("Unexpected identifier '{buf}' in expression"));
+                }
+            }
+            'E' | 'e' => {
+                chars.next();
+                let mut digits = String::new();
+                while let Some(&c) = chars.peek() {
+                    if c.is_ascii_digit() {
+                        digits.push(c);
+                        chars.next();
+                    } else {
+                        break;
+                    }
+                }
+                if digits.is_empty() {
+                    return Err(anyhow!("Expected digits after entity prefix 'E'"));
+                }
+                let id: u32 = digits
+                    .parse()
+                    .map_err(|_| anyhow!("Invalid entity id '{digits}'"))?;
+                tokens.push(Token::Entity(id));
+            }
+            _ => {
+                return Err(anyhow!("Unexpected character '{}' in expression", ch));
+            }
+        }
+    }
+
+    Ok(tokens)
+}
+
+struct ExprParser {
+    tokens: Vec<Token>,
+    pos: usize,
+}
+
+impl ExprParser {
+    fn new(tokens: Vec<Token>) -> Self {
+        ExprParser { tokens, pos: 0 }
+    }
+
+    fn parse(mut self) -> Result<Expr> {
+        let expr = self.parse_and()?;
+        if self.peek().is_some() {
+            return Err(anyhow!("Unexpected tokens at end of expression"));
+        }
+        Ok(expr)
+    }
+
+    fn parse_and(&mut self) -> Result<Expr> {
+        let mut exprs = vec![self.parse_not()?];
+        while matches!(self.peek(), Some(Token::And)) {
+            self.bump();
+            exprs.push(self.parse_not()?);
+        }
+        if exprs.len() == 1 {
+            Ok(exprs.remove(0))
+        } else {
+            Ok(Expr::And(exprs))
+        }
+    }
+
+    fn parse_not(&mut self) -> Result<Expr> {
+        if matches!(self.peek(), Some(Token::Not)) {
+            self.bump();
+            Ok(Expr::Not(Box::new(self.parse_not()?)))
+        } else {
+            self.parse_primary()
+        }
+    }
+
+    fn parse_primary(&mut self) -> Result<Expr> {
+        match self.peek().cloned() {
+            Some(Token::Entity(id)) => {
+                self.bump();
+                Ok(Expr::EntityRef(id))
+            }
+            Some(Token::LParen) => {
+                self.bump();
+                let expr = self.parse_and()?;
+                match self.peek() {
+                    Some(Token::RParen) => {
+                        self.bump();
+                        Ok(expr)
+                    }
+                    _ => Err(anyhow!("Missing closing ')' in expression")),
+                }
+            }
+            Some(Token::RParen) => Err(anyhow!("Unexpected ')' in expression")),
+            None => Err(anyhow!("Unexpected end of expression")),
+            _ => Err(anyhow!("Unexpected token in expression")),
+        }
+    }
+
+    fn peek(&self) -> Option<&Token> {
+        self.tokens.get(self.pos)
+    }
+
+    fn bump(&mut self) -> Option<&Token> {
+        let tok = self.tokens.get(self.pos);
+        if tok.is_some() {
+            self.pos += 1;
+        }
+        tok
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -89,7 +248,14 @@ pub struct CRT {
 
 // ---------- API ----------
 pub fn parse_crt(input: &str) -> Result<CRT> {
-    let mut pairs = CRTParser::parse(Rule::file, input).map_err(|e| anyhow!("Parse error: {e}"))?;
+    let source: Cow<'_, str> = if input.ends_with('\n') {
+        Cow::Borrowed(input)
+    } else {
+        Cow::Owned(format!("{input}\n"))
+    };
+
+    let mut pairs =
+        CRTParser::parse(Rule::file, source.as_ref()).map_err(|e| anyhow!("Parse error: {e}"))?;
     let file = pairs.next().unwrap();
 
     let mut entities = BTreeMap::<u32, Entity>::new();
@@ -119,8 +285,6 @@ pub fn parse_crt(input: &str) -> Result<CRT> {
     validate_refs(&entities, &links)?;
     Ok(CRT { entities, links })
 }
-
-
 
 // ---------- parsers ----------
 fn parse_entity_line(p: Pair<Rule>) -> Result<(u32, String)> {
@@ -155,86 +319,33 @@ fn parse_link_line(p: Pair<Rule>) -> Result<Link> {
             _ => {}
         }
     }
-    if exprs.len() != 2 {
+    if exprs.len() < 2 {
         return Err(anyhow!(
-            "Link must have exactly one source expr and one target expr (found {})",
+            "Link must have at least one source expr and one target expr (found {})",
             exprs.len()
         ));
     }
     let id = id.ok_or_else(|| anyhow!("Missing link ID"))?;
-    let from = parse_expr(exprs[0].clone())?;
-    let to = parse_expr(exprs[1].clone())?;
-    Ok(Link { id, from, to })
+    let mut segments = Vec::with_capacity(exprs.len());
+    for expr_pair in exprs {
+        segments.push(parse_expr(expr_pair)?);
+    }
+    Ok(Link { id, segments })
 }
 
 fn parse_expr(p: Pair<Rule>) -> Result<Expr> {
     debug_assert_eq!(p.as_rule(), Rule::expr);
-    // expr -> and_expr
-    let inner = p.into_inner().next().unwrap();
-    parse_and_expr(inner)
-}
-
-fn parse_and_expr(p: Pair<Rule>) -> Result<Expr> {
-    // and_expr = not_expr ( "AND" not_expr )*
-    let mut exprs = Vec::new();
-    for part in p.into_inner() {
-        if part.as_rule() == Rule::not_expr {
-            exprs.push(parse_not_expr(part)?);
-        }
+    let text = p
+        .as_str()
+        .split_once("//")
+        .map(|(before, _)| before)
+        .unwrap_or_else(|| p.as_str())
+        .trim();
+    if text.is_empty() {
+        return Err(anyhow!("Empty expression"));
     }
-    Ok(if exprs.len() == 1 {
-        exprs.remove(0)
-    } else {
-        Expr::And(exprs)
-    })
-}
-
-fn parse_not_expr(p: Pair<Rule>) -> Result<Expr> {
-    // not_expr = ("NOT" ws+)? primary
-    let mut negate = false;
-    let mut prim: Option<Pair<Rule>> = None;
-
-    for part in p.clone().into_inner() {
-        match part.as_rule() {
-            Rule::primary => prim = Some(part),
-            _ => {
-                if part.as_str().eq_ignore_ascii_case("NOT") {
-                    negate = true;
-                }
-            }
-        }
-    }
-
-    let mut e = parse_primary(prim.ok_or_else(|| anyhow!("Missing primary in NOT expr"))?)?;
-    if negate {
-        e = Expr::Not(Box::new(e));
-    }
-    Ok(e)
-}
-
-fn parse_primary(p: Pair<Rule>) -> Result<Expr> {
-    match p.as_rule() {
-        Rule::entity_ref => parse_entity_ref(p),
-        Rule::primary => {
-            // "(" expr ")"
-            let mut inner = p.into_inner();
-            let first = inner.next().ok_or_else(|| anyhow!("Empty primary"))?;
-            match first.as_rule() {
-                Rule::entity_ref => parse_entity_ref(first),
-                Rule::expr => parse_expr(first),
-                _ => Err(anyhow!("Invalid primary content")),
-            }
-        }
-        Rule::expr => parse_expr(p),
-        _ => Err(anyhow!("Invalid primary")),
-    }
-}
-
-fn parse_entity_ref(p: Pair<Rule>) -> Result<Expr> {
-    let id_pair = p.into_inner().find(|pp| pp.as_rule() == Rule::ID)
-        .ok_or_else(|| anyhow!("Missing ID in entity_ref"))?;
-    let id: u32 = id_pair.as_str().parse()?;
-    Ok(Expr::EntityRef(id))
+    let tokens = tokenize_expr(text)?;
+    ExprParser::new(tokens).parse()
 }
 
 fn validate_refs(entities: &BTreeMap<u32, Entity>, links: &BTreeMap<u32, Link>) -> Result<()> {
@@ -247,13 +358,64 @@ fn validate_refs(entities: &BTreeMap<u32, Entity>, links: &BTreeMap<u32, Link>) 
     }
     for link in links.values() {
         let mut ids = Vec::new();
-        collect(&link.from, &mut ids);
-        collect(&link.to, &mut ids);
+        for expr in &link.segments {
+            collect(expr, &mut ids);
+        }
         for id in ids {
             if !entities.contains_key(&id) {
-                return Err(anyhow!("Link L{} references undefined entity E{}", link.id, id));
+                return Err(anyhow!(
+                    "Link L{} references undefined entity E{}",
+                    link.id,
+                    id
+                ));
             }
         }
     }
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    const SAMPLE: &str = r#"Entities
+E1. First
+E2. Second
+E3. Third
+
+Links
+L1. (E1 AND E2) → E3
+"#;
+
+    #[test]
+    fn parses_parenthesized_and() {
+        parse_crt(SAMPLE).expect("should parse AND expression in parentheses");
+    }
+
+    #[test]
+    fn parses_simple_link() {
+        let pair = "L1. E1 → E2\n";
+        let mut parsed =
+            CRTParser::parse(Rule::link_line, pair).expect("simple link line should parse");
+        assert!(parsed.next().is_some());
+    }
+
+    #[test]
+    fn parses_fixture_file() {
+        let data = include_str!("../CRT.neo");
+        parse_crt(data).expect("fixture CRT.neo should parse");
+    }
+
+    #[test]
+    fn raw_expr_parses() {
+        let result = parse_expr(
+            CRTParser::parse(Rule::expr, "(E1 AND E2)")
+                .expect("expr should parse")
+                .next()
+                .unwrap(),
+        )
+        .expect("parsed expression");
+
+        assert!(matches!(result, Expr::And(_)));
+    }
 }

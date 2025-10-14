@@ -50,6 +50,109 @@
             display: flex;
             transition: transform 0.3s ease;
         }
+        .editor-container .text-editor-wrapper {
+            display: flex;
+            flex: 1;
+            background: #1e1e1e;
+        }
+        .editor-container .text-editor-wrapper.hidden {
+            display: none;
+        }
+        .editor-container .refine-view {
+            flex: 1;
+            display: none;
+            flex-direction: column;
+            background: #1e1e1e;
+            color: #d4d4d4;
+        }
+        .editor-container.show-refine .text-editor-wrapper {
+            display: none;
+        }
+        .editor-container.show-refine .refine-view {
+            display: flex;
+        }
+        .refine-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 16px;
+            border-bottom: 1px solid #3d3d3d;
+            background: #252525;
+        }
+        .refine-grid {
+            flex: 1;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            padding: 16px;
+            overflow: auto;
+        }
+        .refine-column {
+            background: #202020;
+            border: 1px solid #333;
+            border-radius: 6px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .refine-column h3 {
+            margin: 0;
+            padding: 10px 14px;
+            font-size: 14px;
+            background: #292929;
+            border-bottom: 1px solid #333;
+        }
+        .refine-text {
+            padding: 12px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 13px;
+            line-height: 1.45;
+            white-space: pre-wrap;
+            overflow: auto;
+            flex: 1;
+            margin: 0;
+            background: transparent;
+            color: #d4d4d4;
+        }
+        .refine-actions {
+            padding: 12px 14px;
+            border-bottom: 1px solid #333;
+            font-size: 13px;
+            color: #bbb;
+        }
+        .refine-list {
+            padding: 10px 14px;
+            overflow-y: auto;
+            flex: 1;
+        }
+        .refine-entity-item,
+        .refine-link-item {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            padding: 8px;
+            border: 1px solid #3a3a3a;
+            border-radius: 6px;
+            margin-bottom: 8px;
+            background: #262626;
+        }
+        .refine-item-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .refine-item-id {
+            font-weight: bold;
+            color: #8ab4ff;
+        }
+        .refine-item-text {
+            font-size: 13px;
+            color: #dcdcdc;
+        }
+        .refine-item-meta {
+            font-size: 12px;
+            color: #aaa;
+        }
         .visualization-container {
             position: absolute;
             top: 0;
@@ -106,6 +209,11 @@
         }
         .icon-button:hover {
             background: rgba(255, 255, 255, 0.1);
+        }
+        .icon-button:disabled,
+        .icon-button.disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
         }
         .icon-button .material-icons {
             font-size: 24px;
@@ -497,6 +605,35 @@
         .auto-save-indicator.visible {
             opacity: 1;
         }
+        .refine-spinner {
+            position: fixed;
+            top: 15px;
+            right: 15px;
+            background: rgba(0, 0, 0, 0.8);
+            color: #fff;
+            padding: 10px 14px;
+            border-radius: 6px;
+            display: none;
+            align-items: center;
+            gap: 8px;
+            z-index: 1500;
+            font-size: 14px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+        }
+        .refine-spinner.visible {
+            display: flex;
+        }
+        .refine-spinner .spinner-icon {
+            width: 18px;
+            height: 18px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top-color: #fff;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
         .doc-item.current {
             background: #4a4a4a;
             cursor: default;
@@ -520,7 +657,10 @@
             <h1 id="editor-title" contenteditable="true" spellcheck="false">CRT to Cypher Parser</h1>
         </div>
         <div>
-            <button class="icon-button" onclick="toggleView()" title="Toggle View">
+            <button class="icon-button" id="refine-button" onclick="runRefinement()" title="Refine">
+                <span class="material-icons">auto_fix_high</span>
+            </button>
+            <button class="icon-button" id="view-toggle-button" onclick="toggleView()" title="Toggle View">
                 <span class="material-icons" id="view-toggle-icon">account_tree</span>
             </button>
         </div>
@@ -541,11 +681,45 @@
 
     <!-- Add an overlay for when the menu is open -->
     <div class="sidebar-overlay" id="sidebar-overlay"></div>
+    <div class="refine-spinner" id="refine-spinner">
+        <div class="spinner-icon"></div>
+        <span>Refining…</span>
+    </div>
 
     <div class="main-content">
         <div class="editor-container">
-            <div class="line-numbers" id="line-numbers"></div>
-            <textarea id="input" placeholder="Enter CRT content here..." spellcheck="false" wrap="off"></textarea>
+            <div class="text-editor-wrapper" id="text-editor-wrapper">
+                <div class="line-numbers" id="line-numbers"></div>
+                <textarea id="input" placeholder="Enter CRT content here..." spellcheck="false" wrap="off"></textarea>
+            </div>
+            <div class="refine-view" id="refine-view">
+                <div class="refine-header">
+                    <h2>Refinement Preview</h2>
+                    <div>
+                        <button class="icon-button" onclick="applySelectedAdditions()" id="apply-selected-button" title="Add selected suggestions to the editor">
+                            <span class="material-icons">playlist_add_check</span>
+                        </button>
+                        <button class="icon-button" onclick="applyAllAdditions()" id="apply-all-button" title="Add all suggested entities and links">
+                            <span class="material-icons">playlist_add</span>
+                        </button>
+                        <button class="icon-button" onclick="closeRefineView()" title="Close refinement view">
+                            <span class="material-icons">close</span>
+                        </button>
+                    </div>
+                </div>
+                <div class="refine-grid">
+                    <div class="refine-column">
+                        <h3>Current CRT</h3>
+                        <pre class="refine-text" id="refine-current-text"></pre>
+                    </div>
+                    <div class="refine-column">
+                        <h3>Suggested Additions</h3>
+                        <div class="refine-actions" id="refine-summary"></div>
+                        <div class="refine-list" id="refine-entities-list"></div>
+                        <div class="refine-list" id="refine-links-list"></div>
+                    </div>
+                </div>
+            </div>
         </div>
         <div class="visualization-container">
             <svg width="100%" height="100%"></svg>
@@ -564,12 +738,57 @@
     <script type="module">
         import init, { parse_content } from './pkg/crt_to_cypher.js';
 
+        function sanitizeBaseUrl(url) {
+            if (!url) return null;
+            return url.endsWith('/') ? url.slice(0, -1) : url;
+        }
+
+        function resolveBackendBaseUrl() {
+            const stored = sanitizeBaseUrl(localStorage.getItem('crtBackendUrl'));
+            if (stored) return stored;
+
+            const globalOverride = sanitizeBaseUrl(window.CRT_BACKEND_URL);
+            if (globalOverride) return globalOverride;
+
+            const { protocol, hostname, port } = window.location;
+            const defaultPort = '8080';
+
+            if (protocol === 'file:') {
+                return `http://localhost:${defaultPort}`;
+            }
+
+            if (protocol === 'http:' || protocol === 'https:') {
+                if (port) {
+                    return `${protocol}//${hostname}:${port}`;
+                }
+                return `${protocol}//${hostname}:${defaultPort}`;
+            }
+
+            return `http://localhost:${defaultPort}`;
+        }
+
+        let backendBaseUrl = resolveBackendBaseUrl();
+
+        window.setBackendBaseUrl = function(url) {
+            const cleaned = sanitizeBaseUrl(url);
+            if (cleaned) {
+                localStorage.setItem('crtBackendUrl', cleaned);
+                backendBaseUrl = cleaned;
+                console.info('CRT backend URL set to', backendBaseUrl);
+            } else {
+                localStorage.removeItem('crtBackendUrl');
+                backendBaseUrl = resolveBackendBaseUrl();
+                console.info('CRT backend URL reset to', backendBaseUrl);
+            }
+        };
+
         function updateLineNumbers() {
             const textarea = document.getElementById('input');
             const lineNumbers = document.getElementById('line-numbers');
             const lines = textarea.value.split('\n').length;
             lineNumbers.innerHTML = Array.from({length: lines}, (_, i) => i + 1).join('\n');
             lineNumbers.scrollTop = textarea.scrollTop;
+            scheduleViewToggleValidation();
         }
 
         window.onerror = function(message, source, lineno, colno, error) {
@@ -578,7 +797,55 @@
         };
 
         let isVisualizationMode = false;
+        let wasmReady = false;
+        let viewToggleIsEnabled = false;
+        let viewToggleValidationTimer = null;
+        let lastRefinedContent = null;
+        let isRefining = false;
+        function setViewToggleEnabled(enabled) {
+            const button = document.getElementById('view-toggle-button');
+            viewToggleIsEnabled = Boolean(enabled);
+            if (button) {
+                button.disabled = !enabled;
+                button.classList.toggle('disabled', !enabled);
+            }
+        }
+
+        function scheduleViewToggleValidation() {
+            if (viewToggleValidationTimer) {
+                clearTimeout(viewToggleValidationTimer);
+            }
+            viewToggleValidationTimer = setTimeout(updateViewToggleState, 200);
+        }
+
+        function updateViewToggleState() {
+            viewToggleValidationTimer = null;
+            if (!wasmReady) {
+                return;
+            }
+            const content = document.getElementById('input').value;
+            try {
+                parse_content(content);
+                setViewToggleEnabled(true);
+            } catch (error) {
+                setViewToggleEnabled(false);
+            }
+        }
+
+        setViewToggleEnabled(false);
+
+        function exitVisualizationMode() {
+            const mainContent = document.querySelector('.main-content');
+            const icon = document.getElementById('view-toggle-icon');
+            mainContent.classList.remove('show-visualization');
+            icon.textContent = 'account_tree';
+            isVisualizationMode = false;
+        }
+
         window.toggleView = function() {
+            if (!isVisualizationMode && !viewToggleIsEnabled) {
+                return;
+            }
             const mainContent = document.querySelector('.main-content');
             const icon = document.getElementById('view-toggle-icon');
             isVisualizationMode = !isVisualizationMode;
@@ -586,13 +853,13 @@
             if (isVisualizationMode) {
                 // Save content before switching to visualization
                 saveToLocalStorage();
+                window.closeRefineView?.();
                 
                 mainContent.classList.add('show-visualization');
                 icon.textContent = 'edit';
                 updateVisualization();
             } else {
-                mainContent.classList.remove('show-visualization');
-                icon.textContent = 'account_tree';
+                exitVisualizationMode();
             }
         };
 
@@ -600,11 +867,550 @@
             const input = document.getElementById('input').value;
             try {
                 const result = parse_content(input);
+                setViewToggleEnabled(true);
                 renderGraph(result.nodes, result.links);
             } catch (error) {
                 console.error('Error parsing content:', error);
+                setViewToggleEnabled(false);
+                if (isVisualizationMode) {
+                    exitVisualizationMode();
+                }
             }
         }
+
+        function setRefineButtonState(disabled) {
+            const button = document.getElementById('refine-button');
+            if (!button) return;
+            button.disabled = disabled;
+            button.classList.toggle('disabled', disabled);
+        }
+
+        let lastRefineResult = null;
+        let lastRefineOriginal = '';
+        let availableRefineEntities = [];
+        let availableRefineLinks = [];
+        let selectedEntityAdditions = new Set();
+        let selectedLinkAdditions = new Set();
+        let refineEntityMap = new Map();
+        let refineLinkMap = new Map();
+
+        function toArray(value) {
+            if (Array.isArray(value)) return value;
+            if (value && typeof value === 'object') return Object.values(value);
+            return [];
+        }
+
+        function normalizeEntity(entity) {
+            if (!entity) return null;
+            const idRaw = entity.id || entity.entity_id || entity.name;
+            if (!idRaw) return null;
+            const text = entity.text ?? entity.description ?? '';
+            const added = entity.added !== undefined ? Boolean(entity.added) : false;
+            return {
+                ...entity,
+                id: String(idRaw),
+                text,
+                added,
+            };
+        }
+
+        function normalizeEntities(list) {
+            return toArray(list)
+                .map(normalizeEntity)
+                .filter(Boolean);
+        }
+
+        function deriveLineFromLink(link) {
+            if (link.line) return link.line;
+            if (Array.isArray(link.expressions) && link.expressions.length) {
+                return `${link.id || ''}. ${link.expressions.join(' -> ')}`.trim();
+            }
+            if (link.text) return link.text;
+            return String(link.id || '');
+        }
+
+        function normalizeLink(link) {
+            if (!link) return null;
+            const idRaw = link.id || link.link_id || link.name;
+            if (!idRaw) return null;
+            const entities = toArray(link.entities).map(String);
+            const sourceEntities = toArray(link.source_entities).map(String);
+            const targetEntities = toArray(link.target_entities).map(String);
+
+            const fromValue = link.from ?? link.source ?? link.source_entity;
+            if (fromValue) {
+                const val = String(fromValue);
+                sourceEntities.push(val);
+                entities.push(val);
+            }
+            const toValue = link.to ?? link.target ?? link.target_entity;
+            if (toValue) {
+                const val = String(toValue);
+                targetEntities.push(val);
+                entities.push(val);
+            }
+
+            const added = link.added !== undefined ? Boolean(link.added) : false;
+            const unique = (arr) => Array.from(new Set(arr.filter(Boolean)));
+            return {
+                ...link,
+                id: String(idRaw),
+                line: deriveLineFromLink({ ...link, id: String(idRaw) }),
+                entities: unique(entities),
+                source_entities: unique(sourceEntities),
+                target_entities: unique(targetEntities),
+                added,
+            };
+        }
+
+        function normalizeLinks(list) {
+            return toArray(list)
+                .map(normalizeLink)
+                .filter(Boolean);
+        }
+
+        function showRefineView() {
+            document.querySelector('.editor-container').classList.add('show-refine');
+        }
+
+        function hideRefineView() {
+            document.querySelector('.editor-container').classList.remove('show-refine');
+        }
+
+        function getCurrentEntityIds(content) {
+            const ids = new Set();
+            const lines = content.split('\n');
+            let inEntities = false;
+            for (const raw of lines) {
+                const line = raw.trim();
+                if (!inEntities) {
+                    if (line.toLowerCase() === 'entities') {
+                        inEntities = true;
+                    }
+                    continue;
+                }
+                if (line.toLowerCase() === 'links') {
+                    break;
+                }
+                if (!line) continue;
+                const match = line.match(/^(E\d+)\./i);
+                if (match) {
+                    ids.add(match[1]);
+                }
+            }
+            return ids;
+        }
+
+        function getCurrentLinkIds(content) {
+            const ids = new Set();
+            const lines = content.split('\n');
+            let inLinks = false;
+            for (const raw of lines) {
+                const line = raw.trim();
+                if (!inLinks) {
+                    if (line.toLowerCase() === 'links') {
+                        inLinks = true;
+                    }
+                    continue;
+                }
+                if (!line) continue;
+                const match = line.match(/^(L\d+)\./i);
+                if (match) {
+                    ids.add(match[1]);
+                }
+            }
+            return ids;
+        }
+
+        function formatEntityLine(entity) {
+            if (!entity || !entity.id || !entity.text) return null;
+            return `${entity.id}. ${entity.text}`;
+        }
+
+        function ensureSectionIndices(lines) {
+            const entitiesIdx = lines.findIndex(line => line.trim().toLowerCase() === 'entities');
+            const linksIdx = lines.findIndex(line => line.trim().toLowerCase() === 'links');
+            return { entitiesIdx, linksIdx };
+        }
+
+        function insertEntities(content, entityIds) {
+            if (!entityIds.length) return content;
+            const lines = content.split('\n');
+            const { entitiesIdx, linksIdx } = ensureSectionIndices(lines);
+            if (entitiesIdx === -1 || linksIdx === -1 || linksIdx <= entitiesIdx) {
+                alert('Could not locate Entities/Links sections in the CRT.');
+                return content;
+            }
+            const insertionIdx = linksIdx;
+            const newLines = [];
+            for (const id of entityIds) {
+                const entity = refineEntityMap.get(id);
+                const line = formatEntityLine(entity);
+                if (line) {
+                    newLines.push(line);
+                }
+            }
+            if (!newLines.length) return content;
+
+            const hasBlankBeforeLinks = lines[insertionIdx - 1] !== undefined && lines[insertionIdx - 1].trim() === '';
+            const insertArray = hasBlankBeforeLinks ? newLines : [...newLines, ''];
+            lines.splice(insertionIdx, 0, ...insertArray);
+            return lines.join('\n');
+        }
+
+        function insertLinks(content, linkIds) {
+            if (!linkIds.length) return content;
+            const lines = content.split('\n');
+            const { entitiesIdx, linksIdx } = ensureSectionIndices(lines);
+            if (linksIdx === -1 || linksIdx <= entitiesIdx) {
+                alert('Could not locate Links section in the CRT.');
+                return content;
+            }
+
+            const linkLines = [];
+            for (const id of linkIds) {
+                const link = refineLinkMap.get(id);
+                if (link && link.line) {
+                    linkLines.push(link.line);
+                }
+            }
+            if (!linkLines.length) return content;
+
+            let insertionIdx = lines.length;
+            while (insertionIdx > linksIdx + 1 && lines[insertionIdx - 1].trim() === '') {
+                insertionIdx--;
+            }
+            lines.splice(insertionIdx, 0, ...linkLines);
+            return lines.join('\n');
+        }
+
+        function renderRefinePreview(originalText, response) {
+            lastRefineOriginal = originalText;
+            lastRefineResult = response;
+            const currentText = document.getElementById('input').value;
+            const currentEntities = getCurrentEntityIds(currentText);
+            const currentLinks = getCurrentLinkIds(currentText);
+
+            refineEntityMap = new Map();
+            refineLinkMap = new Map();
+
+            const restatement = response?.['CRT Restatement'] || {};
+            const allEntities = normalizeEntities(restatement.Entities);
+            const allLinks = normalizeLinks(restatement.Links);
+
+            allEntities.forEach(entity => {
+                if (entity && entity.id) {
+                    refineEntityMap.set(entity.id, entity);
+                }
+            });
+            allLinks.forEach(link => {
+                if (link && link.id) {
+                    refineLinkMap.set(link.id, link);
+                }
+            });
+
+            const entityIdPattern = /^E\d+$/;
+            const usedEntityIds = new Set(currentEntities);
+            availableRefineEntities = allEntities.filter(entity => {
+                if (!entity || !entity.id || entity.added !== true) {
+                    return false;
+                }
+                if (!entityIdPattern.test(entity.id)) {
+                    console.warn('Skipping invalid entity id from refinement:', entity.id);
+                    return false;
+                }
+                if (usedEntityIds.has(entity.id)) {
+                    return false;
+                }
+                usedEntityIds.add(entity.id);
+                return true;
+            });
+
+            const knownEntityIds = new Set([...currentEntities, ...availableRefineEntities.map(e => e.id)]);
+
+            availableRefineLinks = allLinks.filter(link => {
+                if (!link || !link.id || link.added !== true || currentLinks.has(link.id)) {
+                    return false;
+                }
+
+                const allEntitiesInLink = new Set([
+                    ...(Array.isArray(link.entities) ? link.entities : []),
+                    ...(Array.isArray(link.source_entities) ? link.source_entities : []),
+                    ...(Array.isArray(link.target_entities) ? link.target_entities : []),
+                ]);
+
+                for (const entityId of allEntitiesInLink) {
+                    if (entityId && (!entityIdPattern.test(entityId) || !knownEntityIds.has(entityId))) {
+                        console.warn('Skipping link due to unknown entity reference:', link.id, entityId);
+                        return false;
+                    }
+                }
+
+                return true;
+            });
+
+            selectedEntityAdditions = new Set(availableRefineEntities.map(entity => entity.id));
+            selectedLinkAdditions = new Set(availableRefineLinks.map(link => link.id));
+
+            document.getElementById('refine-current-text').textContent = currentText;
+
+            updateRefineSummary();
+            renderEntitySuggestions();
+            renderLinkSuggestions();
+            showRefineView();
+            document.getElementById('refine-view').scrollTop = 0;
+        }
+
+        function updateRefineSummary() {
+            const summary = document.getElementById('refine-summary');
+            const entityCount = availableRefineEntities.length;
+            const linkCount = availableRefineLinks.length;
+            if (!entityCount && !linkCount) {
+                summary.textContent = 'No new entities or links were suggested.';
+            } else {
+                summary.textContent = `${entityCount} new ${entityCount === 1 ? 'entity' : 'entities'} and ${linkCount} new ${linkCount === 1 ? 'link' : 'links'} available.`;
+            }
+            document.getElementById('apply-selected-button').disabled = entityCount === 0 && linkCount === 0;
+            document.getElementById('apply-all-button').disabled = entityCount === 0 && linkCount === 0;
+        }
+
+        function renderEntitySuggestions() {
+            const container = document.getElementById('refine-entities-list');
+            container.innerHTML = '';
+            if (!availableRefineEntities.length) {
+                const empty = document.createElement('div');
+                empty.className = 'refine-item-meta';
+                empty.textContent = 'No new entities in this refinement.';
+                container.appendChild(empty);
+                return;
+            }
+
+            availableRefineEntities.forEach(entity => {
+                const item = document.createElement('div');
+                item.className = 'refine-entity-item';
+
+                const header = document.createElement('label');
+                header.className = 'refine-item-header';
+
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.value = entity.id;
+                checkbox.checked = selectedEntityAdditions.has(entity.id);
+                checkbox.addEventListener('change', () => {
+                    if (checkbox.checked) {
+                        selectedEntityAdditions.add(entity.id);
+                    } else {
+                        selectedEntityAdditions.delete(entity.id);
+                    }
+                });
+
+                const idSpan = document.createElement('span');
+                idSpan.className = 'refine-item-id';
+                idSpan.textContent = entity.id;
+
+                header.appendChild(checkbox);
+                header.appendChild(idSpan);
+
+                const textSpan = document.createElement('div');
+                textSpan.className = 'refine-item-text';
+                textSpan.textContent = entity.text || '';
+
+                item.appendChild(header);
+                item.appendChild(textSpan);
+
+                const linksForEntity = availableRefineLinks.filter(link => {
+                    const involved = new Set([
+                        ...(Array.isArray(link.entities) ? link.entities : []),
+                        ...(Array.isArray(link.source_entities) ? link.source_entities : []),
+                        ...(Array.isArray(link.target_entities) ? link.target_entities : []),
+                    ]);
+                    return involved.has(entity.id);
+                });
+                if (linksForEntity.length) {
+                    const meta = document.createElement('div');
+                    meta.className = 'refine-item-meta';
+                    const linkIds = linksForEntity.map(link => link.id).join(', ');
+                    meta.textContent = `Associated links: ${linkIds}`;
+                    item.appendChild(meta);
+                }
+                container.appendChild(item);
+            });
+        }
+
+        function renderLinkSuggestions() {
+            const container = document.getElementById('refine-links-list');
+            container.innerHTML = '';
+            if (!availableRefineLinks.length) {
+                const empty = document.createElement('div');
+                empty.className = 'refine-item-meta';
+                empty.textContent = 'No new links in this refinement.';
+                container.appendChild(empty);
+                return;
+            }
+
+            availableRefineLinks.forEach(link => {
+                const item = document.createElement('div');
+                item.className = 'refine-link-item';
+
+                const header = document.createElement('label');
+                header.className = 'refine-item-header';
+
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.value = link.id;
+                checkbox.checked = selectedLinkAdditions.has(link.id);
+                checkbox.addEventListener('change', () => {
+                    if (checkbox.checked) {
+                        selectedLinkAdditions.add(link.id);
+                    } else {
+                        selectedLinkAdditions.delete(link.id);
+                    }
+                });
+
+                const idSpan = document.createElement('span');
+                idSpan.className = 'refine-item-id';
+                idSpan.textContent = link.id;
+
+                header.appendChild(checkbox);
+                header.appendChild(idSpan);
+
+                const textSpan = document.createElement('div');
+                textSpan.className = 'refine-item-text';
+                textSpan.textContent = link.line || '';
+
+                item.appendChild(header);
+                item.appendChild(textSpan);
+                container.appendChild(item);
+            });
+        }
+
+        window.runRefinement = async function() {
+            if (isRefining) return;
+            const content = document.getElementById('input').value;
+            if (!content.trim()) {
+                alert('Please provide CRT content before refining.');
+                return;
+            }
+
+            isRefining = true;
+            setRefineButtonState(true);
+            const spinner = document.getElementById('refine-spinner');
+            if (spinner) spinner.classList.add('visible');
+
+            try {
+                const response = await fetch(`${backendBaseUrl}/api/refine`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ content })
+                });
+
+                if (!response.ok) {
+                    const message = await response.text();
+                    alert(`Refinement failed: ${message || response.statusText}`);
+                    return;
+                }
+
+                const data = await response.json();
+                lastRefineResult = data;
+                renderRefinePreview(content, data);
+            } catch (error) {
+                console.error('Refinement request failed', error);
+                alert(`Refinement failed: ${error.message || error}`);
+            } finally {
+                isRefining = false;
+                setRefineButtonState(false);
+                if (spinner) spinner.classList.remove('visible');
+            }
+        };
+
+        window.closeRefineView = function() {
+            hideRefineView();
+            lastRefineResult = null;
+            availableRefineEntities = [];
+            availableRefineLinks = [];
+            selectedEntityAdditions = new Set();
+            selectedLinkAdditions = new Set();
+        };
+
+        function gatherEntitiesForLinks(linkIds) {
+            const ids = new Set();
+            linkIds.forEach(id => {
+                const link = refineLinkMap.get(id);
+                if (!link) return;
+                [
+                    ...(Array.isArray(link.entities) ? link.entities : []),
+                    ...(Array.isArray(link.source_entities) ? link.source_entities : []),
+                    ...(Array.isArray(link.target_entities) ? link.target_entities : []),
+                ].forEach(entityId => {
+                    if (entityId) {
+                        ids.add(entityId);
+                    }
+                });
+            });
+            return ids;
+        }
+
+        function applyAdditions(entityIds, linkIds) {
+            if (!entityIds.length && !linkIds.length) {
+                alert('No entities or links selected to add.');
+                return;
+            }
+
+            const textarea = document.getElementById('input');
+            let content = textarea.value;
+            const currentEntities = getCurrentEntityIds(content);
+            const currentLinks = getCurrentLinkIds(content);
+
+            const entitiesToAdd = entityIds.filter(id => !currentEntities.has(id));
+            content = insertEntities(content, entitiesToAdd);
+
+            const linksToAdd = linkIds.filter(id => !currentLinks.has(id));
+            content = insertLinks(content, linksToAdd);
+
+            textarea.value = content;
+            updateLineNumbers();
+            saveToLocalStorage();
+
+            if (lastRefineResult) {
+                renderRefinePreview(content, lastRefineResult);
+            }
+        }
+
+        window.applySelectedAdditions = function() {
+            if (!lastRefineResult) return;
+            const finalEntitySet = new Set(selectedEntityAdditions);
+            const finalLinkSet = new Set(selectedLinkAdditions);
+
+            // Automatically include links associated with selected entities
+            availableRefineLinks.forEach(link => {
+                const involved = new Set([
+                    ...(Array.isArray(link.entities) ? link.entities : []),
+                    ...(Array.isArray(link.source_entities) ? link.source_entities : []),
+                    ...(Array.isArray(link.target_entities) ? link.target_entities : []),
+                ]);
+                for (const entityId of finalEntitySet) {
+                    if (involved.has(entityId)) {
+                        finalLinkSet.add(link.id);
+                        break;
+                    }
+                }
+            });
+
+            // Ensure entities for selected links are added
+            const extraEntities = gatherEntitiesForLinks(finalLinkSet);
+            extraEntities.forEach(id => finalEntitySet.add(id));
+
+            applyAdditions(Array.from(finalEntitySet), Array.from(finalLinkSet));
+        };
+
+        window.applyAllAdditions = function() {
+            if (!lastRefineResult) return;
+            const allEntityIds = availableRefineEntities.map(entity => entity.id);
+            const allLinkIds = availableRefineLinks.map(link => link.id);
+            const combinedEntities = new Set(allEntityIds);
+            gatherEntitiesForLinks(new Set(allLinkIds)).forEach(id => combinedEntities.add(id));
+            applyAdditions(Array.from(combinedEntities), allLinkIds);
+        };
 
         // Add these variables before your existing script code
         const physics = {
@@ -1260,7 +2066,9 @@
                             // Add a relationship item
                             const relDiv = document.createElement('div');
                             relDiv.className = 'branch-item branch-relationship';
-                            relDiv.textContent = item.type;
+                            const relLabel = item.label
+                                || `${item.type}${item.targetNegated ? ' NOT' : ''}`;
+                            relDiv.textContent = relLabel;
                             tabContent.appendChild(relDiv);
                             lastItem = 'relationship';
                         }
@@ -1325,6 +2133,7 @@
 
         async function initWasm() {
             await init();
+            wasmReady = true;
             try {
                 const response = await fetch('CRT.neo');
                 const content = await response.text();
@@ -1332,6 +2141,7 @@
                 updateLineNumbers();
             } catch (error) {
                 console.error('Error loading CRT.neo:', error);
+                scheduleViewToggleValidation();
             }
         }
 

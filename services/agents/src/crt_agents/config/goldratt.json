@@ -1,0 +1,364 @@
+{
+  "CRT Restatement": {
+    "Entities": [
+      { "id": "E1", "text": "Excessive time spent on reporting to show control (e.g., >6 hours/week per PO/lead)", "added": false },
+      { "id": "E2", "text": "Insufficient time spent on understanding user needs (e.g., discovery/refinement <8 hours/Sprint/PO)", "added": false },
+      { "id": "E3", "text": "Significant rework during refinement (e.g., >2 rework cycles/PBI to reach Ready)", "added": false },
+      { "id": "E4", "text": "POs often lack time to prepare for sprints (prep hours < threshold before Sprint Planning)", "added": false },
+      { "id": "E5", "text": "Deliveries are in large slices (batch size large: releases include many PBIs or span multiple components)", "added": false },
+      { "id": "E6", "text": "Many PBIs do not meet Definition of Ready (e.g., <80% DoR compliance at Sprint start)", "added": false },
+      { "id": "E7", "text": "PBIs scope and objectives documented inconsistently (missing/ambiguous AC, objectives)", "added": false },
+      { "id": "E8", "text": "PBIs estimated inconsistently (units/scales differ; high variance)", "added": false },
+      { "id": "E9", "text": "Estimates do not allow comparison of PBI sizes (apples-to-oranges)", "added": false },
+      { "id": "E10", "text": "PBIs counted toward performance often do not meet Definition of Done", "added": false },
+      { "id": "E11", "text": "Past performance cannot reliably predict future deliveries (forecast error high)", "added": false },
+      { "id": "E12", "text": "Delivery is unpredictable (high lead time variability; low schedule adherence)", "added": false },
+      { "id": "E13", "text": "Work is rushed to meet delivery dates (preemptions, overtime, scope compression)", "added": false },
+      { "id": "E14", "text": "Technical debt keeps growing", "added": false },
+      { "id": "E15", "text": "Impediments and unplanned work keep increasing or remain volatile", "added": false },
+      { "id": "E16", "text": "Past performance poorly predicts future performance and tends to over-estimate capability", "added": false },
+      { "id": "E17", "text": "We often take short-cuts (skip tests/refactoring, manual workarounds)", "added": false },
+      { "id": "E18", "text": "We deliver low quality (escaped defects, failure rates)", "added": false },
+      { "id": "E19", "text": "We have high levels of rework (defect fixes, re-analysis)", "added": false },
+      { "id": "E20", "text": "Effective development capacity is low (net available hours for new work reduced)", "added": false },
+      { "id": "E21", "text": "Throughput is low (completed PBIs/Sprint below demand)", "added": false },
+      { "id": "E22", "text": "Value-delivery is low (value points/release below target)", "added": false },
+      { "id": "E23", "text": "We lack a production-like ad-hoc test environment", "added": false },
+      { "id": "E24", "text": "We cannot test against a stable known configuration (environment drift, non-reproducible builds)", "added": false },
+      { "id": "E25", "text": "We often need code freezes", "added": false },
+      { "id": "E26", "text": "Code freezes distort or invalidate estimates", "added": false },
+      { "id": "E27", "text": "We have excessive work-in-progress (WIP above capacity; many items in progress)", "added": false },
+      { "id": "E28", "text": "We spend insufficient time on QA in the teams or QA delays deliveries", "added": false },
+      { "id": "E29", "text": "We have little time to work on improving our processes", "added": false },
+      { "id": "E30", "text": "Our processes remain sub-optimal", "added": false },
+      { "id": "E31", "text": "Stakeholder trust in our delivery is low", "added": false },
+      { "id": "E32", "text": "We spend little time working on value-driving work", "added": false },
+      { "id": "E33", "text": "We scope features inconsistently (poor slicing; variable granularity)", "added": false },
+
+      { "id": "E34", "text": "PO time budget per Sprint is fixed (capacity constraint on PO hours)", "added": true },
+      { "id": "E35", "text": "PO discovery/refinement time < target (hours diverted from discovery)", "added": true },
+      { "id": "E36", "text": "Insufficient Ready PBIs available at Sprint start", "added": true },
+      { "id": "E37", "text": "Late/insufficient Ready items cause bundling into larger releases", "added": true },
+      { "id": "E38", "text": "Acceptance criteria/test cases missing or inconsistent", "added": true },
+      { "id": "E39", "text": "Estimation scales or reference classes differ across teams", "added": true },
+      { "id": "E40", "text": "Performance metric (velocity/throughput) is inflated/noisy (includes not-Done items; apples-to-oranges)", "added": true },
+      { "id": "E41", "text": "Forecasts/plans are based on noisy or invalid metrics", "added": true },
+      { "id": "E42", "text": "Fixed-date commitments exist (external promises, deadlines)", "added": true },
+      { "id": "E43", "text": "Expedite/preemption policy is used when behind schedule", "added": true },
+      { "id": "E44", "text": "Environment/integration drift high (no immutable, prod-like baseline)", "added": true },
+      { "id": "E45", "text": "Integration failures/test flakiness rate is high", "added": true },
+      { "id": "E46", "text": "Code freeze instituted to stabilize baseline (stop-the-line policy)", "added": true },
+      { "id": "E47", "text": "Freeze introduces wait states/queue ageing for in-progress work", "added": true },
+      { "id": "E48", "text": "Estimates become stale due to unplanned waits/scope churn", "added": true },
+      { "id": "E49", "text": "No WIP cap / start-to-keep-busy policy (push system)", "added": true },
+      { "id": "E50", "text": "High WIP drives high flow variability (long, variable queues)", "added": true },
+      { "id": "E53", "text": "Reporting demand increases when trust is low (status/control reporting)", "added": true },
+      { "id": "E56", "text": "Under fixed-date pressure, test scope/time is compressed (late testing, reduced coverage)", "added": true }
+    ],
+    "Links": [
+      { "id": "L1", "text": "E1 → E2", "added": false, "assumptions": "PO capacity is fixed; reporting displaces discovery time" },
+      { "id": "L2", "text": "E2 → E3", "added": false },
+      { "id": "L3", "text": "E3 → E4", "added": false },
+      { "id": "L4", "text": "E4 → E5", "added": false },
+      { "id": "L5", "text": "E5 → E6", "added": false },
+      { "id": "L6", "text": "E6 → E7", "added": false },
+      { "id": "L7", "text": "E7 → E8", "added": false },
+      { "id": "L8", "text": "E8 → E9", "added": false },
+      { "id": "L9", "text": "(E9 AND E10) → E11", "added": false },
+      { "id": "L10", "text": "E11 → E12", "added": false },
+      { "id": "L11", "text": "E12 → E13", "added": false },
+      { "id": "L12", "text": "E13 → E14", "added": false },
+      { "id": "L13", "text": "E14 → E15", "added": false },
+      { "id": "L14", "text": "E15 → E16", "added": false },
+      { "id": "L15", "text": "E16 → E12", "added": false },
+
+      { "id": "L16", "text": "E13 → E17", "added": false },
+      { "id": "L17", "text": "E17 → E18", "added": false },
+      { "id": "L18", "text": "E18 → E19", "added": false },
+      { "id": "L19", "text": "E19 → E20", "added": false },
+      { "id": "L20", "text": "E20 → E21", "added": false },
+      { "id": "L21", "text": "E21 → E22", "added": false },
+
+      { "id": "L22", "text": "E23 → E24", "added": false },
+      { "id": "L23", "text": "E24 → E25", "added": false },
+      { "id": "L24", "text": "E25 → E26", "added": false },
+      { "id": "L25", "text": "E26 → E12", "added": false },
+
+      { "id": "L26", "text": "NOT E25 → NOT E27", "added": false },
+      { "id": "L27", "text": "NOT E19 → NOT E27", "added": false },
+
+      { "id": "L28", "text": "NOT E25 → NOT E28 → NOT E18", "added": false },
+      { "id": "L29", "text": "NOT E19 → NOT E29 → NOT E30 → NOT E18 → NOT E22", "added": false },
+
+      { "id": "L30", "text": "(NOT E33 AND NOT E7) → NOT E11 → NOT E12 → NOT E31 → NOT E1 → NOT E32", "added": false },
+
+      { "id": "L31", "text": "E5 → E27", "added": false },
+      { "id": "L32", "text": "E19 → E27", "added": false },
+
+      { "id": "L33", "text": "(E1 AND E34) → E2", "added": true, "assumptions": "PO time is a zero-sum budget" },
+      { "id": "L34", "text": "E2 → E38", "added": true },
+      { "id": "L35", "text": "E38 → E3", "added": true },
+      { "id": "L36", "text": "E3 → E4", "added": true, "assumptions": "Rework consumes PO prep time (Δt)" },
+      { "id": "L37", "text": "E4 → E36", "added": true },
+      { "id": "L38", "text": "E36 → E37", "added": true },
+      { "id": "L39", "text": "E37 → E5", "added": true },
+
+      { "id": "L40", "text": "E5 → E38", "added": true, "assumptions": "Large, cross-component slices make ACs incomplete" },
+      { "id": "L41", "text": "E38 → E6", "added": true },
+
+      { "id": "L42", "text": "E7 → E6", "added": true, "assumptions": "DoR includes consistent documentation; direction reversed from L6" },
+
+      { "id": "L43", "text": "E7 → E39", "added": true },
+      { "id": "L44", "text": "E39 → E8", "added": true },
+      { "id": "L45", "text": "E39 → E9", "added": true },
+
+      { "id": "L46", "text": "(E9 AND E10) → E40", "added": true },
+      { "id": "L47", "text": "E40 → E11", "added": true },
+
+      { "id": "L48", "text": "E41 → E12", "added": true, "assumptions": "Plans based on noisy metrics appear unpredictable to stakeholders" },
+      { "id": "L49", "text": "E50 → E12", "added": true, "assumptions": "Flow variability drives delivery unpredictability" },
+
+      { "id": "L50", "text": "(E12 AND E42) → E43", "added": true },
+      { "id": "L51", "text": "E43 → E13", "added": true },
+
+      { "id": "L52", "text": "E23 → E44", "added": true },
+      { "id": "L53", "text": "E44 → E24", "added": true },
+      { "id": "L54", "text": "E24 → E45", "added": true },
+      { "id": "L55", "text": "E45 → E25", "added": true },
+
+      { "id": "L56", "text": "E25 → E47", "added": true },
+      { "id": "L57", "text": "E47 → E48", "added": true },
+      { "id": "L58", "text": "E48 → E26", "added": true },
+      { "id": "L59", "text": "E26 → E41", "added": true },
+
+      { "id": "L60", "text": "(E5 AND E49) → E27", "added": true },
+      { "id": "L61", "text": "E27 → E50", "added": true },
+
+      { "id": "L62", "text": "(E28 AND E42 AND E43) → E56", "added": true },
+      { "id": "L63", "text": "E56 → E18", "added": true },
+
+      { "id": "L64", "text": "E12 → E31", "added": true },
+      { "id": "L65", "text": "E31 → E53", "added": true },
+      { "id": "L66", "text": "E53 → E1", "added": true },
+      { "id": "L67", "text": "E1 → E32", "added": true },
+      { "id": "L68", "text": "E33 → E5", "added": true }
+    ]
+  },
+  "Leap Analysis": [
+    {
+      "Link": "L1 (E1 → E2)",
+      "CLR Finding": "Sufficiency",
+      "Why it’s a leap": "Assumes reporting displaces discovery time without stating capacity constraint.",
+      "Bridging proposal": [
+        "E34: PO time budget per Sprint is fixed",
+        "E35: Discovery/refinement time falls below target"
+      ],
+      "Rewritten micro-chain": "(E1 AND E34) → E35 → E2"
+    },
+    {
+      "Link": "L2 (E2 → E3)",
+      "CLR Finding": "Causality",
+      "Why it’s a leap": "Missing mechanism from less discovery to refinement rework.",
+      "Bridging proposal": [
+        "E38: Acceptance criteria/test cases missing or inconsistent"
+      ],
+      "Rewritten micro-chain": "E2 → E38 → E3"
+    },
+    {
+      "Link": "L4 (E4 → E5)",
+      "CLR Finding": "Causality",
+      "Why it’s a leap": "From PO prep time to batch size is a jump; bundling mechanism is not stated.",
+      "Bridging proposal": [
+        "E36: Insufficient Ready PBIs at Sprint start",
+        "E37: Late/insufficient Ready items cause bundling into larger releases"
+      ],
+      "Rewritten micro-chain": "E4 → E36 → E37 → E5"
+    },
+    {
+      "Link": "L5 (E5 → E6)",
+      "CLR Finding": "Causality",
+      "Why it’s a leap": "Large slices don’t directly cause DoR failures without a mechanism.",
+      "Bridging proposal": [
+        "E38: Large cross-component items make ACs incomplete",
+        "E41: DoR compliance fails when ACs missing"
+      ],
+      "Rewritten micro-chain": "E5 → E38 → E6"
+    },
+    {
+      "Link": "L6 (E6 → E7)",
+      "CLR Finding": "Tautology",
+      "Why it’s a leap": "DoR typically includes consistent documentation; effect is part of the cause’s definition.",
+      "Bridging proposal": [
+        "Reverse the direction: inconsistent documentation contributes to failing DoR"
+      ],
+      "Rewritten micro-chain": "E7 → E6"
+    },
+    {
+      "Link": "L7 (E7 → E8)",
+      "CLR Finding": "Causality",
+      "Why it’s a leap": "Needs mechanism explaining how inconsistent docs produce inconsistent estimates.",
+      "Bridging proposal": [
+        "E39: Estimation scales/reference classes differ due to ambiguity"
+      ],
+      "Rewritten micro-chain": "E7 → E39 → E8"
+    },
+    {
+      "Link": "L8 (E8 → E9)",
+      "CLR Finding": "Clarity",
+      "Why it’s a leap": "Not clear if inconsistency means variance or unit mismatch.",
+      "Bridging proposal": [
+        "E39: Explicitly model scale/reference mismatch leading to non-comparable sizes"
+      ],
+      "Rewritten micro-chain": "E39 → E9"
+    },
+    {
+      "Link": "L9 ((E9 AND E10) → E11)",
+      "CLR Finding": "Causality",
+      "Why it’s a leap": "Mechanism from non-comparable estimates and not-Done counting to poor predictability is implicit.",
+      "Bridging proposal": [
+        "E40: Performance metric is inflated/noisy",
+        "E41: Forecasts rely on this metric"
+      ],
+      "Rewritten micro-chain": "(E9 AND E10) → E40 → E11"
+    },
+    {
+      "Link": "L10 (E11 → E12)",
+      "CLR Finding": "Causality",
+      "Why it’s a leap": "Predictor unreliability doesn’t cause process unpredictability; it causes planning/communication issues.",
+      "Bridging proposal": [
+        "E41: Forecasts/plans based on noisy metrics → perceived unpredictability",
+        "E50: Independently, high WIP drives actual flow variability"
+      ],
+      "Rewritten micro-chain": "E41 → E12 and E50 → E12"
+    },
+    {
+      "Link": "L11 (E12 → E13)",
+      "CLR Finding": "Sufficiency",
+      "Why it’s a leap": "Rushing only occurs if fixed-date commitments exist and expedite policy is used.",
+      "Bridging proposal": [
+        "E42: Fixed-date commitments exist",
+        "E43: Expedite/preemption policy is used when behind"
+      ],
+      "Rewritten micro-chain": "(E12 AND E42) → E43 → E13"
+    },
+    {
+      "Link": "L22 (E23 → E24)",
+      "CLR Finding": "Causality",
+      "Why it’s a leap": "Missing explicit mechanism linking lack of env to unstable configs.",
+      "Bridging proposal": [
+        "E44: Environment/integration drift high due to lack of prod-like env"
+      ],
+      "Rewritten micro-chain": "E23 → E44 → E24"
+    },
+    {
+      "Link": "L23 (E24 → E25)",
+      "CLR Finding": "Sufficiency",
+      "Why it’s a leap": "Needing freezes also depends on integration failure rates.",
+      "Bridging proposal": [
+        "E45: Integration failures/test flakiness rate high → introduce freeze"
+      ],
+      "Rewritten micro-chain": "E24 → E45 → E25"
+    },
+    {
+      "Link": "L24 (E25 → E26)",
+      "CLR Finding": "Causality",
+      "Why it’s a leap": "Mechanism from freeze to estimate distortion is missing.",
+      "Bridging proposal": [
+        "E47: Freeze introduces wait states/queue ageing",
+        "E48: Estimates become stale due to unplanned waits/scope churn"
+      ],
+      "Rewritten micro-chain": "E25 → E47 → E48 → E26"
+    },
+    {
+      "Link": "L25 (E26 → E12)",
+      "CLR Finding": "Causality",
+      "Why it’s a leap": "Invalid estimates affect forecasts, which affects perceived predictability; process variability may be separate.",
+      "Bridging proposal": [
+        "E41: Forecasts based on invalid estimates",
+        "E50: Flow variability as independent driver"
+      ],
+      "Rewritten micro-chain": "E26 → E41 → E12"
+    },
+    {
+      "Link": "L26 (NOT E25 → NOT E27)",
+      "CLR Finding": "Causality",
+      "Why it’s a leap": "Absence of freezes doesn’t ensure low WIP; WIP is driven by policies like starting too much and rework.",
+      "Bridging proposal": [
+        "E49: No WIP cap / start-to-keep-busy policy",
+        "E5/E19 as additional causes of E27"
+      ],
+      "Rewritten micro-chain": "Remove L26; replace with (E5 AND E49) → E27 and E19 → E27"
+    },
+    {
+      "Link": "L27 (NOT E19 → NOT E27)",
+      "CLR Finding": "Additional Cause",
+      "Why it’s a leap": "Reducing rework helps, but WIP can still be excessive due to push policies and large batches.",
+      "Bridging proposal": [
+        "Add parallel cause: E49 (no WIP cap)",
+        "Add: E5 (large slices) contributing to E27"
+      ],
+      "Rewritten micro-chain": "E19 → E27; (E5 AND E49) → E27"
+    },
+    {
+      "Link": "L28 (NOT E25 → NOT E28 → NOT E18)",
+      "CLR Finding": "Causality",
+      "Why it’s a leap": "Lack of freeze doesn’t guarantee adequate QA; QA delays don’t directly cause low quality; often time compression does.",
+      "Bridging proposal": [
+        "E42 + E43: Under fixed dates and expedites",
+        "E56: Test scope/time compressed causes quality issues"
+      ],
+      "Rewritten micro-chain": "(E28 AND E42 AND E43) → E56 → E18"
+    },
+    {
+      "Link": "L29 (NOT E19 → NOT E29 → NOT E30 → NOT E18 → NOT E22)",
+      "CLR Finding": "Aggregation jump",
+      "Why it’s a leap": "Multiple big steps with untested mechanisms; assumes linear improvement chain.",
+      "Bridging proposal": [
+        "Split: E19↓ → capacity↑ → time for improvement (E29)↑",
+        "E29↓ → specific process changes (state which) → defect rate↓ (E18) → throughput/value↑"
+      ],
+      "Rewritten micro-chain": "E19↓ → E20↑ → E29↓ → E30↓ (after specific changes) → E18↓ → E22↑"
+    },
+    {
+      "Link": "L30 ((NOT E33 AND NOT E7) → NOT E11 → NOT E12 → NOT E31 → NOT E1 → NOT E32)",
+      "CLR Finding": "Sufficiency",
+      "Why it’s a leap": "Chain bundles several assumptions (metrics, trust, reporting demand) without mechanisms.",
+      "Bridging proposal": [
+        "E33/E7 → E39 → E8 → E9 → E40 → E11",
+        "E11/E50/E41 → E12 → E31 → E53 → E1 → E32"
+      ],
+      "Rewritten micro-chain": "(NOT E33 AND NOT E7) → E39 (aligned) → E8↓ → E9↓ → E40↓ → E11↓; then E12↓ → E31↓ → E53↓ → E1↓ → E32↓"
+    },
+    {
+      "Link": "L31 (E5 → E27)",
+      "CLR Finding": "Sufficiency",
+      "Why it’s a leap": "Large slices lead to high WIP only if the system starts many items without a WIP cap.",
+      "Bridging proposal": [
+        "E49: No WIP cap / start-to-keep-busy policy"
+      ],
+      "Rewritten micro-chain": "(E5 AND E49) → E27"
+    }
+  ],
+  "Suggested Edits": [
+    "Replace L6 (E6 → E7) with E7 → E6 to avoid tautology; make DoR criteria explicit (includes AC consistency).",
+    "Refine L1 with an AND gate: (E1 AND E34) → E2 to state the capacity constraint.",
+    "Split L4 into E4 → E36 → E37 → E5 (late Ready → bundling → large batches).",
+    "Replace/augment L5 with E5 → E38 → E6 (large slices → missing AC → DoR failures).",
+    "Clarify estimation chain: E7 → E39 → E8 and E39 → E9; keep L8 only if it references unit mismatch explicitly.",
+    "Decompose L9 into (E9 AND E10) → E40 → E11 (metric inflation/noise as mechanism).",
+    "Replace L10 with two converging causes: E41 → E12 (perceived unpredictability) and E50 → E12 (actual flow variability).",
+    "Refine L11 with an AND: (E12 AND E42) → E43 → E13 (need fixed dates + expedite policy).",
+    "Decompose environment→freeze chain: E23 → E44 → E24 → E45 → E25.",
+    "Decompose freeze→estimate distortion: E25 → E47 → E48 → E26 → E41.",
+    "Remove L26 (NOT E25 → NOT E27) and L28; replace with causes of WIP: (E5 AND E49) → E27 and E19 → E27.",
+    "Annotate WIP loop: E27 → E50 → E12 and maintain rework path E18 → E19 → E20 → E21 → E22.",
+    "Add trust-reporting loop: E12 → E31 → E53 → E1 → E2 and E1 → E32.",
+    "Connect scoping to batch size: E33 → E5; ensure slicing policy is explicit."
+  ],
+  "Quick Consistency Checks": [
+    "All UDEs still explained: Yes. Unpredictability (E12), low quality (E18), low value (E22), low trust (E31), excessive WIP (E27) are reachable via short, mechanistic chains.",
+    "Core driver(s) unique and minimally sufficient: Candidate drivers are policies E49 (no WIP cap) and E42/E43 (fixed-date + expedite), plus measurement policy E40/E41. Each is modeled explicitly with mechanisms.",
+    "Hidden policy constraints unresolved: Existence/value of fixed-date policy (E42), expedite rules (E43), WIP cap policy (E49), DoR content (E38), estimation scale alignment (E39).",
+    "Measurements available to validate: WIP count, lead time variance, percent DoR compliance, AC completeness rate, estimate scale alignment across teams, fraction of not-Done counted in performance, hours/week on reporting vs discovery, freeze days/Sprint, queue ageing during freeze, forecast error vs actual."
+  ]
+}

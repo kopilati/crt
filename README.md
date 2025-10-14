@@ -56,6 +56,82 @@ wasm-pack build --target web
 
 This creates a `pkg` directory containing the compiled WebAssembly module and JavaScript bindings.
 
+### Agent Backend (Python)
+
+A lightweight FastAPI service lives in `agents/`; it exposes a single endpoint backed by the OpenAI Agents SDK.
+
+1. Create a virtual environment:
+
+    ```bash
+    python -m venv .venv
+    source .venv/bin/activate
+    pip install -e agents
+    ```
+
+2. Configure credentials and launch:
+
+    ```bash
+    export OPENAI_API_KEY=sk-...
+    export OPENAI_MODEL=gpt-4o-mini   # optional
+    export BACKEND_PORT=3000          # optional
+
+    python -m agents.main
+    ```
+
+Create a virtual environment and install the service:
+
+```bash
+python -m venv .venv
+source .venv/bin/activate
+pip install -e services/agents
+```
+
+Then configure credentials and start the API:
+
+```bash
+export OPENAI_API_KEY=sk-...
+export OPENAI_MODEL=gpt-4o-mini   # optional
+export BACKEND_PORT=3000          # optional
+
+python -m crt_agents.main
+# or use the console script: crt-agents-service
+```
+
+The server exposes `POST /agents/{agent_name}/run`, which loads the matching agent YAML definition (for example `goldratt.yml`), forwards the request to the OpenAI Agents SDK, and returns the agent response and run id.
+
+Agent definitions live under `services/agents/src/crt_agents/config/` and must be named `<agent_name>.yml` (or `.yaml`). Each file should provide at least an `instructions` field, with optional `name` and `model` overrides.
+
+#### Connecting the front-end to the backend
+
+When you open `index.html` from a static file server (or straight off disk), it needs to know where the backend is running. By default, the UI assumes `http://localhost:8080`. You can override this at runtime from the browser console:
+
+```js
+// In the devtools console
+setBackendBaseUrl('http://localhost:3000');
+```
+
+The value is stored in `localStorage` so the page remembers it between reloads. To reset back to the default, call `setBackendBaseUrl(null)`.
+
+Environment variables can also be provided via a `.env` file (repository root or `services/agents/`) and are loaded automatically when the server starts.
+
+### Rust Proxy Backend
+
+The `services/backend` crate exposes the original `/api/refine` endpoint but now proxies every request to the Goldratt agent service. It expects the agent service to be reachable (e.g., the Python backend above running on port 3000).
+
+```bash
+cargo run -p crt-backend --manifest-path services/backend/Cargo.toml
+```
+
+Configuration (via environment variables):
+
+- `AGENT_SERVICE_URL` – base URL of the agent service (`http://127.0.0.1:3000` by default)
+- `AGENT_NAME` – agent identifier (matches `<name>.yml` under `services/agents/src/crt_agents/config/`, defaults to `goldratt`)
+- `BACKEND_ADDR` – bind address for the Rust proxy (`0.0.0.0:8080` by default)
+
+`POST /api/refine` accepts `{ "content": "..." }`, forwards the request to `{AGENT_SERVICE_URL}/agents/{AGENT_NAME}/run`, and relays the agent's JSON back to the caller. If the agent returns plain text, the proxy wraps it in `{ "output_text": ..., "run_id": ... }`.
+
+If you host both the UI and backend behind the same origin/port, the UI will automatically target that origin.
+
 ## Usage
 
 ### Command Line
