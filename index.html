@@ -6,6 +6,9 @@
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <style>
+:root {
+    --tab-bar-height: 54px;
+}
         body {
             font-family: Arial, sans-serif;
             margin: 0;
@@ -17,20 +20,26 @@
             color: #d4d4d4;
             overflow: hidden;
         }
-        .header {
+        .crt-panel-header {
+            display: none;
             padding: 10px 20px;
             background: #2d2d2d;
             border-bottom: 1px solid #3d3d3d;
-            display: flex;
             align-items: center;
             justify-content: space-between;
             z-index: 100;
+        }
+        .main-content.crt-active .crt-panel-header {
+            display: flex;
+        }
+        .main-content.crt-active {
+            --crt-header-height: 56px;
         }
         .header-left {
             display: flex;
             align-items: center;
         }
-        .header h1 {
+        .crt-panel-header h1 {
             margin: 0;
             color: #fff;
             font-size: 20px;
@@ -38,39 +47,83 @@
         .main-content {
             flex: 1;
             display: flex;
+            flex-direction: column;
             overflow: hidden;
             position: relative;
         }
-        .editor-container {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
+        .crt-actions {
             display: flex;
-            transition: transform 0.3s ease;
+            align-items: center;
+            gap: 6px;
         }
-        .editor-container .text-editor-wrapper {
-            display: flex;
-            flex: 1;
-            background: #1e1e1e;
-        }
-        .editor-container .text-editor-wrapper.hidden {
-            display: none;
-        }
-        .editor-container .refine-view {
-            flex: 1;
-            display: none;
-            flex-direction: column;
-            background: #1e1e1e;
-            color: #d4d4d4;
-        }
-        .editor-container.show-refine .text-editor-wrapper {
-            display: none;
-        }
-        .editor-container.show-refine .refine-view {
-            display: flex;
-        }
+.editor-container {
+    position: absolute;
+    top: calc(var(--tab-bar-height) + var(--crt-header-height));
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    flex-direction: column;
+}
+.edit-tabs {
+    display: flex;
+    gap: 8px;
+    padding: 8px 16px;
+    align-items: center;
+    background: #1e1e1e;
+    border-bottom: 1px solid #2f2f2f;
+    position: relative;
+    z-index: 2;
+    height: var(--tab-bar-height);
+    box-sizing: border-box;
+}
+.edit-tab-button {
+    background: #2a2a2a;
+    border: 1px solid #3a3a3a;
+    color: #d4d4d4;
+    padding: 6px 14px;
+    border-radius: 6px 6px 0 0;
+    cursor: pointer;
+    font-size: 13px;
+    letter-spacing: 0.3px;
+}
+.edit-tab-button:hover {
+    background: #323232;
+}
+.edit-tab-button.active {
+    background: #363636;
+    border-bottom-color: #1e1e1e;
+    color: #fff;
+}
+.edit-tab-content {
+    display: none;
+    flex: 1;
+    overflow: hidden;
+}
+.edit-tab-content.active {
+    display: flex;
+}
+.editor-container .text-editor-wrapper {
+    display: flex;
+    flex: 1;
+    background: #1e1e1e;
+}
+.editor-container .text-editor-wrapper.hidden {
+    display: none;
+}
+.editor-container .refine-view {
+    flex: 1;
+    display: none;
+    flex-direction: column;
+    background: #1e1e1e;
+    color: #d4d4d4;
+}
+.editor-container.show-refine .text-editor-wrapper {
+    display: none;
+}
+.editor-container.show-refine .refine-view {
+    display: flex;
+}
         .refine-header {
             display: flex;
             justify-content: space-between;
@@ -155,7 +208,7 @@
         }
         .visualization-container {
             position: absolute;
-            top: 0;
+            top: calc(var(--tab-bar-height) + var(--crt-header-height));
             left: 0;
             right: 0;
             bottom: 0;
@@ -163,7 +216,7 @@
             transition: transform 0.3s ease;
             background: #fff;
         }
-        .show-visualization .editor-container {
+        .show-visualization .crt-workspace {
             transform: translateX(-100%);
         }
         .show-visualization .visualization-container {
@@ -215,9 +268,119 @@
             opacity: 0.4;
             cursor: not-allowed;
         }
-        .icon-button .material-icons {
-            font-size: 24px;
-        }
+.icon-button .material-icons {
+    font-size: 24px;
+}
+.edit-tab-content#crt-tab {
+    flex-direction: column;
+    overflow: hidden;
+}
+.crt-panel-header {
+    flex: 0 0 auto;
+}
+.crt-workspace {
+    flex: 1 1 auto;
+    display: flex;
+    min-height: 0;
+    transition: transform 0.3s ease;
+}
+.edit-tab-content#dora-tab,
+.edit-tab-content#time-tab {
+    flex-direction: column;
+    padding: 20px;
+    gap: 24px;
+    overflow-y: auto;
+    color: #d4d4d4;
+}
+.dora-metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 16px;
+}
+.dora-card {
+    border: 1px solid #333;
+    border-radius: 8px;
+    padding: 16px;
+    background: #242424;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+.dora-card h4 {
+    margin: 0;
+    font-size: 15px;
+    color: #fff;
+}
+.dora-card p {
+    margin: 0;
+    font-size: 12px;
+    color: #999;
+}
+.dora-select {
+    background: #1e1e1e;
+    color: #d4d4d4;
+    border: 1px solid #3a3a3a;
+    border-radius: 6px;
+    padding: 6px 10px;
+}
+.westrum-scale {
+    border: 1px solid #333;
+    border-radius: 8px;
+    padding: 18px;
+    background: #242424;
+}
+.westrum-scale h3 {
+    margin: 0 0 8px;
+}
+.westrum-scale input[type="range"] {
+    width: 100%;
+}
+.westrum-label {
+    font-weight: bold;
+    color: #8ab4ff;
+}
+.time-allocation-section {
+    border: 1px solid #333;
+    border-radius: 8px;
+    background: #242424;
+    padding: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+.time-allocation-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 12px;
+}
+.time-allocation-item {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    background: #1f1f1f;
+    border: 1px solid #333;
+    border-radius: 6px;
+    padding: 12px;
+}
+.time-allocation-item label {
+    font-size: 13px;
+    color: #bbb;
+}
+.time-allocation-item input[type="number"] {
+    background: #151515;
+    border: 1px solid #3a3a3a;
+    border-radius: 4px;
+    padding: 6px 8px;
+    color: #e0e0e0;
+}
+.time-allocation-summary {
+    font-size: 14px;
+    color: #bbb;
+}
+.time-allocation-summary.error {
+    color: #ff8a80;
+    font-weight: bold;
+}
         /* Visualization styles from viz.html */
         .node {
             stroke: #fff;
@@ -649,23 +812,6 @@
     </style>
 </head>
 <body>
-    <div class="header">
-        <div class="header-left">
-            <button class="icon-button menu-button" id="menu-button" title="Open Menu">
-                <span class="material-icons">menu</span>
-            </button>
-            <h1 id="editor-title" contenteditable="true" spellcheck="false">CRT to Cypher Parser</h1>
-        </div>
-        <div>
-            <button class="icon-button" id="refine-button" onclick="runRefinement()" title="Refine">
-                <span class="material-icons">auto_fix_high</span>
-            </button>
-            <button class="icon-button" id="view-toggle-button" onclick="toggleView()" title="Toggle View">
-                <span class="material-icons" id="view-toggle-icon">account_tree</span>
-            </button>
-        </div>
-    </div>
-
     <!-- Add this sidebar menu -->
     <div class="sidebar" id="sidebar">
         <div class="sidebar-header">
@@ -686,38 +832,144 @@
         <span>Refining…</span>
     </div>
 
-    <div class="main-content">
-        <div class="editor-container">
-            <div class="text-editor-wrapper" id="text-editor-wrapper">
-                <div class="line-numbers" id="line-numbers"></div>
-                <textarea id="input" placeholder="Enter CRT content here..." spellcheck="false" wrap="off"></textarea>
+    <div class="main-content crt-active">
+        <div class="edit-tabs">
+            <button class="edit-tab-button active" data-edit-tab="crt" id="crt-tab-button">CRT</button>
+            <button class="edit-tab-button" data-edit-tab="dora" id="dora-tab-button">DORA Metrics</button>
+            <button class="edit-tab-button" data-edit-tab="time" id="time-tab-button">Time Allocation</button>
+        </div>
+        <div class="crt-panel-header">
+            <div class="header-left">
+                <button class="icon-button menu-button" id="menu-button" title="Open Menu">
+                    <span class="material-icons">menu</span>
+                </button>
+                <h1 id="editor-title" contenteditable="true" spellcheck="false">CRT to Cypher Parser</h1>
             </div>
-            <div class="refine-view" id="refine-view">
-                <div class="refine-header">
-                    <h2>Refinement Preview</h2>
-                    <div>
-                        <button class="icon-button" onclick="applySelectedAdditions()" id="apply-selected-button" title="Add selected suggestions to the editor">
-                            <span class="material-icons">playlist_add_check</span>
-                        </button>
-                        <button class="icon-button" onclick="applyAllAdditions()" id="apply-all-button" title="Add all suggested entities and links">
-                            <span class="material-icons">playlist_add</span>
-                        </button>
-                        <button class="icon-button" onclick="closeRefineView()" title="Close refinement view">
-                            <span class="material-icons">close</span>
-                        </button>
+            <div class="crt-actions">
+                <button class="icon-button" id="refine-button" onclick="runRefinement()" title="Refine">
+                    <span class="material-icons">auto_fix_high</span>
+                </button>
+                <button class="icon-button" id="view-toggle-button" onclick="toggleView()" title="Toggle View">
+                    <span class="material-icons" id="view-toggle-icon">account_tree</span>
+                </button>
+            </div>
+        </div>
+        <div class="editor-container">
+            <div class="edit-tab-content active" id="crt-tab">
+                <div class="crt-workspace">
+                <div class="text-editor-wrapper" id="text-editor-wrapper">
+                    <div class="line-numbers" id="line-numbers"></div>
+                    <textarea id="input" placeholder="Enter CRT content here..." spellcheck="false" wrap="off"></textarea>
+                </div>
+                <div class="refine-view" id="refine-view">
+                    <div class="refine-header">
+                        <h2>Refinement Preview</h2>
+                        <div>
+                            <button class="icon-button" onclick="applySelectedAdditions()" id="apply-selected-button" title="Add selected suggestions to the editor">
+                                <span class="material-icons">playlist_add_check</span>
+                            </button>
+                            <button class="icon-button" onclick="applyAllAdditions()" id="apply-all-button" title="Add all suggested entities and links">
+                                <span class="material-icons">playlist_add</span>
+                            </button>
+                            <button class="icon-button" onclick="closeRefineView()" title="Close refinement view">
+                                <span class="material-icons">close</span>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="refine-grid">
+                        <div class="refine-column">
+                            <h3>Current CRT</h3>
+                            <pre class="refine-text" id="refine-current-text"></pre>
+                        </div>
+                        <div class="refine-column">
+                            <h3>Suggested Additions</h3>
+                            <div class="refine-actions" id="refine-summary"></div>
+                            <div class="refine-list" id="refine-entities-list"></div>
+                            <div class="refine-list" id="refine-links-list"></div>
+                        </div>
                     </div>
                 </div>
-                <div class="refine-grid">
-                    <div class="refine-column">
-                        <h3>Current CRT</h3>
-                        <pre class="refine-text" id="refine-current-text"></pre>
+                </div>
+            </div>
+            <div class="edit-tab-content" id="dora-tab">
+                <h2>DORA Metrics Overview</h2>
+                <p style="margin: 0 0 12px; color: #aaa;">Assess each metric using industry benchmark tiers.</p>
+                <div class="dora-metrics-grid">
+                    <div class="dora-card">
+                        <h4>Deployment Frequency</h4>
+                        <p>How often does your team successfully deploy to production?</p>
+                        <select class="dora-select" id="dora-deployment-frequency">
+                            <option value="elite">Elite (On-demand, multiple deploys per day)</option>
+                            <option value="high">High (Between once per day and once per week)</option>
+                            <option value="medium">Medium (Between once per week and once per month)</option>
+                            <option value="low">Low (Fewer than once per month)</option>
+                        </select>
                     </div>
-                    <div class="refine-column">
-                        <h3>Suggested Additions</h3>
-                        <div class="refine-actions" id="refine-summary"></div>
-                        <div class="refine-list" id="refine-entities-list"></div>
-                        <div class="refine-list" id="refine-links-list"></div>
+                    <div class="dora-card">
+                        <h4>Lead Time for Changes</h4>
+                        <p>Time from code committed to code running in production.</p>
+                        <select class="dora-select" id="dora-lead-time">
+                            <option value="elite">Elite (&lt; 1 day)</option>
+                            <option value="high">High (1 day – 1 week)</option>
+                            <option value="medium">Medium (1 week – 1 month)</option>
+                            <option value="low">Low (&gt; 1 month)</option>
+                        </select>
                     </div>
+                    <div class="dora-card">
+                        <h4>Change Failure Rate</h4>
+                        <p>Percent of deployments causing degraded service that require remediation.</p>
+                        <select class="dora-select" id="dora-change-failure">
+                            <option value="elite">Elite (&lt; 15%)</option>
+                            <option value="high">High (15% – 30%)</option>
+                            <option value="medium">Medium (31% – 45%)</option>
+                            <option value="low">Low (&gt; 45%)</option>
+                        </select>
+                    </div>
+                    <div class="dora-card">
+                        <h4>MTTR (Restore Service)</h4>
+                        <p>How long to restore service after an incident or defect.</p>
+                        <select class="dora-select" id="dora-mttr">
+                            <option value="elite">Elite (&lt; 1 hour)</option>
+                            <option value="high">High (1 – 24 hours)</option>
+                            <option value="medium">Medium (1 day – 1 week)</option>
+                            <option value="low">Low (&gt; 1 week)</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="westrum-scale">
+                    <h3>Westrum Organizational Culture</h3>
+                    <p style="margin: 0 0 12px; color: #aaa;">Rate your culture from <strong>Pathological (1)</strong> to <strong>Generative (7)</strong>.</p>
+                    <input type="range" id="westrum-scale" min="1" max="7" step="1" value="4">
+                    <div>Selected: <span class="westrum-label" id="westrum-scale-label"></span></div>
+                </div>
+            </div>
+            <div class="edit-tab-content" id="time-tab">
+                <h2>Team Time Allocation</h2>
+                <p style="margin: 0; color: #aaa;">Distribute 100% of your available capacity across focus areas.</p>
+                <div class="time-allocation-section">
+                    <div class="time-allocation-list">
+                        <div class="time-allocation-item">
+                            <label for="time-meetings">Meetings (%)</label>
+                            <input type="number" id="time-meetings" data-time-category="meetings" min="0" max="100" step="1" value="20">
+                        </div>
+                        <div class="time-allocation-item">
+                            <label for="time-unplanned">Unplanned / Interruptions (%)</label>
+                            <input type="number" id="time-unplanned" data-time-category="unplanned" min="0" max="100" step="1" value="15">
+                        </div>
+                        <div class="time-allocation-item">
+                            <label for="time-bugs">Bug Fixing (%)</label>
+                            <input type="number" id="time-bugs" data-time-category="bugs" min="0" max="100" step="1" value="15">
+                        </div>
+                        <div class="time-allocation-item">
+                            <label for="time-tech-debt">Tech Debt &amp; Improvements (%)</label>
+                            <input type="number" id="time-tech-debt" data-time-category="tech_debt" min="0" max="100" step="1" value="20">
+                        </div>
+                        <div class="time-allocation-item">
+                            <label for="time-features">Feature Development (%)</label>
+                            <input type="number" id="time-features" data-time-category="features" min="0" max="100" step="1" value="30">
+                        </div>
+                    </div>
+                    <div class="time-allocation-summary" id="time-allocation-summary">Remaining capacity: -0%</div>
                 </div>
             </div>
         </div>
@@ -800,14 +1052,19 @@
         let wasmReady = false;
         let viewToggleIsEnabled = false;
         let viewToggleValidationTimer = null;
+        let viewToggleIntended = false;
+        let activeEditTab = 'crt';
         let lastRefinedContent = null;
         let isRefining = false;
+        let refineButtonIntendedDisabled = false;
         function setViewToggleEnabled(enabled) {
             const button = document.getElementById('view-toggle-button');
-            viewToggleIsEnabled = Boolean(enabled);
+            viewToggleIntended = Boolean(enabled);
+            const effective = viewToggleIntended && activeEditTab === 'crt';
+            viewToggleIsEnabled = effective;
             if (button) {
-                button.disabled = !enabled;
-                button.classList.toggle('disabled', !enabled);
+                button.disabled = !effective;
+                button.classList.toggle('disabled', !effective);
             }
         }
 
@@ -820,7 +1077,7 @@
 
         function updateViewToggleState() {
             viewToggleValidationTimer = null;
-            if (!wasmReady) {
+            if (!wasmReady || activeEditTab !== 'crt') {
                 return;
             }
             const content = document.getElementById('input').value;
@@ -878,11 +1135,105 @@
             }
         }
 
+        function applyActiveEditTab() {
+            document.querySelectorAll('.edit-tab-button').forEach((button) => {
+                const target = button.dataset.editTab;
+                const isActive = target === activeEditTab;
+                button.classList.toggle('active', isActive);
+            });
+            document.querySelectorAll('.edit-tab-content').forEach((section) => {
+                const isActive = section.id === `${activeEditTab}-tab` || (activeEditTab === 'crt' && section.id === 'crt-tab');
+                section.classList.toggle('active', isActive);
+            });
+            const mainContent = document.querySelector('.main-content');
+            if (mainContent) {
+                mainContent.classList.toggle('crt-active', activeEditTab === 'crt');
+            }
+            if (activeEditTab !== 'crt') {
+                if (isVisualizationMode) {
+                    exitVisualizationMode();
+                }
+                window.closeRefineView?.();
+            } else {
+                scheduleViewToggleValidation();
+            }
+            setRefineButtonState(refineButtonIntendedDisabled);
+            setViewToggleEnabled(viewToggleIntended);
+            const menuButton = document.getElementById('menu-button');
+            if (menuButton) {
+                menuButton.disabled = activeEditTab !== 'crt';
+                menuButton.classList.toggle('disabled', activeEditTab !== 'crt');
+            }
+            if (activeEditTab !== 'crt') {
+                closeSidebar();
+            }
+        }
+
+        function setActiveEditTab(tab) {
+            const allowed = new Set(['crt', 'dora', 'time']);
+            const nextTab = allowed.has(tab) ? tab : 'crt';
+            if (nextTab === activeEditTab) {
+                return;
+            }
+            activeEditTab = nextTab;
+            applyActiveEditTab();
+        }
+
+        const WESTRUM_LEVELS = {
+            1: 'Pathological',
+            2: 'Power-Oriented',
+            3: 'Rule-Oriented',
+            4: 'Calculative',
+            5: 'Collaborative',
+            6: 'Learning-Oriented',
+            7: 'Generative',
+        };
+
+        function updateWestrumScaleLabel() {
+            const slider = document.getElementById('westrum-scale');
+            const label = document.getElementById('westrum-scale-label');
+            if (!slider || !label) return;
+            const value = Number(slider.value) || 1;
+            label.textContent = `${WESTRUM_LEVELS[value] ?? 'Unknown'} (${value})`;
+        }
+
+        function clampPercentage(value) {
+            if (Number.isNaN(value)) return 0;
+            return Math.max(0, Math.min(100, Math.round(value)));
+        }
+
+        function updateTimeAllocationSummary() {
+            const inputs = document.querySelectorAll('[data-time-category]');
+            let total = 0;
+            inputs.forEach((input) => {
+                const numeric = clampPercentage(Number(input.value));
+                if (numeric !== Number(input.value)) {
+                    input.value = numeric;
+                }
+                total += numeric;
+            });
+            const remaining = 100 - total;
+            const summary = document.getElementById('time-allocation-summary');
+            if (!summary) return;
+            if (remaining === 0) {
+                summary.textContent = 'Perfect allocation: 100% of capacity assigned.';
+                summary.classList.remove('error');
+            } else if (remaining > 0) {
+                summary.textContent = `Remaining capacity: ${remaining}%`;
+                summary.classList.remove('error');
+            } else {
+                summary.textContent = `Over-allocated by ${Math.abs(remaining)}%`;
+                summary.classList.add('error');
+            }
+        }
+
         function setRefineButtonState(disabled) {
             const button = document.getElementById('refine-button');
             if (!button) return;
-            button.disabled = disabled;
-            button.classList.toggle('disabled', disabled);
+            refineButtonIntendedDisabled = disabled;
+            const effective = disabled || activeEditTab !== 'crt';
+            button.disabled = effective;
+            button.classList.toggle('disabled', effective);
         }
 
         let lastRefineResult = null;
@@ -2146,6 +2497,22 @@
         }
 
         initWasm();
+
+        document.querySelectorAll('.edit-tab-button').forEach((button) => {
+            button.addEventListener('click', () => setActiveEditTab(button.dataset.editTab));
+        });
+        applyActiveEditTab();
+        const westrumSlider = document.getElementById('westrum-scale');
+        if (westrumSlider) {
+            westrumSlider.addEventListener('input', updateWestrumScaleLabel);
+            westrumSlider.addEventListener('change', updateWestrumScaleLabel);
+        }
+        updateWestrumScaleLabel();
+        document.querySelectorAll('[data-time-category]').forEach((input) => {
+            input.addEventListener('input', updateTimeAllocationSummary);
+            input.addEventListener('change', updateTimeAllocationSummary);
+        });
+        updateTimeAllocationSummary();
 
         const textarea = document.getElementById('input');
         textarea.addEventListener('input', updateLineNumbers);
