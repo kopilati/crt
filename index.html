@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>CRT to Cypher Parser</title>
+    <title>Oak Insights</title>
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <style>
@@ -101,6 +101,18 @@
     background: #363636;
     border-bottom-color: #1e1e1e;
     color: #fff;
+}
+.edit-tab-button:disabled,
+.edit-tab-button.disabled {
+    background: #1e1e1e;
+    border-color: #2c2c2c;
+    color: var(--text-muted);
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+.edit-tab-button:disabled:hover,
+.edit-tab-button.disabled:hover {
+    background: #1e1e1e;
 }
 .edit-tab-content {
     display: none;
@@ -417,6 +429,41 @@
     box-shadow: inset 0 0 0 1px var(--accent-color);
     font-weight: 600;
 }
+.dora-input {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 18px 20px;
+    background: #1c1c1c;
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+}
+.dora-input label {
+    font-weight: 600;
+    font-size: 13px;
+    color: #fff;
+}
+.dora-input input {
+    background: #111;
+    border: 1px solid #3a3a3a;
+    border-radius: 8px;
+    padding: 10px 12px;
+    color: #e6e6e6;
+    font-size: 14px;
+}
+.dora-input input:focus {
+    outline: none;
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 2px rgba(74, 110, 245, 0.25);
+}
+.dora-input input::placeholder {
+    color: var(--text-muted);
+}
+.dora-input .dora-input-hint {
+    font-size: 12px;
+    color: var(--text-muted);
+    line-height: 1.5;
+}
 .westrum-card-header {
     display: flex;
     justify-content: space-between;
@@ -519,47 +566,370 @@
     font-weight: 600;
     line-height: 1.35;
 }
-.time-allocation-section {
-    border: 1px solid #333;
-    border-radius: 8px;
-    background: #242424;
-    padding: 18px;
+.time-content {
+    width: min(960px, 100%);
+    margin: 0 auto;
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 32px;
+    align-items: stretch;
 }
-.time-allocation-list {
+.time-card {
+    background: var(--surface-elevated);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: 28px 32px;
+    box-shadow: 0 18px 32px rgba(0, 0, 0, 0.35);
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+.time-card-header {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+.time-card-header h2 {
+    margin: 0;
+    font-size: 22px;
+    letter-spacing: 0.4px;
+}
+.time-card-header p {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: 13px;
+    max-width: 520px;
+}
+.time-progress {
+    width: 100%;
+    height: 10px;
+    background: #161616;
+    border-radius: 999px;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+.time-progress-bar {
+    height: 100%;
+    width: 0;
+    background: var(--accent-color);
+    border-radius: inherit;
+    transition: width 0.2s ease, background 0.2s ease;
+}
+.time-progress-bar.overallocated {
+    background: #ff6b6b;
+}
+.time-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 16px;
+}
+.time-item {
+    background: var(--surface-raised);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 16px 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    position: relative;
+}
+.time-item label {
+    font-size: 13px;
+    font-weight: 600;
+    color: #fff;
+}
+.time-lock-badge {
+    position: absolute;
+    top: 12px;
+    right: 16px;
+    display: none;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    font-weight: 600;
+    background: var(--accent-soft);
+    color: var(--accent-color);
+    border-radius: 999px;
+    padding: 4px 8px;
+    pointer-events: none;
+}
+.time-lock-badge .material-icons {
+    font-size: 16px;
+    line-height: 1;
+}
+.time-item.locked .time-lock-badge {
+    display: inline-flex;
+}
+.time-item-hint {
+    font-size: 12px;
+    color: var(--text-muted);
+}
+.time-lock {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    color: var(--text-muted);
+}
+.time-lock label {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+}
+.time-lock input[type="checkbox"] {
+    accent-color: var(--accent-color);
+}
+.time-input-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.time-input-group input[type="number"] {
+    flex: 0 0 70px;
+    background: #151515;
+    border: 1px solid #3a3a3a;
+    border-radius: 8px;
+    padding: 6px 10px;
+    color: #e0e0e0;
+    font-size: 14px;
+}
+.time-slider {
+    flex: 1;
+    margin-bottom: 6px;
+}
+.time-slider input[type="range"] {
+    width: 100%;
+    -webkit-appearance: none;
+    appearance: none;
+    height: 6px;
+    border-radius: 999px;
+    background: linear-gradient(90deg, var(--accent-color) 0%, rgba(255, 255, 255, 0.08) 0%);
+    outline: none;
+    cursor: pointer;
+}
+.time-slider input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #fff;
+    border: 2px solid var(--accent-color);
+    box-shadow: 0 0 0 3px rgba(74, 110, 245, 0.2);
+}
+.time-slider input[type="range"]::-moz-range-thumb {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #fff;
+    border: 2px solid var(--accent-color);
+    box-shadow: 0 0 0 3px rgba(74, 110, 245, 0.2);
+}
+.time-input-suffix {
+    font-size: 13px;
+    color: var(--text-muted);
+}
+.analysis-content {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    width: 100%;
+}
+.analysis-card {
+    background: var(--surface-elevated);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: 28px 32px;
+    box-shadow: 0 18px 32px rgba(0, 0, 0, 0.35);
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+.analysis-card-header {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+.analysis-card-header h2 {
+    margin: 0;
+    font-size: 22px;
+    letter-spacing: 0.4px;
+}
+.analysis-card-header p {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: 13px;
+    max-width: 520px;
+}
+.analysis-status {
+    font-size: 12px;
+    color: var(--text-muted);
+    padding: 6px 10px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.05);
+    align-self: flex-start;
+}
+.analysis-status.running {
+    color: var(--accent-color);
+    background: rgba(74, 110, 245, 0.12);
+}
+.analysis-status.warning {
+    color: #f6c177;
+    background: rgba(246, 193, 119, 0.16);
+}
+.analysis-status.error {
+    color: #ff8f8f;
+    background: rgba(255, 107, 107, 0.18);
+}
+.analysis-actions {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+.analysis-actions button {
+    background: var(--accent-color);
+    color: #fff;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 13px;
+    letter-spacing: 0.3px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+.analysis-actions button:disabled {
+    background: #2f2f2f;
+    color: var(--text-muted);
+    cursor: not-allowed;
+}
+.analysis-output {
+    background: #151515;
+    border: 1px solid #2f2f2f;
+    border-radius: 12px;
+    padding: 18px;
+    font-size: 13px;
+    line-height: 1.6;
+    overflow: auto;
+    max-height: 360px;
+    display: flex;
+    flex-direction: column;
     gap: 12px;
 }
-.time-allocation-item {
+.analysis-output p {
+    margin: 0;
+}
+.analysis-output ul {
+    margin: 8px 0 0 18px;
+    padding: 0;
+    list-style: disc;
+}
+.analysis-output li {
+    margin-bottom: 4px;
+}
+.analysis-section-title {
+    font-weight: 600;
+    color: #fff;
+}
+.analysis-section {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+.analysis-subsection {
     display: flex;
     flex-direction: column;
     gap: 6px;
-    background: #1f1f1f;
-    border: 1px solid #333;
-    border-radius: 6px;
-    padding: 12px;
 }
-.time-allocation-item label {
-    font-size: 13px;
-    color: #bbb;
+.analysis-subsection .analysis-key {
+    margin: 0;
+    font-weight: 600;
 }
-.time-allocation-item input[type="number"] {
-    background: #151515;
-    border: 1px solid #3a3a3a;
-    border-radius: 4px;
-    padding: 6px 8px;
-    color: #e0e0e0;
+.analysis-subdetail {
+    font-size: 12px;
+    color: var(--text-muted);
+}
+.analysis-subdetails {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-top: 4px;
+}
+.analysis-empty {
+    color: var(--text-muted);
+    font-style: italic;
+}
+.analysis-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--text-muted);
 }
 .time-allocation-summary {
     font-size: 14px;
-    color: #bbb;
+    font-weight: 600;
+    color: var(--text-muted);
+}
+.time-allocation-summary.good {
+    color: #7cbf8e;
 }
 .time-allocation-summary.error {
     color: #ff8a80;
-    font-weight: bold;
+}
+.time-progress {
+    width: 100%;
+    height: 10px;
+    background: #161616;
+    border-radius: 999px;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+.time-progress-bar {
+    height: 100%;
+    width: 0;
+    background: var(--accent-color);
+    border-radius: inherit;
+    transition: width 0.2s ease, background 0.2s ease;
+}
+.time-progress-bar.overallocated {
+    background: #ff6b6b;
+}
+.quality-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 16px;
+}
+.quality-pill,
+.quality-note {
+    background: var(--surface-raised);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 18px;
+    color: #d4d4d4;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+.quality-pill h4,
+.quality-note strong {
+    margin: 0;
+    font-size: 15px;
+    letter-spacing: 0.2px;
+}
+.quality-pill p,
+.quality-note p {
+    margin: 0;
+    font-size: 13px;
+    color: var(--text-muted);
+    line-height: 1.45;
 }
         /* Visualization styles from viz.html */
         .node {
@@ -1013,17 +1383,18 @@
     </div>
 
     <div class="main-content crt-active">
-        <div class="edit-tabs">
-            <button class="edit-tab-button active" data-edit-tab="crt" id="crt-tab-button">CRT</button>
-            <button class="edit-tab-button" data-edit-tab="dora" id="dora-tab-button">DORA Metrics</button>
-            <button class="edit-tab-button" data-edit-tab="time" id="time-tab-button">Time Allocation</button>
-        </div>
+            <div class="edit-tabs">
+                <button class="edit-tab-button active" data-edit-tab="crt" id="crt-tab-button">CRT</button>
+                <button class="edit-tab-button" data-edit-tab="dora" id="dora-tab-button">DORA Metrics</button>
+                <button class="edit-tab-button" data-edit-tab="time" id="time-tab-button">Time Allocation</button>
+                <button class="edit-tab-button disabled" data-edit-tab="analysis" id="analysis-tab-button" disabled>Systems Analysis</button>
+            </div>
         <div class="crt-panel-header">
             <div class="header-left">
                 <button class="icon-button menu-button" id="menu-button" title="Open Menu">
                     <span class="material-icons">menu</span>
                 </button>
-                <h1 id="editor-title" contenteditable="true" spellcheck="false">CRT to Cypher Parser</h1>
+                <h1 id="editor-title" contenteditable="true" spellcheck="false">Oak Insights</h1>
             </div>
             <div class="crt-actions">
                 <button class="icon-button" id="refine-button" onclick="runRefinement()" title="Refine">
@@ -1091,11 +1462,23 @@
                             <button type="button" class="dora-cell" data-metric="deployment_frequency" data-tier="high">1 per day – 1 per week</button>
                             <button type="button" class="dora-cell" data-metric="deployment_frequency" data-tier="elite">On-demand, multiple per day</button>
 
+                            <div class="dora-metric" data-metric="commit_frequency">Commit Frequency</div>
+                            <button type="button" class="dora-cell" data-metric="commit_frequency" data-tier="low">&lt; 5 commits per developer per week</button>
+                            <button type="button" class="dora-cell" data-metric="commit_frequency" data-tier="medium">5 – 15 commits per developer per week</button>
+                            <button type="button" class="dora-cell" data-metric="commit_frequency" data-tier="high">15 – 30 commits per developer per week</button>
+                            <button type="button" class="dora-cell" data-metric="commit_frequency" data-tier="elite">&gt; 30 commits per developer per week</button>
+
                             <div class="dora-metric" data-metric="lead_time">Lead Time for Changes</div>
                             <button type="button" class="dora-cell" data-metric="lead_time" data-tier="low">&gt; 1 month</button>
                             <button type="button" class="dora-cell" data-metric="lead_time" data-tier="medium">1 week – 1 month</button>
                             <button type="button" class="dora-cell" data-metric="lead_time" data-tier="high">1 day – 1 week</button>
                             <button type="button" class="dora-cell" data-metric="lead_time" data-tier="elite">&lt; 1 day</button>
+
+                            <div class="dora-metric" data-metric="branch_lifetime">Branch Lifetime</div>
+                            <button type="button" class="dora-cell" data-metric="branch_lifetime" data-tier="low">More than 2 weeks open</button>
+                            <button type="button" class="dora-cell" data-metric="branch_lifetime" data-tier="medium">~3 – 10 days open</button>
+                            <button type="button" class="dora-cell" data-metric="branch_lifetime" data-tier="high">~1 – 3 days open</button>
+                            <button type="button" class="dora-cell" data-metric="branch_lifetime" data-tier="elite">≤ 1 day open</button>
 
                             <div class="dora-metric" data-metric="change_failure">Change Failure Rate</div>
                             <button type="button" class="dora-cell" data-metric="change_failure" data-tier="low">&gt; 45%</button>
@@ -1108,6 +1491,11 @@
                             <button type="button" class="dora-cell" data-metric="mttr" data-tier="medium">1 day – 1 week</button>
                             <button type="button" class="dora-cell" data-metric="mttr" data-tier="high">1 – 24 hours</button>
                             <button type="button" class="dora-cell" data-metric="mttr" data-tier="elite">&lt; 1 hour</button>
+                        </div>
+                        <div class="dora-input">
+                            <label for="pbis-per-sprint">PBIs per Sprint per Team</label>
+                            <input type="number" id="pbis-per-sprint" name="pbis_per_sprint" min="0" step="0.1" placeholder="Enter average PBIs completed">
+                            <span class="dora-input-hint">Average number of Product Backlog Items completed by a team each sprint.</span>
                         </div>
                     </div>
                     <div class="westrum-card">
@@ -1155,32 +1543,181 @@
                 </div>
             </div>
             <div class="edit-tab-content" id="time-tab">
-                <h2>Team Time Allocation</h2>
-                <p style="margin: 0; color: #aaa;">Distribute 100% of your available capacity across focus areas.</p>
-                <div class="time-allocation-section">
-                    <div class="time-allocation-list">
-                        <div class="time-allocation-item">
-                            <label for="time-meetings">Meetings (%)</label>
-                            <input type="number" id="time-meetings" data-time-category="meetings" min="0" max="100" step="1" value="20">
+                <div class="time-content">
+                    <div class="time-card">
+                        <div class="time-card-header">
+                            <div>
+                                <h2>Team Time Allocation</h2>
+                                <p>Distribute your available capacity across the focus areas your team invests in each sprint.</p>
+                            </div>
+                            <div class="time-allocation-summary" id="time-allocation-summary">Remaining capacity: 100%</div>
                         </div>
-                        <div class="time-allocation-item">
-                            <label for="time-unplanned">Unplanned / Interruptions (%)</label>
-                            <input type="number" id="time-unplanned" data-time-category="unplanned" min="0" max="100" step="1" value="15">
+                        <div class="time-progress">
+                            <div class="time-progress-bar" id="time-allocation-progress"></div>
                         </div>
-                        <div class="time-allocation-item">
-                            <label for="time-bugs">Bug Fixing (%)</label>
-                            <input type="number" id="time-bugs" data-time-category="bugs" min="0" max="100" step="1" value="15">
-                        </div>
-                        <div class="time-allocation-item">
-                            <label for="time-tech-debt">Tech Debt &amp; Improvements (%)</label>
-                            <input type="number" id="time-tech-debt" data-time-category="tech_debt" min="0" max="100" step="1" value="20">
-                        </div>
-                        <div class="time-allocation-item">
-                            <label for="time-features">Feature Development (%)</label>
-                            <input type="number" id="time-features" data-time-category="features" min="0" max="100" step="1" value="30">
+                        <div class="time-grid">
+                            <div class="time-item" data-time-item="meetings">
+                                <span class="time-lock-badge" aria-hidden="true">
+                                    <span class="material-icons" aria-hidden="true">check_circle</span>
+                                    Locked
+                                </span>
+                                <div class="time-lock">
+                                    <label>
+                                        <input type="checkbox" data-time-lock="meetings">
+                                        Locked
+                                    </label>
+                                </div>
+                                <label for="time-meetings">Meetings</label>
+                                <span class="time-item-hint">Planning ceremonies, team syncs, reviews, retrospectives.</span>
+                                <div class="time-slider">
+                                    <input type="range" min="0" max="100" step="1" value="20" data-time-slider="meetings">
+                                </div>
+                                <div class="time-input-group">
+                                    <input type="number" id="time-meetings" data-time-category="meetings" min="0" max="100" step="1" value="20">
+                                    <span class="time-input-suffix">%</span>
+                                </div>
+                            </div>
+                            <div class="time-item" data-time-item="unplanned">
+                                <span class="time-lock-badge" aria-hidden="true">
+                                    <span class="material-icons" aria-hidden="true">check_circle</span>
+                                    Locked
+                                </span>
+                                <div class="time-lock">
+                                    <label>
+                                        <input type="checkbox" data-time-lock="unplanned">
+                                        Locked
+                                    </label>
+                                </div>
+                                <label for="time-unplanned">Unplanned / Interruptions</label>
+                                <span class="time-item-hint">Production incidents, urgent escalations, unplanned requests.</span>
+                                <div class="time-slider">
+                                    <input type="range" min="0" max="100" step="1" value="15" data-time-slider="unplanned">
+                                </div>
+                                <div class="time-input-group">
+                                    <input type="number" id="time-unplanned" data-time-category="unplanned" min="0" max="100" step="1" value="15">
+                                    <span class="time-input-suffix">%</span>
+                                </div>
+                            </div>
+                            <div class="time-item" data-time-item="bugs">
+                                <span class="time-lock-badge" aria-hidden="true">
+                                    <span class="material-icons" aria-hidden="true">check_circle</span>
+                                    Locked
+                                </span>
+                                <div class="time-lock">
+                                    <label>
+                                        <input type="checkbox" data-time-lock="bugs">
+                                        Locked
+                                    </label>
+                                </div>
+                                <label for="time-bugs">Bug Fixing</label>
+                                <span class="time-item-hint">Stabilising releases, defect triage, remediation.</span>
+                                <div class="time-slider">
+                                    <input type="range" min="0" max="100" step="1" value="15" data-time-slider="bugs">
+                                </div>
+                                <div class="time-input-group">
+                                    <input type="number" id="time-bugs" data-time-category="bugs" min="0" max="100" step="1" value="15">
+                                    <span class="time-input-suffix">%</span>
+                                </div>
+                            </div>
+                            <div class="time-item" data-time-item="tech_debt">
+                                <span class="time-lock-badge" aria-hidden="true">
+                                    <span class="material-icons" aria-hidden="true">check_circle</span>
+                                    Locked
+                                </span>
+                                <div class="time-lock">
+                                    <label>
+                                        <input type="checkbox" data-time-lock="tech_debt">
+                                        Locked
+                                    </label>
+                                </div>
+                                <label for="time-tech-debt">Software Quality Investment</label>
+                                <span class="time-item-hint">Improving software quality so product &amp; process outcomes stay healthy.</span>
+                                <div class="time-slider">
+                                    <input type="range" min="0" max="100" step="1" value="20" data-time-slider="tech_debt">
+                                </div>
+                                <div class="time-input-group">
+                                    <input type="number" id="time-tech-debt" data-time-category="tech_debt" min="0" max="100" step="1" value="20">
+                                    <span class="time-input-suffix">%</span>
+                                </div>
+                            </div>
+                            <div class="time-item" data-time-item="features">
+                                <span class="time-lock-badge" aria-hidden="true">
+                                    <span class="material-icons" aria-hidden="true">check_circle</span>
+                                    Locked
+                                </span>
+                                <div class="time-lock">
+                                    <label>
+                                        <input type="checkbox" data-time-lock="features">
+                                        Locked
+                                    </label>
+                                </div>
+                                <label for="time-features">Feature Development</label>
+                                <span class="time-item-hint">Net-new product work, enhancements, discovery experiments.</span>
+                                <div class="time-slider">
+                                    <input type="range" min="0" max="100" step="1" value="30" data-time-slider="features">
+                                </div>
+                                <div class="time-input-group">
+                                    <input type="number" id="time-features" data-time-category="features" min="0" max="100" step="1" value="30">
+                                    <span class="time-input-suffix">%</span>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                    <div class="time-allocation-summary" id="time-allocation-summary">Remaining capacity: -0%</div>
+                    <div class="time-card">
+                        <div class="time-card-header">
+                            <div>
+                                <h2>Quality Definitions</h2>
+                                <p>Use shared language when debating trade-offs. Balance quality so product value, delivery flow, and software health reinforce each other.</p>
+                            </div>
+                        </div>
+                        <div class="quality-grid">
+                            <div class="quality-pill">
+                                <h4>Product Quality</h4>
+                                <p>Customer experience and outcomes&mdash;metrics like NPS, adoption, and retention.</p>
+                            </div>
+                            <div class="quality-pill">
+                                <h4>Process Quality</h4>
+                                <p>Ability to sustain predictable flow while meeting the prescribed product quality.</p>
+                            </div>
+                            <div class="quality-pill">
+                                <h4>Software Quality</h4>
+                                <p>Technical integrity of the codebase&mdash;the grade you would give a CS thesis.</p>
+                            </div>
+                        </div>
+                        <div class="quality-grid">
+                            <div class="quality-note">
+                                <strong>Tech Debt</strong>
+                                <p>Insufficient software quality causing product or process quality to suffer.</p>
+                            </div>
+                            <div class="quality-note">
+                                <strong>Gold Plating</strong>
+                                <p>Software quality work that does not materially improve product or process quality.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="edit-tab-content" id="analysis-tab">
+                <div class="analysis-content">
+                    <div class="analysis-card">
+                        <div class="analysis-card-header">
+                            <div>
+                                <h2>Systems Analysis</h2>
+                                <p>Combine your CRT, delivery metrics, and culture signals to surface systemic constraints.</p>
+                            </div>
+                            <div class="analysis-status" id="analysis-status">Provide CRT text, DORA selections, Westrum score, and lock all time categories.</div>
+                        </div>
+                        <div class="analysis-actions">
+                            <button type="button" id="analysis-refresh-button" disabled>
+                                <span class="material-icons" aria-hidden="true">play_arrow</span>
+                                Run Analysis
+                            </button>
+                        </div>
+                        <div class="analysis-meta" id="analysis-meta"></div>
+                        <div class="analysis-output" id="analysis-output">
+                            <p>Enter CRT content, select DORA tiers, set the Westrum slider, and lock every time category to enable analysis.</p>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -1372,6 +1909,11 @@
             setViewToggleEnabled(viewToggleIntended);
             if (activeEditTab === 'dora') {
                 updateWestrumScaleLabel();
+            } else if (activeEditTab === 'time') {
+                updateTimeAllocationSummary();
+            } else if (activeEditTab === 'analysis') {
+                updateAnalysisAvailability();
+                runAnalysis();
             }
             const menuButton = document.getElementById('menu-button');
             if (menuButton) {
@@ -1384,7 +1926,10 @@
         }
 
         function setActiveEditTab(tab) {
-            const allowed = new Set(['crt', 'dora', 'time']);
+            const allowed = new Set(['crt', 'dora', 'time', 'analysis']);
+            if (tab === 'analysis' && !isAnalysisReady()) {
+                return;
+            }
             const nextTab = allowed.has(tab) ? tab : 'crt';
             if (nextTab === activeEditTab) {
                 return;
@@ -1429,6 +1974,93 @@
             return Math.max(0, Math.min(100, Math.round(value)));
         }
 
+function syncTimeSlider(category, value) {
+            const slider = document.querySelector(`[data-time-slider=\"${category}\"]`);
+            if (slider) {
+                slider.value = value;
+            }
+        }
+
+function setLockState(category, locked = true) {
+            const lock = document.querySelector(`[data-time-lock=\"${category}\"]`);
+            const card = document.querySelector(`[data-time-item=\"${category}\"]`);
+            const isLocked = Boolean(locked);
+            if (lock) {
+                lock.checked = isLocked;
+            }
+            if (card) {
+                card.classList.toggle('locked', isLocked);
+            }
+        }
+
+        function setCategoryValue(category, value) {
+            const numeric = clampPercentage(Math.round(value));
+            const input = document.querySelector(`[data-time-category=\"${category}\"]`);
+            const slider = document.querySelector(`[data-time-slider=\"${category}\"]`);
+            if (input) {
+                input.value = numeric;
+            }
+            if (slider) {
+                slider.value = numeric;
+            }
+        }
+
+        function updateSliderVisuals() {
+            document.querySelectorAll('[data-time-slider]').forEach((slider) => {
+                const numeric = clampPercentage(Number(slider.value));
+                slider.style.background = `linear-gradient(90deg, var(--accent-color) ${numeric}%, rgba(255, 255, 255, 0.08) ${numeric}%)`;
+            });
+        }
+
+        function distributeUnlocked() {
+            const unlocked = [];
+            let totalLocked = 0;
+            TIME_CATEGORIES.forEach((category) => {
+                const input = document.querySelector(`[data-time-category="${category}"]`);
+                if (!input) {
+                    return;
+                }
+                const value = clampPercentage(Number(input.value));
+                const lock = document.querySelector(`[data-time-lock="${category}"]`);
+                const isLocked = lock && lock.checked;
+                if (isLocked) {
+                    totalLocked += value;
+                } else {
+                    unlocked.push({ category });
+                }
+            });
+            if (!unlocked.length) {
+                updateSliderVisuals();
+                return;
+            }
+            let remaining = Math.round(100 - totalLocked);
+            if (remaining <= 0) {
+                unlocked.forEach(({ category }) => setCategoryValue(category, 0));
+                updateSliderVisuals();
+                return;
+            }
+            const base = Math.floor(remaining / unlocked.length);
+            let remainder = remaining - base * unlocked.length;
+            unlocked.forEach(({ category }) => {
+                let value = base;
+                if (remainder > 0) {
+                    value += 1;
+                    remainder -= 1;
+                }
+                setCategoryValue(category, value);
+            });
+            updateSliderVisuals();
+        }
+
+        function applyManualTimeAllocation(category, value) {
+            const numeric = clampPercentage(Number(value));
+            setCategoryValue(category, numeric);
+            setLockState(category, true);
+            distributeUnlocked();
+            markAnalysisStale();
+            updateTimeAllocationSummary();
+        }
+
         function updateTimeAllocationSummary() {
             const inputs = document.querySelectorAll('[data-time-category]');
             let total = 0;
@@ -1438,19 +2070,456 @@
                     input.value = numeric;
                 }
                 total += numeric;
+                syncTimeSlider(input.dataset.timeCategory, numeric);
             });
-            const remaining = 100 - total;
             const summary = document.getElementById('time-allocation-summary');
+            const progress = document.getElementById('time-allocation-progress');
+            if (progress) {
+                const clamped = Math.max(0, Math.min(total, 100));
+                progress.style.width = `${clamped}%`;
+                progress.classList.toggle('overallocated', total > 100);
+            }
             if (!summary) return;
-            if (remaining === 0) {
-                summary.textContent = 'Perfect allocation: 100% of capacity assigned.';
-                summary.classList.remove('error');
-            } else if (remaining > 0) {
-                summary.textContent = `Remaining capacity: ${remaining}%`;
-                summary.classList.remove('error');
+            const remaining = 100 - total;
+            summary.classList.remove('error', 'good');
+            if (total === 100) {
+                summary.textContent = 'Perfect allocation: 100% assigned.';
+                summary.classList.add('good');
+            } else if (total < 100) {
+                summary.textContent = `Remaining capacity: ${Math.max(0, Math.round(remaining))}%`;
+                summary.classList.add('good');
             } else {
-                summary.textContent = `Over-allocated by ${Math.abs(remaining)}%`;
+                summary.textContent = `Over-allocated by ${Math.round(Math.abs(remaining))}%`;
                 summary.classList.add('error');
+            }
+            updateSliderVisuals();
+            updateAnalysisAvailability();
+        }
+
+        function getTimeAllocationData() {
+            const categories = {};
+            let total = 0;
+            let lockedCount = 0;
+            TIME_CATEGORIES.forEach((category) => {
+                const input = document.querySelector(`[data-time-category="${category}"]`);
+                const lock = document.querySelector(`[data-time-lock="${category}"]`);
+                const value = clampPercentage(Number(input?.value ?? 0));
+                const locked = Boolean(lock && lock.checked);
+                categories[category] = { value, locked };
+                total += value;
+                if (locked) {
+                    lockedCount += 1;
+                }
+            });
+            return {
+                categories,
+                total,
+                lockedCount,
+                allLocked: lockedCount === TIME_CATEGORIES.length,
+            };
+        }
+
+        function isTimeFullyLocked() {
+            const data = getTimeAllocationData();
+            return data.allLocked && Math.abs(data.total - 100) <= 1;
+        }
+
+        function getWestrumData() {
+            const slider = document.getElementById('westrum-scale');
+            if (!slider) return null;
+            const raw = Number(slider.value);
+            const score = Number.isFinite(raw) ? raw : null;
+            const rounded = score !== null ? Math.round(score) : null;
+            return {
+                score,
+                rounded,
+                descriptor: rounded !== null ? (WESTRUM_LEVELS[rounded] ?? 'Unknown') : null,
+            };
+        }
+
+        function isDoraComplete() {
+            return DORA_CORE_METRICS.every((metric) => {
+                const value = doraSelections[metric];
+                return typeof value === 'string' && value.length > 0;
+            });
+        }
+
+        function hasCrtContent() {
+            const textarea = document.getElementById('input');
+            return Boolean(textarea && textarea.value.trim().length > 0);
+        }
+
+        function isWestrumProvided() {
+            const data = getWestrumData();
+            return data !== null && Number.isFinite(data.score);
+        }
+
+        function isAnalysisReady() {
+            return hasCrtContent() && isDoraComplete() && isTimeFullyLocked() && isWestrumProvided();
+        }
+
+        function setAnalysisStatus(state, message) {
+            const statusEl = document.getElementById('analysis-status');
+            if (!statusEl) return;
+            statusEl.classList.remove('running', 'error', 'warning');
+            if (state === 'running') {
+                statusEl.classList.add('running');
+            } else if (state === 'error') {
+                statusEl.classList.add('error');
+            } else if (state === 'warning') {
+                statusEl.classList.add('warning');
+            }
+            statusEl.textContent = message;
+        }
+
+        function markAnalysisStale() {
+            analysisNeedsRefresh = true;
+            if (isRunningAnalysis) {
+                return;
+            }
+            if (isAnalysisReady()) {
+                setAnalysisStatus('warning', 'Inputs changed. Re-run the analysis.');
+            } else {
+                setAnalysisStatus(
+                    'idle',
+                    'Provide CRT text, DORA selections, Westrum score, and lock all time categories.'
+                );
+            }
+        }
+
+        function updateAnalysisAvailability() {
+            const ready = isAnalysisReady();
+            const tabButton = document.getElementById('analysis-tab-button');
+            const runButton = document.getElementById('analysis-refresh-button');
+            if (tabButton) {
+                tabButton.disabled = !ready;
+                tabButton.classList.toggle('disabled', !ready);
+                tabButton.title = ready
+                    ? 'Generate a systems analysis from your inputs.'
+                    : 'Provide CRT, DORA, Westrum, and locked time allocation data to enable analysis.';
+            }
+            if (runButton) {
+                runButton.disabled = !ready || isRunningAnalysis;
+            }
+            if (!ready) {
+                if (activeEditTab === 'analysis') {
+                    setActiveEditTab('crt');
+                    return;
+                }
+                if (!isRunningAnalysis) {
+                    setAnalysisStatus(
+                        'idle',
+                        'Provide CRT text, DORA selections, Westrum score, and lock all time categories.'
+                    );
+                    const output = document.getElementById('analysis-output');
+                    if (output) {
+                        output.innerHTML = renderAnalysisMessage(
+                            'Enter CRT content, select DORA tiers, set the Westrum slider, and lock every time category to enable analysis.'
+                        );
+                    }
+                    const meta = document.getElementById('analysis-meta');
+                    if (meta) {
+                        meta.textContent = '';
+                    }
+                }
+            } else if (!isRunningAnalysis) {
+                if (analysisNeedsRefresh) {
+                    setAnalysisStatus('warning', 'Inputs changed. Re-run the analysis.');
+                } else {
+                    setAnalysisStatus('idle', 'Analysis is up to date.');
+                }
+            }
+        }
+
+        function toDoraCategoryName(value) {
+            if (!value) return null;
+            const normalised = String(value).trim().toLowerCase();
+            switch (normalised) {
+                case 'low':
+                    return 'Low';
+                case 'medium':
+                    return 'Medium';
+                case 'high':
+                    return 'High';
+                case 'elite':
+                    return 'Elite';
+                default:
+                    return null;
+            }
+        }
+
+        function toIntPercentage(value) {
+            const numeric = Number(value);
+            if (!Number.isFinite(numeric)) {
+                return 0;
+            }
+            return Math.round(numeric);
+        }
+
+        function buildAnalysisPayload() {
+            const crtField = document.getElementById('input');
+            const crt = crtField ? crtField.value : '';
+
+            const mttrCategory = toDoraCategoryName(doraSelections.mttr) ?? 'Medium';
+
+            const westrum = getWestrumData();
+            const westrumScore = westrum && Number.isFinite(westrum.score)
+                ? Number(westrum.score)
+                : null;
+
+            const time = getTimeAllocationData();
+            const timePayload = {
+                meetings: toIntPercentage(time.categories.meetings?.value),
+                unplanned: toIntPercentage(time.categories.unplanned?.value),
+                bugs: toIntPercentage(time.categories.bugs?.value),
+                feature: toIntPercentage(time.categories.features?.value),
+                tech_debt: toIntPercentage(time.categories.tech_debt?.value),
+            };
+
+            const commitFrequency = toDoraCategoryName(doraSelections.commit_frequency) ?? 'Medium';
+            const branchLifetime = toDoraCategoryName(doraSelections.branch_lifetime) ?? 'Medium';
+            const selections = window.getDoraSelections();
+            const pbisValue =
+                selections.pbis_per_sprint_per_team !== null &&
+                Number.isFinite(selections.pbis_per_sprint_per_team)
+                    ? Number(selections.pbis_per_sprint_per_team)
+                    : 0;
+
+            const payload = {
+                crt,
+                dora_metrics: {
+                    mttr: mttrCategory,
+                },
+                extended_engineering_metrics: {
+                    commit_frequency: commitFrequency,
+                    branch_lifetime: branchLifetime,
+                    pbis_delivered_per_sprint_per_team: pbisValue,
+                },
+                time_allocation: timePayload,
+            };
+
+            if (westrumScore !== null) {
+                payload.westrum = westrumScore;
+            }
+
+            return payload;
+        }
+
+        function renderAnalysisResult(data) {
+            const output = document.getElementById('analysis-output');
+            const meta = document.getElementById('analysis-meta');
+            if (!output || !meta) return { hasWarnings: false };
+
+            const analyser = data || {};
+
+            if (analyser.result !== undefined) {
+                output.innerHTML = buildAnalysisContent(analyser.result);
+            } else {
+                output.innerHTML = renderAnalysisMessage('No analysis output was returned.');
+            }
+
+            lastAnalysisResult = data;
+            return { hasWarnings: false };
+        }
+
+        function renderAnalysisMessage(message) {
+            return `<p>${escapeHtml(String(message))}</p>`;
+        }
+
+        function normalizeAnalysisMessages(value) {
+            if (value === null || value === undefined) {
+                return [];
+            }
+            if (Array.isArray(value)) {
+                return value
+                    .filter((item) => item !== null && item !== undefined)
+                    .map((item) => (typeof item === 'string' ? item : JSON.stringify(item)));
+            }
+            if (typeof value === 'string') {
+                return [value];
+            }
+            return [JSON.stringify(value)];
+        }
+
+        function buildAnalysisContent(result) {
+            if (result === null || result === undefined) {
+                return renderAnalysisMessage('No analysis output was returned.');
+            }
+            if (isSimpleAnalysisValue(result)) {
+                return renderAnalysisMessage(result);
+            }
+            if (Array.isArray(result)) {
+                const listContent = renderAnalysisArray(result, 0);
+                return `<div class="analysis-section">${listContent}</div>`;
+            }
+            if (typeof result === 'object') {
+                const sections = Object.keys(result).map((key) => renderTopLevelAnalysisSection(key, result[key]));
+                return sections.join('') || renderAnalysisMessage('No analysis output was returned.');
+            }
+            return renderAnalysisMessage(result);
+        }
+
+        function renderTopLevelAnalysisSection(key, value) {
+            if (isSimpleAnalysisValue(value)) {
+                return `<div class="analysis-section"><p class="analysis-section-title"><strong>${escapeHtml(
+                    key
+                )}:</strong> ${escapeHtml(String(value))}</p></div>`;
+            }
+            const body = renderAnalysisValue(value, 0);
+            return `<div class="analysis-section"><p class="analysis-section-title">${escapeHtml(
+                key
+            )}</p>${body}</div>`;
+        }
+
+        function renderAnalysisValue(value, depth) {
+            if (value === null || value === undefined) {
+                return `<p class="analysis-empty">No data provided.</p>`;
+            }
+            if (isSimpleAnalysisValue(value)) {
+                return `<p>${escapeHtml(String(value))}</p>`;
+            }
+            if (Array.isArray(value)) {
+                return renderAnalysisArray(value, depth + 1);
+            }
+            if (typeof value === 'object') {
+                const entries = Object.entries(value)
+                    .map(
+                        ([childKey, childValue]) =>
+                            `<div class="analysis-subsection"><p class="analysis-key">${escapeHtml(
+                                childKey
+                            )}:</p>${renderAnalysisValue(childValue, depth + 1)}</div>`
+                    )
+                    .join('');
+                return entries || `<p class="analysis-empty">No details available.</p>`;
+            }
+            return `<p>${escapeHtml(String(value))}</p>`;
+        }
+
+        function renderAnalysisArray(items, depth) {
+            if (!items.length) {
+                return '<ul><li class="analysis-empty">No items.</li></ul>';
+            }
+            const rendered = items
+                .map((item) => `<li>${renderAnalysisListItem(item, depth + 1)}</li>`)
+                .join('');
+            return `<ul>${rendered}</ul>`;
+        }
+
+        function renderAnalysisListItem(item, depth) {
+            if (item === null || item === undefined) {
+                return '<span class="analysis-empty">—</span>';
+            }
+            if (isSimpleAnalysisValue(item)) {
+                return escapeHtml(String(item));
+            }
+            if (Array.isArray(item)) {
+                return renderAnalysisValue(item, depth + 1);
+            }
+            if (typeof item === 'object') {
+                const labelParts = [];
+                if (Object.prototype.hasOwnProperty.call(item, 'id') && item.id) {
+                    labelParts.push(`<strong>${escapeHtml(String(item.id))}</strong>`);
+                }
+                if (Object.prototype.hasOwnProperty.call(item, 'text') && item.text) {
+                    labelParts.push(escapeHtml(String(item.text)));
+                }
+                const headline = labelParts.join(' — ');
+                const remainder = Object.entries(item)
+                    .filter(([key]) => key !== 'id' && key !== 'text')
+                    .map(
+                        ([key, value]) =>
+                            `<div class="analysis-subdetail"><strong>${escapeHtml(key)}:</strong> ${renderAnalysisInlineValue(
+                                value,
+                                depth + 1
+                            )}</div>`
+                    )
+                    .join('');
+                if (headline && remainder) {
+                    return `${headline}<div class="analysis-subdetails">${remainder}</div>`;
+                }
+                if (headline) {
+                    return headline;
+                }
+                return remainder || escapeHtml(JSON.stringify(item));
+            }
+            return escapeHtml(String(item));
+        }
+
+        function renderAnalysisInlineValue(value, depth) {
+            if (value === null || value === undefined) {
+                return '<span class="analysis-empty">—</span>';
+            }
+            if (isSimpleAnalysisValue(value)) {
+                return escapeHtml(String(value));
+            }
+            return renderAnalysisValue(value, depth);
+        }
+
+        function isSimpleAnalysisValue(value) {
+            return typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean';
+        }
+
+        function escapeHtml(raw) {
+            return String(raw)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        async function runAnalysis(force = false) {
+            if (!isAnalysisReady()) {
+                return;
+            }
+            if (isRunningAnalysis) {
+                if (!force) {
+                    return;
+                }
+            } else if (!analysisNeedsRefresh && !force) {
+                return;
+            }
+            const runButton = document.getElementById('analysis-refresh-button');
+            isRunningAnalysis = true;
+            analysisNeedsRefresh = false;
+            setAnalysisStatus('running', 'Running analysis...');
+            if (runButton) {
+                runButton.disabled = true;
+            }
+            try {
+                const payload = buildAnalysisPayload();
+                const response = await fetch(`${backendBaseUrl}/api/analyse`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload),
+                });
+                if (!response.ok) {
+                    const text = await response.text();
+                    throw new Error(text || response.statusText);
+                }
+                const data = await response.json();
+                console.log("analysis result", data);
+                const { hasWarnings } = renderAnalysisResult(data);
+                if (hasWarnings) {
+                    setAnalysisStatus('warning', 'Analysis complete with normaliser alerts.');
+                } else {
+                    setAnalysisStatus('idle', 'Analysis is up to date.');
+                }
+                analysisNeedsRefresh = false;
+            } catch (error) {
+                console.error('Analysis request failed', error);
+                const output = document.getElementById('analysis-output');
+                if (output) {
+                    output.innerHTML = renderAnalysisMessage(`Analysis failed: ${error.message || error}`);
+                }
+                setAnalysisStatus('error', 'Analysis failed. See console for details.');
+                analysisNeedsRefresh = true;
+            } finally {
+                isRunningAnalysis = false;
+                if (runButton) {
+                    runButton.disabled = !isAnalysisReady();
+                }
+                updateAnalysisAvailability();
             }
         }
 
@@ -1471,6 +2540,8 @@
                     groups.get(metric).forEach((btn) => btn.classList.remove('active'));
                     cell.classList.add('active');
                     doraSelections[metric] = tier;
+                    markAnalysisStale();
+                    updateAnalysisAvailability();
                 });
             });
 
@@ -1480,15 +2551,21 @@
             const slider = document.getElementById('westrum-scale');
             if (!slider) return;
             const steps = document.querySelectorAll('.westrum-step');
+            const handleSliderChange = () => {
+                updateWestrumScaleLabel();
+                markAnalysisStale();
+                updateAnalysisAvailability();
+            };
             steps.forEach((step) => {
                 step.addEventListener('click', () => {
                     slider.value = step.dataset.value;
-                    updateWestrumScaleLabel();
+                    handleSliderChange();
                 });
             });
-            slider.addEventListener('input', updateWestrumScaleLabel);
-            slider.addEventListener('change', updateWestrumScaleLabel);
+            slider.addEventListener('input', handleSliderChange);
+            slider.addEventListener('change', handleSliderChange);
             updateWestrumScaleLabel();
+            updateAnalysisAvailability();
         }
 
         function setRefineButtonState(disabled) {
@@ -1500,6 +2577,13 @@
             button.classList.toggle('disabled', effective);
         }
 
+        const TIME_CATEGORIES = ['meetings', 'unplanned', 'bugs', 'tech_debt', 'features'];
+        const DORA_CORE_METRICS = ['deployment_frequency', 'lead_time', 'change_failure', 'mttr'];
+        const EXTENDED_ENGINEERING_METRICS = ['commit_frequency', 'branch_lifetime'];
+        const DORA_ALL_METRICS = [...new Set([...DORA_CORE_METRICS, ...EXTENDED_ENGINEERING_METRICS])];
+        let analysisNeedsRefresh = true;
+        let isRunningAnalysis = false;
+        let lastAnalysisResult = null;
         let lastRefineResult = null;
         let lastRefineOriginal = '';
         let availableRefineEntities = [];
@@ -2768,17 +3852,76 @@
         });
         applyActiveEditTab();
         document.querySelectorAll('[data-time-category]').forEach((input) => {
-            input.addEventListener('input', updateTimeAllocationSummary);
-            input.addEventListener('change', updateTimeAllocationSummary);
+            const category = input.dataset.timeCategory;
+            if (!category) {
+                return;
+            }
+            const handler = () => applyManualTimeAllocation(category, input.value);
+            input.addEventListener('input', handler);
+            input.addEventListener('change', handler);
         });
+        document.querySelectorAll('[data-time-slider]').forEach((slider) => {
+            const category = slider.dataset.timeSlider;
+            if (!category) {
+                return;
+            }
+            const handler = () => applyManualTimeAllocation(category, slider.value);
+            slider.addEventListener('input', handler);
+            slider.addEventListener('change', handler);
+        });
+        document.querySelectorAll('[data-time-lock]').forEach((lock) => {
+            const category = lock.dataset.timeLock;
+            if (!category) {
+                return;
+            }
+            setLockState(category, lock.checked);
+            lock.addEventListener('change', () => {
+                setLockState(category, lock.checked);
+                if (!lock.checked) {
+                    distributeUnlocked();
+                }
+                updateTimeAllocationSummary();
+                markAnalysisStale();
+                updateAnalysisAvailability();
+            });
+        });
+        const pbisInput = document.getElementById('pbis-per-sprint');
+        if (pbisInput) {
+            const notify = () => {
+                markAnalysisStale();
+                updateAnalysisAvailability();
+            };
+            pbisInput.addEventListener('input', notify);
+            pbisInput.addEventListener('change', notify);
+        }
+        const analysisButton = document.getElementById('analysis-refresh-button');
+        if (analysisButton) {
+            analysisButton.addEventListener('click', () => runAnalysis(true));
+        }
         updateTimeAllocationSummary();
         initializeWestrumScale();
         initializeDoraTable();
-        window.getDoraSelections = () => ({ ...doraSelections });
+        updateAnalysisAvailability();
+        window.getDoraSelections = () => {
+            const selections = {};
+            DORA_ALL_METRICS.forEach((metric) => {
+                selections[metric] = doraSelections[metric] ?? null;
+            });
+            const input = document.getElementById('pbis-per-sprint');
+            const raw = input ? input.value.trim() : '';
+            const parsed = raw === '' ? null : Number.parseFloat(raw);
+            selections.pbis_per_sprint_per_team =
+                parsed !== null && Number.isFinite(parsed) ? parsed : null;
+            return selections;
+        };
         window.getWestrumScore = () => Number(document.getElementById('westrum-scale')?.value ?? 0);
 
         const textarea = document.getElementById('input');
-        textarea.addEventListener('input', updateLineNumbers);
+        textarea.addEventListener('input', () => {
+            updateLineNumbers();
+            markAnalysisStale();
+            updateAnalysisAvailability();
+        });
         textarea.addEventListener('scroll', function(e) {
             document.getElementById('line-numbers').scrollTop = e.target.scrollTop;
         });
