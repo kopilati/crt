@@ -17,9 +17,9 @@ from pydantic import BaseModel, Field
 
 logger = logging.getLogger(__name__)
 
-DEFAULT_MODEL = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
+DEFAULT_MODEL = os.getenv("OPENAI_MODEL", "gpt-5")
 CONFIG_DIR = Path(__file__).resolve().parent / "config"
-STUB_ENABLED = os.getenv("STUB", "").strip().lower() in {"1", "true", "yes", "on"}
+STUB_ENABLED_FOR = set(os.getenv("STUB", "").strip().lower().split(","))
 STUB_DIR = Path(os.getenv("AGENT_STUB_DIR", CONFIG_DIR))
 
 router = APIRouter(prefix="/agents", tags=["agents"])
@@ -84,7 +84,7 @@ def _extract_text(response: object) -> str:
 
 
 def _maybe_stub_response(agent_name: str) -> Optional[Tuple[str, str]]:
-    if not STUB_ENABLED:
+    if not agent_name.lower() in STUB_ENABLED_FOR:
         return None
 
     candidate = STUB_DIR / f"{agent_name}.json"
@@ -142,12 +142,15 @@ def _run_agent_sync(config: Dict[str, str], message: str) -> Tuple[str, str]:
     output_text = _extract_text(final)
     if not output_text:
         output_text = "(no text output)"
+    logger.debug("message %s\n**********************************************", message)
+
     logger.debug("result %s", output_text)
     return output_text, run_id
 
 
 @router.post("/{agent_name}/run", response_model=AgentRunResponse)
 async def run_agent(agent_name: str, request: AgentRunRequest) -> AgentRunResponse:
+    logger.debug(request.message)
     stubbed = _maybe_stub_response(agent_name)
     if stubbed is not None:
         output_text, run_id = stubbed

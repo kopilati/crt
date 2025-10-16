@@ -352,81 +352,107 @@
     color: var(--text-muted);
     font-size: 13px;
 }
-.dora-table {
-    display: grid;
-    width: 100%;
-    grid-template-columns: minmax(220px, 1.15fr) repeat(4, minmax(0, 1fr));
-    grid-auto-rows: minmax(52px, auto);
+.dora-sliders {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+.dora-slider-item {
     background: var(--surface-raised);
     border: 1px solid var(--border-color);
     border-radius: 12px;
-    overflow: hidden;
+    padding: 20px;
 }
-.dora-table-header {
-    padding: 12px;
-    background: #2f2f2f;
-    font-weight: bold;
-    text-transform: uppercase;
-    font-size: 12px;
-    letter-spacing: 0.6px;
-    text-align: center;
-    border-right: 1px solid var(--border-color);
-    color: #bbb;
+.dora-slider-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
 }
-.dora-table-header:first-child {
-    background: transparent;
-    text-align: left;
-}
-.dora-table-header:last-child {
-    border-right: none;
-}
-.dora-metric {
-    padding: 14px;
-    border-top: 1px solid var(--border-color);
-    border-right: 1px solid var(--border-color);
-    color: #fff;
+.dora-slider-header h4 {
+    margin: 0;
+    font-size: 16px;
     font-weight: 600;
-    font-size: 13px;
-    background: #202020;
+    color: var(--text-primary);
+}
+.dora-slider-label {
+    font-size: 14px;
+    color: var(--accent-color);
+    font-weight: 500;
+}
+.dora-slider-wrap {
+    padding: 0 6px 16px;
+}
+.dora-slider-wrap input[type="range"] {
+    width: 100%;
+    -webkit-appearance: none;
+    appearance: none;
+    height: 6px;
+    border-radius: 3px;
+    background: #2a2a2a;
+    outline: none;
+    cursor: pointer;
+}
+.dora-slider-wrap input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--accent-color);
+    cursor: pointer;
+    box-shadow: 0 0 0 3px rgba(74, 110, 245, 0.2);
+    transition: transform 0.2s ease;
+}
+.dora-slider-wrap input[type="range"]::-moz-range-thumb {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--accent-color);
+    cursor: pointer;
+    border: none;
+    box-shadow: 0 0 0 3px rgba(74, 110, 245, 0.2);
+    transition: transform 0.2s ease;
+}
+.dora-slider-wrap input[type="range"]::-webkit-slider-thumb:hover,
+.dora-slider-wrap input[type="range"]::-moz-range-thumb:hover {
+    transform: scale(1.05);
+}
+.dora-scale-steps {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 8px;
+}
+.dora-step {
+    background: #252525;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 12px 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: center;
+    min-height: 60px;
     display: flex;
     align-items: center;
-    justify-content: flex-start;
-    line-height: 1.4;
+    justify-content: center;
 }
-.dora-table .dora-metric:first-of-type {
-    border-top: none;
+.dora-step:hover {
+    border-color: rgba(126, 160, 255, 0.6);
+    background: rgba(126, 160, 255, 0.05);
 }
-.dora-table .dora-cell:nth-of-type(-n+4) {
-    border-top: none;
-}
-.dora-cell {
-    border: none;
-    background: #1c1c1c;
-    color: #d4d4d4;
-    border-top: 1px solid var(--border-color);
-    border-right: 1px solid var(--border-color);
-    padding: 14px 16px;
-    text-align: center;
-    font-size: 13px;
-    cursor: pointer;
-    transition: background 0.2s, color 0.2s, box-shadow 0.2s;
-    line-height: 1.4;
-    word-break: break-word;
-}
-.dora-cell:focus-visible {
-    outline: 2px solid #7ea0ff;
-    outline-offset: -2px;
-}
-.dora-cell:last-child {
-    border-right: none;
-}
-.dora-cell:hover {
-    background: #2a2a2a;
-}
-.dora-cell.active {
+.dora-step.active {
+    border-color: var(--accent-color);
     background: var(--accent-soft);
+    box-shadow: inset 0 0 0 1px rgba(126, 160, 255, 0.6);
+}
+.dora-step-text {
+    font-size: 12px;
+    font-weight: 500;
     color: #fff;
-    box-shadow: inset 0 0 0 1px var(--accent-color);
+    line-height: 1.3;
+}
+.dora-step.active .dora-step-text {
+    color: #fff;
     font-weight: 600;
 }
 .dora-input {
@@ -1449,48 +1475,150 @@
                             <h2>DORA Metrics Overview</h2>
                             <p>Assess each metric against industry benchmark tiers to understand your current delivery capability.</p>
                         </div>
-                        <div class="dora-table">
-                            <div class="dora-table-header"></div>
-                            <div class="dora-table-header">Low</div>
-                            <div class="dora-table-header">Medium</div>
-                            <div class="dora-table-header">High</div>
-                            <div class="dora-table-header">Elite</div>
+                        <div class="dora-sliders">
+                            <div class="dora-slider-item">
+                                <div class="dora-slider-header">
+                                    <h4>Deployment Frequency</h4>
+                                    <div class="dora-slider-label" id="deployment-frequency-label">2.5 deployments/day</div>
+                                </div>
+                                <div class="dora-slider-wrap">
+                                    <input type="range" id="deployment-frequency" min="0" max="1" step="0.01" value="0.25">
+                                </div>
+                                <div class="dora-scale-steps">
+                                    <button type="button" class="dora-step" data-metric="deployment_frequency" data-value="0.0">
+                                        <span class="dora-step-text">Fewer than once per month</span>
+                                    </button>
+                                    <button type="button" class="dora-step" data-metric="deployment_frequency" data-value="0.25">
+                                        <span class="dora-step-text">1 per week – 1 per month</span>
+                                    </button>
+                                    <button type="button" class="dora-step" data-metric="deployment_frequency" data-value="0.5">
+                                        <span class="dora-step-text">1 per day – 1 per week</span>
+                                    </button>
+                                    <button type="button" class="dora-step" data-metric="deployment_frequency" data-value="1.0">
+                                        <span class="dora-step-text">On-demand, multiple per day</span>
+                                    </button>
+                                </div>
+                            </div>
 
-                            <div class="dora-metric" data-metric="deployment_frequency">Deployment Frequency</div>
-                            <button type="button" class="dora-cell" data-metric="deployment_frequency" data-tier="low">Fewer than once per month</button>
-                            <button type="button" class="dora-cell" data-metric="deployment_frequency" data-tier="medium">1 per week – 1 per month</button>
-                            <button type="button" class="dora-cell" data-metric="deployment_frequency" data-tier="high">1 per day – 1 per week</button>
-                            <button type="button" class="dora-cell" data-metric="deployment_frequency" data-tier="elite">On-demand, multiple per day</button>
+                            <div class="dora-slider-item">
+                                <div class="dora-slider-header">
+                                    <h4>Lead Time for Changes</h4>
+                                    <div class="dora-slider-label" id="lead-time-label">15.1 days</div>
+                                </div>
+                                <div class="dora-slider-wrap">
+                                    <input type="range" id="lead-time" min="0" max="1" step="0.01" value="0.25">
+                                </div>
+                                <div class="dora-scale-steps">
+                                    <button type="button" class="dora-step" data-metric="lead_time" data-value="0.0">
+                                        <span class="dora-step-text">&gt; 1 month</span>
+                                    </button>
+                                    <button type="button" class="dora-step" data-metric="lead_time" data-value="0.25">
+                                        <span class="dora-step-text">1 week – 1 month</span>
+                                    </button>
+                                    <button type="button" class="dora-step" data-metric="lead_time" data-value="0.5">
+                                        <span class="dora-step-text">1 day – 1 week</span>
+                                    </button>
+                                    <button type="button" class="dora-step" data-metric="lead_time" data-value="1.0">
+                                        <span class="dora-step-text">&lt; 1 day</span>
+                                    </button>
+                                </div>
+                            </div>
 
-                            <div class="dora-metric" data-metric="commit_frequency">Commit Frequency</div>
-                            <button type="button" class="dora-cell" data-metric="commit_frequency" data-tier="low">&lt; 5 commits per developer per week</button>
-                            <button type="button" class="dora-cell" data-metric="commit_frequency" data-tier="medium">5 – 15 commits per developer per week</button>
-                            <button type="button" class="dora-cell" data-metric="commit_frequency" data-tier="high">15 – 30 commits per developer per week</button>
-                            <button type="button" class="dora-cell" data-metric="commit_frequency" data-tier="elite">&gt; 30 commits per developer per week</button>
+                            <div class="dora-slider-item">
+                                <div class="dora-slider-header">
+                                    <h4>Change Failure Rate</h4>
+                                    <div class="dora-slider-label" id="change-failure-label">25%</div>
+                                </div>
+                                <div class="dora-slider-wrap">
+                                    <input type="range" id="change-failure" min="0" max="1" step="0.01" value="0.75">
+                                </div>
+                                <div class="dora-scale-steps">
+                                    <button type="button" class="dora-step" data-metric="change_failure" data-value="0.0">
+                                        <span class="dora-step-text">&gt; 45%</span>
+                                    </button>
+                                    <button type="button" class="dora-step" data-metric="change_failure" data-value="0.25">
+                                        <span class="dora-step-text">31% – 45%</span>
+                                    </button>
+                                    <button type="button" class="dora-step" data-metric="change_failure" data-value="0.5">
+                                        <span class="dora-step-text">15% – 30%</span>
+                                    </button>
+                                    <button type="button" class="dora-step" data-metric="change_failure" data-value="1.0">
+                                        <span class="dora-step-text">&lt; 15%</span>
+                                    </button>
+                                </div>
+                            </div>
 
-                            <div class="dora-metric" data-metric="lead_time">Lead Time for Changes</div>
-                            <button type="button" class="dora-cell" data-metric="lead_time" data-tier="low">&gt; 1 month</button>
-                            <button type="button" class="dora-cell" data-metric="lead_time" data-tier="medium">1 week – 1 month</button>
-                            <button type="button" class="dora-cell" data-metric="lead_time" data-tier="high">1 day – 1 week</button>
-                            <button type="button" class="dora-cell" data-metric="lead_time" data-tier="elite">&lt; 1 day</button>
+                            <div class="dora-slider-item">
+                                <div class="dora-slider-header">
+                                    <h4>MTTR (Restore Service)</h4>
+                                    <div class="dora-slider-label" id="mttr-label">3.55 days</div>
+                                </div>
+                                <div class="dora-slider-wrap">
+                                    <input type="range" id="mttr" min="0" max="1" step="0.01" value="0.25">
+                                </div>
+                                <div class="dora-scale-steps">
+                                    <button type="button" class="dora-step" data-metric="mttr" data-value="0.0">
+                                        <span class="dora-step-text">&gt; 1 week</span>
+                                    </button>
+                                    <button type="button" class="dora-step" data-metric="mttr" data-value="0.25">
+                                        <span class="dora-step-text">1 day – 1 week</span>
+                                    </button>
+                                    <button type="button" class="dora-step" data-metric="mttr" data-value="0.5">
+                                        <span class="dora-step-text">1 – 24 hours</span>
+                                    </button>
+                                    <button type="button" class="dora-step" data-metric="mttr" data-value="1.0">
+                                        <span class="dora-step-text">&lt; 1 hour</span>
+                                    </button>
+                                </div>
+                            </div>
 
-                            <div class="dora-metric" data-metric="branch_lifetime">Branch Lifetime</div>
-                            <button type="button" class="dora-cell" data-metric="branch_lifetime" data-tier="low">More than 2 weeks open</button>
-                            <button type="button" class="dora-cell" data-metric="branch_lifetime" data-tier="medium">~3 – 10 days open</button>
-                            <button type="button" class="dora-cell" data-metric="branch_lifetime" data-tier="high">~1 – 3 days open</button>
-                            <button type="button" class="dora-cell" data-metric="branch_lifetime" data-tier="elite">≤ 1 day open</button>
+                            <div class="dora-slider-item">
+                                <div class="dora-slider-header">
+                                    <h4>Commit Frequency</h4>
+                                    <div class="dora-slider-label" id="commit-frequency-label">2.69 commits/day per developer</div>
+                                </div>
+                                <div class="dora-slider-wrap">
+                                    <input type="range" id="commit-frequency" min="0" max="1" step="0.01" value="0.25">
+                                </div>
+                                <div class="dora-scale-steps">
+                                    <button type="button" class="dora-step" data-metric="commit_frequency" data-value="0.0">
+                                        <span class="dora-step-text">&lt; 5 commits per developer per week</span>
+                                    </button>
+                                    <button type="button" class="dora-step" data-metric="commit_frequency" data-value="0.25">
+                                        <span class="dora-step-text">5 – 15 commits per developer per week</span>
+                                    </button>
+                                    <button type="button" class="dora-step" data-metric="commit_frequency" data-value="0.5">
+                                        <span class="dora-step-text">15 – 30 commits per developer per week</span>
+                                    </button>
+                                    <button type="button" class="dora-step" data-metric="commit_frequency" data-value="1.0">
+                                        <span class="dora-step-text">&gt; 30 commits per developer per week</span>
+                                    </button>
+                                </div>
+                            </div>
 
-                            <div class="dora-metric" data-metric="change_failure">Change Failure Rate</div>
-                            <button type="button" class="dora-cell" data-metric="change_failure" data-tier="low">&gt; 45%</button>
-                            <button type="button" class="dora-cell" data-metric="change_failure" data-tier="medium">31% – 45%</button>
-                            <button type="button" class="dora-cell" data-metric="change_failure" data-tier="high">15% – 30%</button>
-                            <button type="button" class="dora-cell" data-metric="change_failure" data-tier="elite">&lt; 15%</button>
-
-                            <div class="dora-metric" data-metric="mttr">MTTR (Restore Service)</div>
-                            <button type="button" class="dora-cell" data-metric="mttr" data-tier="low">&gt; 1 week</button>
-                            <button type="button" class="dora-cell" data-metric="mttr" data-tier="medium">1 day – 1 week</button>
-                            <button type="button" class="dora-cell" data-metric="mttr" data-tier="high">1 – 24 hours</button>
-                            <button type="button" class="dora-cell" data-metric="mttr" data-tier="elite">&lt; 1 hour</button>
+                            <div class="dora-slider-item">
+                                <div class="dora-slider-header">
+                                    <h4>Branch Lifetime</h4>
+                                    <div class="dora-slider-label" id="branch-lifetime-label">7.55 days</div>
+                                </div>
+                                <div class="dora-slider-wrap">
+                                    <input type="range" id="branch-lifetime" min="0" max="1" step="0.01" value="0.25">
+                                </div>
+                                <div class="dora-scale-steps">
+                                    <button type="button" class="dora-step" data-metric="branch_lifetime" data-value="0.0">
+                                        <span class="dora-step-text">More than 2 weeks open</span>
+                                    </button>
+                                    <button type="button" class="dora-step" data-metric="branch_lifetime" data-value="0.25">
+                                        <span class="dora-step-text">~3 – 10 days open</span>
+                                    </button>
+                                    <button type="button" class="dora-step" data-metric="branch_lifetime" data-value="0.5">
+                                        <span class="dora-step-text">~1 – 3 days open</span>
+                                    </button>
+                                    <button type="button" class="dora-step" data-metric="branch_lifetime" data-value="1.0">
+                                        <span class="dora-step-text">≤ 1 day open</span>
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                         <div class="dora-input">
                             <label for="pbis-per-sprint">PBIs per Sprint per Team</label>
@@ -1714,8 +1842,21 @@
                             </button>
                         </div>
                         <div class="analysis-meta" id="analysis-meta"></div>
-                        <div class="analysis-output" id="analysis-output">
-                            <p>Enter CRT content, select DORA tiers, set the Westrum slider, and lock every time category to enable analysis.</p>
+                        <div class="analysis-split" id="analysis-split" style="display:none; gap: 16px;">
+                            <div class="analysis-output" id="analysis-output" style="flex:1;">
+                                <p>Enter CRT content, select DORA tiers, set the Westrum slider, and lock every time category to enable analysis.</p>
+                            </div>
+                            <div class="evaluation-panel" style="flex:1; display:flex; flex-direction:column;">
+                                <div style="display:flex; justify-content:space-between; align-items:center; padding: 8px 0;">
+                                    <strong>Analysis Evaluation</strong>
+                                    <div style="display:flex; gap:8px;">
+                                        <button type="button" id="evaluate-button" class="secondary">Evaluate</button>
+                                        <button type="button" id="refine-analysis-button">Refine</button>
+                                    </div>
+                                </div>
+                                <textarea id="evaluation-editor" style="min-height:200px; flex:1; background:#151515; color:#e0e0e0; border:1px solid #2f2f2f; padding:10px; font-family: Consolas, Monaco, monospace;"></textarea>
+                                <div id="evaluation-meta" style="font-size:12px; color: var(--text-muted); padding-top:6px;"></div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -2138,9 +2279,10 @@ function setLockState(category, locked = true) {
         }
 
         function isDoraComplete() {
-            return DORA_CORE_METRICS.every((metric) => {
-                const value = doraSelections[metric];
-                return typeof value === 'string' && value.length > 0;
+            const coreMetrics = ['deployment-frequency', 'lead-time', 'change-failure', 'mttr'];
+            return coreMetrics.every((metricId) => {
+                const slider = document.getElementById(metricId);
+                return slider && slider.value !== '';
             });
         }
 
@@ -2260,7 +2402,10 @@ function setLockState(category, locked = true) {
             const crtField = document.getElementById('input');
             const crt = crtField ? crtField.value : '';
 
-            const mttrCategory = toDoraCategoryName(doraSelections.mttr) ?? 'Medium';
+            const mttrValue = parseFloat(document.getElementById('mttr')?.value || '0.25');
+            const deploymentFrequency = parseFloat(document.getElementById('deployment-frequency')?.value || '0.25');
+            const leadTime = parseFloat(document.getElementById('lead-time')?.value || '0.25');
+            const changeFailure = parseFloat(document.getElementById('change-failure')?.value || '0.75');
 
             const westrum = getWestrumData();
             const westrumScore = westrum && Number.isFinite(westrum.score)
@@ -2276,8 +2421,8 @@ function setLockState(category, locked = true) {
                 tech_debt: toIntPercentage(time.categories.tech_debt?.value),
             };
 
-            const commitFrequency = toDoraCategoryName(doraSelections.commit_frequency) ?? 'Medium';
-            const branchLifetime = toDoraCategoryName(doraSelections.branch_lifetime) ?? 'Medium';
+            const commitFrequency = parseFloat(document.getElementById('commit-frequency')?.value || '0.25');
+            const branchLifetime = parseFloat(document.getElementById('branch-lifetime')?.value || '0.25');
             const selections = window.getDoraSelections();
             const pbisValue =
                 selections.pbis_per_sprint_per_team !== null &&
@@ -2288,7 +2433,10 @@ function setLockState(category, locked = true) {
             const payload = {
                 crt,
                 dora_metrics: {
-                    mttr: mttrCategory,
+                    deployment_frequency: deploymentFrequency,
+                    lead_time: leadTime,
+                    change_failure_rate: changeFailure,
+                    mttr: mttrValue,
                 },
                 extended_engineering_metrics: {
                     commit_frequency: commitFrequency,
@@ -2305,20 +2453,50 @@ function setLockState(category, locked = true) {
             return payload;
         }
 
-        function renderAnalysisResult(data) {
+        function renderAnalysisResult(data, skipEvaluation = false) {
             const output = document.getElementById('analysis-output');
             const meta = document.getElementById('analysis-meta');
-            if (!output || !meta) return { hasWarnings: false };
+            const split = document.getElementById('analysis-split');
+            if (!output || !meta || !split) return { hasWarnings: false };
+            meta.textContent = '';
 
-            const analyser = data || {};
-
-            if (analyser.result !== undefined) {
-                output.innerHTML = buildAnalysisContent(analyser.result);
-            } else {
+            const result = extractAnalysisBody(data);
+            if (!result) {
                 output.innerHTML = renderAnalysisMessage('No analysis output was returned.');
+                return { hasWarnings: false };
             }
 
+            const sections = [
+                formatAnalysisParagraph('Executive Summary', result.executive_summary),
+                formatAnalysisParagraph('Analysis Confidence', result.analysis_confidence),
+                formatAnalysisParagraph(
+                    'Core Systemic Issues',
+                    summariseCollection(result.core_systemic_issues, ['issue', 'summary', 'description', 'impact'])
+                ),
+                formatAnalysisParagraph(
+                    'Leverage Points',
+                    summariseCollection(result.leverage_points, ['constraint', 'leverage_point', 'summary', 'description'])
+                ),
+                formatAnalysisParagraph(
+                    'Systemic Relationships',
+                    summariseCollection(result.systemic_relationships, ['relationship', 'summary', 'description', 'detail'])
+                ),
+                formatAnalysisParagraph(
+                    'Assumptions',
+                    summariseCollection(result.assumptions, ['assumption', 'summary', 'description'])
+                ),
+            ].filter(Boolean);
+
+            output.innerHTML = sections.length
+                ? sections.join('')
+                : renderAnalysisMessage('No analysis output was returned.');
+
             lastAnalysisResult = data;
+            // Show split view and trigger evaluation (unless skipped)
+            split.style.display = 'flex';
+            if (!skipEvaluation) {
+                queueMicrotask(() => runEvaluation());
+            }
             return { hasWarnings: false };
         }
 
@@ -2326,137 +2504,138 @@ function setLockState(category, locked = true) {
             return `<p>${escapeHtml(String(message))}</p>`;
         }
 
-        function normalizeAnalysisMessages(value) {
-            if (value === null || value === undefined) {
-                return [];
+        function extractAnalysisBody(payload) {
+            if (!payload || typeof payload !== 'object') {
+                return null;
             }
-            if (Array.isArray(value)) {
-                return value
-                    .filter((item) => item !== null && item !== undefined)
-                    .map((item) => (typeof item === 'string' ? item : JSON.stringify(item)));
+            const expectedKeys = [
+                'executive_summary',
+                'analysis_confidence',
+                'core_systemic_issues',
+                'leverage_points',
+                'systemic_relationships',
+                'assumptions',
+            ];
+            if (payload.result && typeof payload.result === 'object') {
+                return payload.result;
+            }
+            if (payload.analyser && typeof payload.analyser === 'object') {
+                const inner = payload.analyser.result;
+                if (inner && typeof inner === 'object') {
+                    return inner;
+                }
+            }
+            const hasExpectedKey = expectedKeys.some((key) =>
+                Object.prototype.hasOwnProperty.call(payload, key)
+            );
+            return hasExpectedKey ? payload : null;
+        }
+
+        function formatAnalysisParagraph(title, rawContent) {
+            const text = extractTextValue(rawContent);
+            const body = text ? escapeHtml(text) : 'No data provided.';
+            return `<p><strong>${escapeHtml(title)}:</strong> ${body}</p>`;
+        }
+
+        function extractTextValue(value) {
+            if (value === null || value === undefined) {
+                return '';
             }
             if (typeof value === 'string') {
-                return [value];
+                return value.trim();
             }
-            return [JSON.stringify(value)];
-        }
-
-        function buildAnalysisContent(result) {
-            if (result === null || result === undefined) {
-                return renderAnalysisMessage('No analysis output was returned.');
-            }
-            if (isSimpleAnalysisValue(result)) {
-                return renderAnalysisMessage(result);
-            }
-            if (Array.isArray(result)) {
-                const listContent = renderAnalysisArray(result, 0);
-                return `<div class="analysis-section">${listContent}</div>`;
-            }
-            if (typeof result === 'object') {
-                const sections = Object.keys(result).map((key) => renderTopLevelAnalysisSection(key, result[key]));
-                return sections.join('') || renderAnalysisMessage('No analysis output was returned.');
-            }
-            return renderAnalysisMessage(result);
-        }
-
-        function renderTopLevelAnalysisSection(key, value) {
-            if (isSimpleAnalysisValue(value)) {
-                return `<div class="analysis-section"><p class="analysis-section-title"><strong>${escapeHtml(
-                    key
-                )}:</strong> ${escapeHtml(String(value))}</p></div>`;
-            }
-            const body = renderAnalysisValue(value, 0);
-            return `<div class="analysis-section"><p class="analysis-section-title">${escapeHtml(
-                key
-            )}</p>${body}</div>`;
-        }
-
-        function renderAnalysisValue(value, depth) {
-            if (value === null || value === undefined) {
-                return `<p class="analysis-empty">No data provided.</p>`;
-            }
-            if (isSimpleAnalysisValue(value)) {
-                return `<p>${escapeHtml(String(value))}</p>`;
+            if (typeof value === 'number' || typeof value === 'boolean') {
+                return String(value);
             }
             if (Array.isArray(value)) {
-                return renderAnalysisArray(value, depth + 1);
+                const parts = value
+                    .map((item) => extractTextValue(item))
+                    .filter((text) => Boolean(text));
+                return parts.join(' ');
             }
             if (typeof value === 'object') {
-                const entries = Object.entries(value)
-                    .map(
-                        ([childKey, childValue]) =>
-                            `<div class="analysis-subsection"><p class="analysis-key">${escapeHtml(
-                                childKey
-                            )}:</p>${renderAnalysisValue(childValue, depth + 1)}</div>`
-                    )
-                    .join('');
-                return entries || `<p class="analysis-empty">No details available.</p>`;
+                const preferred = ['text', 'summary', 'description', 'value'];
+                for (const key of preferred) {
+                    if (Object.prototype.hasOwnProperty.call(value, key) && value[key]) {
+                        const extracted = extractTextValue(value[key]);
+                        if (extracted) {
+                            return extracted;
+                        }
+                    }
+                }
+                const found = Object.values(value)
+                    .map((val) => extractTextValue(val))
+                    .find((text) => Boolean(text));
+                if (found) {
+                    return found;
+                }
+                try {
+                    return JSON.stringify(value);
+                } catch (error) {
+                    return '';
+                }
             }
-            return `<p>${escapeHtml(String(value))}</p>`;
+            return '';
         }
 
-        function renderAnalysisArray(items, depth) {
-            if (!items.length) {
-                return '<ul><li class="analysis-empty">No items.</li></ul>';
+        function summariseCollection(value, preferredKeys = []) {
+            if (!value) {
+                return '';
             }
-            const rendered = items
-                .map((item) => `<li>${renderAnalysisListItem(item, depth + 1)}</li>`)
-                .join('');
-            return `<ul>${rendered}</ul>`;
+            if (Array.isArray(value)) {
+                const items = value
+                    .map((item) => describeStructuredItem(item, preferredKeys))
+                    .filter((text) => Boolean(text));
+                if (!items.length) {
+                    return '';
+                }
+                return items.map((text, index) => `${index + 1}. ${text}`).join(' ');
+            }
+            if (typeof value === 'object') {
+                return describeStructuredItem(value, preferredKeys);
+            }
+            return extractTextValue(value);
         }
 
-        function renderAnalysisListItem(item, depth) {
+        function describeStructuredItem(item, preferredKeys = []) {
             if (item === null || item === undefined) {
-                return '<span class="analysis-empty">—</span>';
+                return '';
             }
-            if (isSimpleAnalysisValue(item)) {
-                return escapeHtml(String(item));
+            if (typeof item === 'string' || typeof item === 'number' || typeof item === 'boolean') {
+                return String(item);
             }
             if (Array.isArray(item)) {
-                return renderAnalysisValue(item, depth + 1);
+                return item
+                    .map((child) => extractTextValue(child))
+                    .filter((text) => Boolean(text))
+                    .join(', ');
             }
             if (typeof item === 'object') {
-                const labelParts = [];
-                if (Object.prototype.hasOwnProperty.call(item, 'id') && item.id) {
-                    labelParts.push(`<strong>${escapeHtml(String(item.id))}</strong>`);
+                for (const key of preferredKeys) {
+                    if (Object.prototype.hasOwnProperty.call(item, key) && item[key]) {
+                        const extracted = extractTextValue(item[key]);
+                        if (extracted) {
+                            return extracted;
+                        }
+                    }
                 }
-                if (Object.prototype.hasOwnProperty.call(item, 'text') && item.text) {
-                    labelParts.push(escapeHtml(String(item.text)));
+                const combined = Object.entries(item)
+                    .map(([key, value]) => {
+                        const text = extractTextValue(value);
+                        return text ? `${key}: ${text}` : null;
+                    })
+                    .filter(Boolean)
+                    .join(', ');
+                if (combined) {
+                    return combined;
                 }
-                const headline = labelParts.join(' — ');
-                const remainder = Object.entries(item)
-                    .filter(([key]) => key !== 'id' && key !== 'text')
-                    .map(
-                        ([key, value]) =>
-                            `<div class="analysis-subdetail"><strong>${escapeHtml(key)}:</strong> ${renderAnalysisInlineValue(
-                                value,
-                                depth + 1
-                            )}</div>`
-                    )
-                    .join('');
-                if (headline && remainder) {
-                    return `${headline}<div class="analysis-subdetails">${remainder}</div>`;
+                try {
+                    return JSON.stringify(item);
+                } catch (error) {
+                    return '';
                 }
-                if (headline) {
-                    return headline;
-                }
-                return remainder || escapeHtml(JSON.stringify(item));
             }
-            return escapeHtml(String(item));
-        }
-
-        function renderAnalysisInlineValue(value, depth) {
-            if (value === null || value === undefined) {
-                return '<span class="analysis-empty">—</span>';
-            }
-            if (isSimpleAnalysisValue(value)) {
-                return escapeHtml(String(value));
-            }
-            return renderAnalysisValue(value, depth);
-        }
-
-        function isSimpleAnalysisValue(value) {
-            return typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean';
+            return '';
         }
 
         function escapeHtml(raw) {
@@ -2466,6 +2645,70 @@ function setLockState(category, locked = true) {
                 .replace(/>/g, '&gt;')
                 .replace(/"/g, '&quot;')
                 .replace(/'/g, '&#39;');
+        }
+
+        async function runEvaluation() {
+            const split = document.getElementById('analysis-split');
+            const editor = document.getElementById('evaluation-editor');
+            const meta = document.getElementById('evaluation-meta');
+            if (!split || !editor || !meta) return;
+            if (!lastAnalysisResult) return;
+            try {
+                meta.textContent = 'Evaluating...';
+                const payload = {
+                    original_payload: buildAnalysisPayload(),
+                    analysis_result: lastAnalysisResult.result || lastAnalysisResult,
+                };
+                const response = await fetch(`${backendBaseUrl}/api/evaluate_analysis`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload),
+                });
+                if (!response.ok) {
+                    const text = await response.text();
+                    throw new Error(text || response.statusText);
+                }
+                const data = await response.json();
+                lastEvaluationResult = data;
+                lastEvaluationRunId = data.run_id || null;
+                const body = (data && data.result) ? data.result : data;
+                editor.value = typeof body === 'string' ? body : JSON.stringify(body, null, 2);
+                meta.textContent = lastEvaluationRunId ? `Run: ${lastEvaluationRunId}` : '';
+            } catch (error) {
+                meta.textContent = `Evaluation failed: ${error.message || error}`;
+            }
+        }
+
+        async function runRefineWithFeedback() {
+            const editor = document.getElementById('evaluation-editor');
+            const meta = document.getElementById('evaluation-meta');
+            if (!editor || !meta) return;
+            try {
+                meta.textContent = 'Refining analysis with feedback...';
+                const original_payload = buildAnalysisPayload();
+                const analysis_result = lastAnalysisResult.result || lastAnalysisResult;
+                let evaluation;
+                try {
+                    evaluation = JSON.parse(editor.value);
+                } catch (_) {
+                    evaluation = editor.value;
+                }
+                const payload = { original_payload, analysis_result, evaluation };
+                const response = await fetch(`${backendBaseUrl}/api/analyse_with_feedback`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload),
+                });
+                if (!response.ok) {
+                    const text = await response.text();
+                    throw new Error(text || response.statusText);
+                }
+                const data = await response.json();
+                renderAnalysisResult(data, true);
+                meta.textContent = 'Refine complete. Evaluation preserved for further edits.';
+            } catch (error) {
+                meta.textContent = `Refine failed: ${error.message || error}`;
+            }
         }
 
         async function runAnalysis(force = false) {
@@ -2523,28 +2766,187 @@ function setLockState(category, locked = true) {
             }
         }
 
-        function initializeDoraTable() {
-            const groups = new Map();
-            document.querySelectorAll('.dora-cell').forEach((cell) => {
-                const metric = cell.dataset.metric;
-                const tier = cell.dataset.tier;
-                if (!metric || !tier) {
-                    return;
-                }
-                if (!groups.has(metric)) {
-                    groups.set(metric, []);
-                }
-                cell.classList.remove('active');
-                groups.get(metric).push(cell);
-                cell.addEventListener('click', () => {
-                    groups.get(metric).forEach((btn) => btn.classList.remove('active'));
-                    cell.classList.add('active');
-                    doraSelections[metric] = tier;
+        function initializeDoraSliders() {
+            const sliders = [
+                'deployment-frequency', 'lead-time', 'change-failure', 'mttr',
+                'commit-frequency', 'branch-lifetime'
+            ];
+
+            sliders.forEach(sliderId => {
+                const slider = document.getElementById(sliderId);
+                const label = document.getElementById(sliderId + '-label');
+                const steps = document.querySelectorAll(`[data-metric="${sliderId.replace('-', '_')}"]`);
+                
+                if (!slider || !label) return;
+
+                const updateLabel = () => {
+                    const value = parseFloat(slider.value);
+                    
+                    // Show translated value with units instead of category text
+                    const translated = translateDoraMetric(sliderId, value);
+                    label.textContent = `${translated.value} ${translated.unit}`;
+                    
+                    // Update active step based on range
+                    steps.forEach(step => {
+                        step.classList.remove('active');
+                        const stepValue = parseFloat(step.dataset.value);
+                        
+                        // Determine the range for this step
+                        const stepIndex = Array.from(steps).indexOf(step);
+                        let rangeStart, rangeEnd;
+                        
+                        if (stepIndex === 0) {
+                            // First step: 0 to 0.125 (middle of 0 and 0.25)
+                            rangeStart = 0;
+                            rangeEnd = 0.125;
+                        } else if (stepIndex === steps.length - 1) {
+                            // Last step: 0.875 to 1
+                            rangeStart = 0.875;
+                            rangeEnd = 1;
+                        } else {
+                            // Middle steps: centered around their value
+                            const prevValue = stepIndex > 0 ? parseFloat(steps[stepIndex - 1].dataset.value) : 0;
+                            const nextValue = stepIndex < steps.length - 1 ? parseFloat(steps[stepIndex + 1].dataset.value) : 1;
+                            rangeStart = (prevValue + stepValue) / 2;
+                            rangeEnd = (stepValue + nextValue) / 2;
+                        }
+                        
+                        if (value >= rangeStart && value <= rangeEnd) {
+                            step.classList.add('active');
+                        }
+                    });
+                    
                     markAnalysisStale();
                     updateAnalysisAvailability();
-                });
-            });
+                };
 
+                slider.addEventListener('input', updateLabel);
+                slider.addEventListener('change', updateLabel);
+
+                // Handle step button clicks
+                steps.forEach(step => {
+                    step.addEventListener('click', () => {
+                        slider.value = step.dataset.value;
+                        updateLabel();
+                    });
+                });
+
+                // Initial update
+                updateLabel();
+            });
+        }
+
+        function translateDoraMetric(metricId, sliderValue) {
+            // Convert 0-1 slider value to meaningful metrics with units (matches backend logic)
+            switch (metricId) {
+                case 'deployment-frequency':
+                    // Range: 0.025 to 10 deployments/day
+                    const minDeploy = 0.025;
+                    const maxDeploy = 10;
+                    const deployValue = minDeploy + (maxDeploy - minDeploy) * sliderValue;
+                    return {
+                        value: Math.round(deployValue * 1000) / 1000, // Round to 3 decimal places
+                        unit: 'deployments/day'
+                    };
+                
+                case 'lead-time':
+                    // Range: 60 to 0.1 days (inverted - lower slider = better)
+                    const maxLeadTime = 60;
+                    const minLeadTime = 0.1;
+                    const leadTimeValue = maxLeadTime - (maxLeadTime - minLeadTime) * sliderValue;
+                    return {
+                        value: Math.round(leadTimeValue * 100) / 100, // Round to 2 decimal places
+                        unit: 'days'
+                    };
+                
+                case 'change-failure':
+                    // Range: 0% to 100% (inverted - lower slider = better)
+                    const maxFailureRate = 100;
+                    const minFailureRate = 0;
+                    const failureRateValue = maxFailureRate - (maxFailureRate - minFailureRate) * sliderValue;
+                    return {
+                        value: Math.round(failureRateValue * 100) / 100, // Round to 2 decimal places
+                        unit: '%'
+                    };
+                
+                case 'mttr':
+                    // Range: 14 to 0.05 days (inverted - lower slider = better)
+                    const maxMttr = 14;
+                    const minMttr = 0.05;
+                    const mttrValue = maxMttr - (maxMttr - minMttr) * sliderValue;
+                    return {
+                        value: Math.round(mttrValue * 100) / 100, // Round to 2 decimal places
+                        unit: 'days'
+                    };
+                
+                case 'commit-frequency':
+                    // Range: 0.25 to 10 commits/day per developer
+                    const minCommits = 0.25;
+                    const maxCommits = 10;
+                    const commitValue = minCommits + (maxCommits - minCommits) * sliderValue;
+                    return {
+                        value: Math.round(commitValue * 100) / 100, // Round to 2 decimal places
+                        unit: 'commits/day per developer'
+                    };
+                
+                case 'branch-lifetime':
+                    // Range: 30 to 0.05 days (inverted - lower slider = better)
+                    const maxBranchLifetime = 30;
+                    const minBranchLifetime = 0.05;
+                    const branchLifetimeValue = maxBranchLifetime - (maxBranchLifetime - minBranchLifetime) * sliderValue;
+                    return {
+                        value: Math.round(branchLifetimeValue * 100) / 100, // Round to 2 decimal places
+                        unit: 'days'
+                    };
+                
+                default:
+                    return { value: sliderValue, unit: 'unknown' };
+            }
+        }
+
+        function getDoraLabel(metricId, value) {
+            const labels = {
+                'deployment-frequency': [
+                    'Fewer than once per month',
+                    '1 per week – 1 per month', 
+                    '1 per day – 1 per week',
+                    'On-demand, multiple per day'
+                ],
+                'lead-time': [
+                    '> 1 month',
+                    '1 week – 1 month',
+                    '1 day – 1 week', 
+                    '< 1 day'
+                ],
+                'change-failure': [
+                    '> 45%',
+                    '31% – 45%',
+                    '15% – 30%',
+                    '< 15%'
+                ],
+                'mttr': [
+                    '> 1 week',
+                    '1 day – 1 week',
+                    '1 – 24 hours',
+                    '< 1 hour'
+                ],
+                'commit-frequency': [
+                    '< 5 commits per developer per week',
+                    '5 – 15 commits per developer per week',
+                    '15 – 30 commits per developer per week',
+                    '> 30 commits per developer per week'
+                ],
+                'branch-lifetime': [
+                    'More than 2 weeks open',
+                    '~3 – 10 days open',
+                    '~1 – 3 days open',
+                    '≤ 1 day open'
+                ]
+            };
+
+            const metricLabels = labels[metricId] || [];
+            const index = Math.round(value * (metricLabels.length - 1));
+            return metricLabels[index] || 'Unknown';
         }
 
         function initializeWestrumScale() {
@@ -2578,12 +2980,11 @@ function setLockState(category, locked = true) {
         }
 
         const TIME_CATEGORIES = ['meetings', 'unplanned', 'bugs', 'tech_debt', 'features'];
-        const DORA_CORE_METRICS = ['deployment_frequency', 'lead_time', 'change_failure', 'mttr'];
-        const EXTENDED_ENGINEERING_METRICS = ['commit_frequency', 'branch_lifetime'];
-        const DORA_ALL_METRICS = [...new Set([...DORA_CORE_METRICS, ...EXTENDED_ENGINEERING_METRICS])];
         let analysisNeedsRefresh = true;
         let isRunningAnalysis = false;
         let lastAnalysisResult = null;
+        let lastEvaluationResult = null;
+        let lastEvaluationRunId = null;
         let lastRefineResult = null;
         let lastRefineOriginal = '';
         let availableRefineEntities = [];
@@ -3898,15 +4299,27 @@ function setLockState(category, locked = true) {
         if (analysisButton) {
             analysisButton.addEventListener('click', () => runAnalysis(true));
         }
+        const evaluateBtn = document.getElementById('evaluate-button');
+        if (evaluateBtn) {
+            evaluateBtn.addEventListener('click', () => runEvaluation());
+        }
+        const refineAnalysisBtn = document.getElementById('refine-analysis-button');
+        if (refineAnalysisBtn) {
+            refineAnalysisBtn.addEventListener('click', () => runRefineWithFeedback());
+        }
         updateTimeAllocationSummary();
         initializeWestrumScale();
-        initializeDoraTable();
+        initializeDoraSliders();
         updateAnalysisAvailability();
         window.getDoraSelections = () => {
-            const selections = {};
-            DORA_ALL_METRICS.forEach((metric) => {
-                selections[metric] = doraSelections[metric] ?? null;
-            });
+            const selections = {
+                deployment_frequency: parseFloat(document.getElementById('deployment-frequency')?.value || '0.25'),
+                lead_time: parseFloat(document.getElementById('lead-time')?.value || '0.25'),
+                change_failure: parseFloat(document.getElementById('change-failure')?.value || '0.75'),
+                mttr: parseFloat(document.getElementById('mttr')?.value || '0.25'),
+                commit_frequency: parseFloat(document.getElementById('commit-frequency')?.value || '0.25'),
+                branch_lifetime: parseFloat(document.getElementById('branch-lifetime')?.value || '0.25'),
+            };
             const input = document.getElementById('pbis-per-sprint');
             const raw = input ? input.value.trim() : '';
             const parsed = raw === '' ? null : Number.parseFloat(raw);

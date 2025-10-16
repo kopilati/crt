@@ -41,7 +41,12 @@ instructions: |
     ],
     "systemic_relationships": [],
     "assumptions": [],
-    "analysis_confidence": ""
+    "analysis_confidence": "",
+    "analysis_metadata": {
+      "confidence_score": "0-100%",
+      "data_completeness": "0-100%",
+      "analysis_timestamp": "ISO 8601"
+    }
   }
 
   ## RULES
