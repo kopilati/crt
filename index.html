@@ -525,7 +525,7 @@
     appearance: none;
     height: 6px;
     border-radius: 999px;
-    background: linear-gradient(90deg, rgba(74, 110, 245, 0.25), rgba(74, 110, 245, 0.65));
+    background: rgba(255, 255, 255, 0.08); /* Default background, will be overridden by JS */
     outline: none;
     cursor: pointer;
 }
@@ -1844,8 +1844,8 @@
                         <div class="analysis-meta" id="analysis-meta"></div>
                         <div class="analysis-split" id="analysis-split" style="display:none; gap: 16px;">
                             <div class="analysis-output" id="analysis-output" style="flex:1;">
-                                <p>Enter CRT content, select DORA tiers, set the Westrum slider, and lock every time category to enable analysis.</p>
-                            </div>
+                            <p>Enter CRT content, select DORA tiers, set the Westrum slider, and lock every time category to enable analysis.</p>
+                        </div>
                             <div class="evaluation-panel" style="flex:1; display:flex; flex-direction:column;">
                                 <div style="display:flex; justify-content:space-between; align-items:center; padding: 8px 0;">
                                     <strong>Analysis Evaluation</strong>
@@ -1877,7 +1877,7 @@
     </div>
 
     <script type="module">
-        import init, { parse_content } from './pkg/crt_to_cypher.js';
+        import initCrt, * as CrtWasm from './pkg/crt_frontend.js';
 
         function sanitizeBaseUrl(url) {
             if (!url) return null;
@@ -1971,7 +1971,9 @@
             }
             const content = document.getElementById('input').value;
             try {
-                parse_content(content);
+                if (typeof CrtWasm.parse_content === 'function') {
+                    CrtWasm.parse_content(content);
+                }
                 setViewToggleEnabled(true);
             } catch (error) {
                 setViewToggleEnabled(false);
@@ -2012,9 +2014,13 @@
         function updateVisualization() {
             const input = document.getElementById('input').value;
             try {
-                const result = parse_content(input);
-                setViewToggleEnabled(true);
-                renderGraph(result.nodes, result.links);
+                if (typeof CrtWasm.parse_content === 'function') {
+                    const result = CrtWasm.parse_content(input);
+                    setViewToggleEnabled(true);
+                    renderGraph(result.nodes, result.links);
+                } else {
+                    setViewToggleEnabled(false);
+                }
             } catch (error) {
                 console.error('Error parsing content:', error);
                 setViewToggleEnabled(false);
@@ -2049,7 +2055,7 @@
             setRefineButtonState(refineButtonIntendedDisabled);
             setViewToggleEnabled(viewToggleIntended);
             if (activeEditTab === 'dora') {
-                updateWestrumScaleLabel();
+                // Westrum scale will be updated by its own event listeners
             } else if (activeEditTab === 'time') {
                 updateTimeAllocationSummary();
             } else if (activeEditTab === 'analysis') {
@@ -2089,28 +2095,12 @@
             7: 'Generative',
         };
 
-        function updateWestrumScaleLabel() {
-            const slider = document.getElementById('westrum-scale');
-            const label = document.getElementById('westrum-scale-label');
-            if (!slider || !label) return;
-            const rawValue = Number(slider.value) || 1;
-            const min = Number(slider.min) || 1;
-            const max = Number(slider.max) || 7;
-            const range = Math.max(max - min, 1);
-            const nearest = Math.min(max, Math.max(min, Math.round(rawValue)));
-            const descriptor = WESTRUM_LEVELS[nearest] ?? 'Unknown';
-            label.textContent = `${descriptor} (${rawValue.toFixed(1)})`;
-            slider.setAttribute('aria-valuetext', `${descriptor} (${rawValue.toFixed(1)})`);
-            const percent = ((rawValue - min) / range) * 100;
-            slider.style.background = `linear-gradient(90deg, var(--accent-color) ${percent}%, rgba(255, 255, 255, 0.08) ${percent}%)`;
-            document.querySelectorAll('.westrum-step').forEach((step) => {
-                const match = Number(step.dataset.value) === nearest;
-                step.classList.toggle('active', match);
-                step.setAttribute('aria-pressed', match ? 'true' : 'false');
-            });
-        }
 
         function clampPercentage(value) {
+            if (typeof CrtWasm.clamp_percentage === 'function') {
+                return CrtWasm.clamp_percentage(value);
+            }
+            // Fallback if WASM not loaded
             if (Number.isNaN(value)) return 0;
             return Math.max(0, Math.min(100, Math.round(value)));
         }
@@ -2271,19 +2261,37 @@ function setLockState(category, locked = true) {
             const raw = Number(slider.value);
             const score = Number.isFinite(raw) ? raw : null;
             const rounded = score !== null ? Math.round(score) : null;
+            const descriptor = score !== null ? 
+                (typeof CrtWasm.get_westrum_descriptor === 'function' ? CrtWasm.get_westrum_descriptor(score) : 'Unknown') : 
+                null;
             return {
                 score,
                 rounded,
-                descriptor: rounded !== null ? (WESTRUM_LEVELS[rounded] ?? 'Unknown') : null,
+                descriptor,
             };
         }
 
         function isDoraComplete() {
-            const coreMetrics = ['deployment-frequency', 'lead-time', 'change-failure', 'mttr'];
-            return coreMetrics.every((metricId) => {
-                const slider = document.getElementById(metricId);
-                return slider && slider.value !== '';
-            });
+            if (typeof CrtWasm.is_dora_complete === 'function') {
+                const deploymentFrequency = parseFloat(document.getElementById('deployment-frequency')?.value);
+                const leadTime = parseFloat(document.getElementById('lead-time')?.value);
+                const changeFailureRate = parseFloat(document.getElementById('change-failure')?.value);
+                const mttr = parseFloat(document.getElementById('mttr')?.value);
+                
+                return CrtWasm.is_dora_complete(
+                    isNaN(deploymentFrequency) ? null : deploymentFrequency,
+                    isNaN(leadTime) ? null : leadTime,
+                    isNaN(changeFailureRate) ? null : changeFailureRate,
+                    isNaN(mttr) ? null : mttr
+                );
+            } else {
+                // Fallback if WASM not loaded
+                const coreMetrics = ['deployment-frequency', 'lead-time', 'change-failure', 'mttr'];
+                return coreMetrics.every((metricId) => {
+                    const slider = document.getElementById(metricId);
+                    return slider && slider.value !== '';
+                });
+            }
         }
 
         function hasCrtContent() {
@@ -2292,12 +2300,49 @@ function setLockState(category, locked = true) {
         }
 
         function isWestrumProvided() {
+            if (typeof CrtWasm.is_westrum_provided === 'function') {
+                const westrumScore = parseFloat(document.getElementById('westrum-scale')?.value);
+                return CrtWasm.is_westrum_provided(isNaN(westrumScore) ? null : westrumScore);
+            } else {
+                // Fallback if WASM not loaded
             const data = getWestrumData();
             return data !== null && Number.isFinite(data.score);
+            }
         }
 
         function isAnalysisReady() {
-            return hasCrtContent() && isDoraComplete() && isTimeFullyLocked() && isWestrumProvided();
+            // Don't check until WASM is ready
+            if (!wasmReady || typeof CrtWasm.is_analysis_ready !== 'function') {
+                return false;
+            }
+            
+            const crtContent = document.getElementById('input')?.value || '';
+            const deploymentFrequency = parseFloat(document.getElementById('deployment-frequency')?.value);
+            const leadTime = parseFloat(document.getElementById('lead-time')?.value);
+            const changeFailureRate = parseFloat(document.getElementById('change-failure')?.value);
+            const mttr = parseFloat(document.getElementById('mttr')?.value);
+            const westrumScore = parseFloat(document.getElementById('westrum-scale')?.value);
+            
+            const time = getTimeAllocationData();
+            const meetings = toIntPercentage(time.categories.meetings?.value);
+            const unplanned = toIntPercentage(time.categories.unplanned?.value);
+            const bugs = toIntPercentage(time.categories.bugs?.value);
+            const feature = toIntPercentage(time.categories.features?.value);
+            const tech_debt = toIntPercentage(time.categories.tech_debt?.value);
+            
+            return CrtWasm.is_analysis_ready(
+                crtContent,
+                isNaN(deploymentFrequency) ? null : deploymentFrequency,
+                isNaN(leadTime) ? null : leadTime,
+                isNaN(changeFailureRate) ? null : changeFailureRate,
+                isNaN(mttr) ? null : mttr,
+                meetings,
+                unplanned,
+                bugs,
+                feature,
+                tech_debt,
+                isNaN(westrumScore) ? null : westrumScore
+            );
         }
 
         function setAnalysisStatus(state, message) {
@@ -2330,6 +2375,10 @@ function setLockState(category, locked = true) {
         }
 
         function updateAnalysisAvailability() {
+            // Don't check analysis readiness until WASM is loaded
+            if (!wasmReady) {
+                return;
+            }
             const ready = isAnalysisReady();
             const tabButton = document.getElementById('analysis-tab-button');
             const runButton = document.getElementById('analysis-refresh-button');
@@ -2374,29 +2423,51 @@ function setLockState(category, locked = true) {
         }
 
         function toDoraCategoryName(value) {
-            if (!value) return null;
-            const normalised = String(value).trim().toLowerCase();
-            switch (normalised) {
-                case 'low':
-                    return 'Low';
-                case 'medium':
-                    return 'Medium';
-                case 'high':
-                    return 'High';
-                case 'elite':
+            if (value === null || value === undefined) return 'Unknown';
+            const numericValue = parseFloat(value);
+            if (isNaN(numericValue)) return 'Unknown';
+            
+            // Convert 0-1 slider value to category
+            if (numericValue <= 0.25) {
                     return 'Elite';
-                default:
-                    return null;
+            } else if (numericValue <= 0.5) {
+                return 'High';
+            } else if (numericValue <= 0.75) {
+                return 'Medium';
+            } else {
+                return 'Low';
             }
         }
 
         function toIntPercentage(value) {
+            if (typeof CrtWasm.to_int_percentage === 'function') {
+                return CrtWasm.to_int_percentage(value);
+            }
+            // Fallback if WASM not loaded
             const numeric = Number(value);
             if (!Number.isFinite(numeric)) {
                 return 0;
             }
             return Math.round(numeric);
         }
+
+        // Define getDoraSelections before it's used
+        window.getDoraSelections = () => {
+            const selections = {
+                deployment_frequency: parseFloat(document.getElementById('deployment-frequency')?.value || '0.25'),
+                lead_time: parseFloat(document.getElementById('lead-time')?.value || '0.25'),
+                change_failure: parseFloat(document.getElementById('change-failure')?.value || '0.75'),
+                mttr: parseFloat(document.getElementById('mttr')?.value || '0.25'),
+                commit_frequency: parseFloat(document.getElementById('commit-frequency')?.value || '0.25'),
+                branch_lifetime: parseFloat(document.getElementById('branch-lifetime')?.value || '0.25'),
+            };
+            const input = document.getElementById('pbis-per-sprint');
+            const raw = input ? input.value.trim() : '';
+            const parsed = raw === '' ? null : Number.parseFloat(raw);
+            selections.pbis_per_sprint_per_team =
+                parsed !== null && Number.isFinite(parsed) ? parsed : null;
+            return selections;
+        };
 
         function buildAnalysisPayload() {
             const crtField = document.getElementById('input');
@@ -2430,13 +2501,47 @@ function setLockState(category, locked = true) {
                     ? Number(selections.pbis_per_sprint_per_team)
                     : 0;
 
+            // Use WASM to build the request with proper validation if available
+            if (typeof CrtWasm.WasmAnalyseRequest !== 'undefined') {
+                const wasmRequest = new CrtWasm.WasmAnalyseRequest(
+                    crt,
+                    deploymentFrequency,
+                    leadTime,
+                    changeFailure,
+                    mttrValue,
+                    commitFrequency,
+                    branchLifetime,
+                    pbisValue,
+                    timePayload.meetings,
+                    timePayload.unplanned,
+                    timePayload.bugs,
+                    timePayload.feature,
+                    timePayload.tech_debt,
+                    westrumScore
+                );
+
+                // Convert to JSON for sending to backend
+                const payload = JSON.parse(wasmRequest.to_json());
+                
+                // Validate the payload using WASM if available
+                if (typeof CrtWasm.validate_analyse_request_json === 'function') {
+                    const validationResult = CrtWasm.validate_analyse_request_json(JSON.stringify(payload));
+                    if (!validationResult) {
+                        console.error('Analysis payload validation failed');
+                        throw new Error('Invalid analysis request payload');
+                    }
+                }
+                
+                return payload;
+            } else {
+                // Fallback if WASM not loaded - build payload manually
             const payload = {
                 crt,
                 dora_metrics: {
-                    deployment_frequency: deploymentFrequency,
-                    lead_time: leadTime,
-                    change_failure_rate: changeFailure,
-                    mttr: mttrValue,
+                        deployment_frequency: deploymentFrequency,
+                        lead_time: leadTime,
+                        change_failure_rate: changeFailure,
+                        mttr: mttrValue,
                 },
                 extended_engineering_metrics: {
                     commit_frequency: commitFrequency,
@@ -2451,6 +2556,7 @@ function setLockState(category, locked = true) {
             }
 
             return payload;
+            }
         }
 
         function renderAnalysisResult(data, skipEvaluation = false) {
@@ -2766,6 +2872,10 @@ function setLockState(category, locked = true) {
             }
         }
 
+        function truncateTo3(num) {
+           return Math.trunc(num * 1000) / 1000;
+        }
+
         function initializeDoraSliders() {
             const sliders = [
                 'deployment-frequency', 'lead-time', 'change-failure', 'mttr',
@@ -2781,10 +2891,22 @@ function setLockState(category, locked = true) {
 
                 const updateLabel = () => {
                     const value = parseFloat(slider.value);
+                    console.log(`Updating label for ${sliderId}, value: ${value}`);
                     
                     // Show translated value with units instead of category text
                     const translated = translateDoraMetric(sliderId, value);
-                    label.textContent = `${translated.value} ${translated.unit}`;
+                    console.log(`Translation result:`, translated);
+                    
+                    if (translated && translated.value !== undefined && translated.unit) {
+                        const newText = `${truncateTo3(translated.value)} ${translated.unit}`;
+                        console.log(`Setting label to: ${newText}`);
+                        label.textContent = newText;
+                    } else {
+                        // Fallback to category name if translation fails
+                        const fallbackText = toDoraCategoryName(value);
+                        console.log(`Using fallback: ${fallbackText}`);
+                        label.textContent = fallbackText;
+                    }
                     
                     // Update active step based on range
                     steps.forEach(step => {
@@ -2828,8 +2950,8 @@ function setLockState(category, locked = true) {
                     step.addEventListener('click', () => {
                         slider.value = step.dataset.value;
                         updateLabel();
-                    });
                 });
+            });
 
                 // Initial update
                 updateLabel();
@@ -2837,70 +2959,36 @@ function setLockState(category, locked = true) {
         }
 
         function translateDoraMetric(metricId, sliderValue) {
-            // Convert 0-1 slider value to meaningful metrics with units (matches backend logic)
-            switch (metricId) {
-                case 'deployment-frequency':
-                    // Range: 0.025 to 10 deployments/day
-                    const minDeploy = 0.025;
-                    const maxDeploy = 10;
-                    const deployValue = minDeploy + (maxDeploy - minDeploy) * sliderValue;
-                    return {
-                        value: Math.round(deployValue * 1000) / 1000, // Round to 3 decimal places
-                        unit: 'deployments/day'
-                    };
-                
-                case 'lead-time':
-                    // Range: 60 to 0.1 days (inverted - lower slider = better)
-                    const maxLeadTime = 60;
-                    const minLeadTime = 0.1;
-                    const leadTimeValue = maxLeadTime - (maxLeadTime - minLeadTime) * sliderValue;
-                    return {
-                        value: Math.round(leadTimeValue * 100) / 100, // Round to 2 decimal places
-                        unit: 'days'
-                    };
-                
-                case 'change-failure':
-                    // Range: 0% to 100% (inverted - lower slider = better)
-                    const maxFailureRate = 100;
-                    const minFailureRate = 0;
-                    const failureRateValue = maxFailureRate - (maxFailureRate - minFailureRate) * sliderValue;
-                    return {
-                        value: Math.round(failureRateValue * 100) / 100, // Round to 2 decimal places
-                        unit: '%'
-                    };
-                
-                case 'mttr':
-                    // Range: 14 to 0.05 days (inverted - lower slider = better)
-                    const maxMttr = 14;
-                    const minMttr = 0.05;
-                    const mttrValue = maxMttr - (maxMttr - minMttr) * sliderValue;
-                    return {
-                        value: Math.round(mttrValue * 100) / 100, // Round to 2 decimal places
-                        unit: 'days'
-                    };
-                
-                case 'commit-frequency':
-                    // Range: 0.25 to 10 commits/day per developer
-                    const minCommits = 0.25;
-                    const maxCommits = 10;
-                    const commitValue = minCommits + (maxCommits - minCommits) * sliderValue;
-                    return {
-                        value: Math.round(commitValue * 100) / 100, // Round to 2 decimal places
-                        unit: 'commits/day per developer'
-                    };
-                
-                case 'branch-lifetime':
-                    // Range: 30 to 0.05 days (inverted - lower slider = better)
-                    const maxBranchLifetime = 30;
-                    const minBranchLifetime = 0.05;
-                    const branchLifetimeValue = maxBranchLifetime - (maxBranchLifetime - minBranchLifetime) * sliderValue;
-                    return {
-                        value: Math.round(branchLifetimeValue * 100) / 100, // Round to 2 decimal places
-                        unit: 'days'
-                    };
-                
-                default:
+            // Convert slider ID to metric name with proper mapping
+            const metricMapping = {
+                'deployment-frequency': 'deployment_frequency',
+                'lead-time': 'lead_time',
+                'change-failure': 'change_failure_rate',  // Special case: change-failure -> change_failure_rate
+                'mttr': 'mttr',
+                'commit-frequency': 'commit_frequency',
+                'branch-lifetime': 'branch_lifetime'
+            };
+            const metricName = metricMapping[metricId] || metricId.replace('-', '_');
+            console.log(`translateDoraMetric called: ${metricId} -> ${metricName}, value: ${sliderValue}`);
+            console.log('WASM available:', typeof CrtWasm);
+            console.log('translate_dora_metric available:', typeof CrtWasm?.translate_dora_metric);
+            
+            // Use WASM function for DORA metric translation if available
+            if (typeof CrtWasm.translate_dora_metric === 'function') {
+                console.log('Using WASM function');
+                try {
+                    const result = CrtWasm.translate_dora_metric(metricName, sliderValue);
+                    console.log('WASM result:', result);
+                    // The WASM function already returns a JsValue with proper formatting, no need to modify
+                    return result;
+                } catch (error) {
+                    console.error('Error translating DORA metric:', error);
                     return { value: sliderValue, unit: 'unknown' };
+                }
+            } else {
+                console.log('WASM not available, using fallback');
+                // Fallback if WASM not loaded - basic translation
+                return { value: sliderValue, unit: 'unknown' };
             }
         }
 
@@ -2950,24 +3038,95 @@ function setLockState(category, locked = true) {
         }
 
         function initializeWestrumScale() {
+            console.log('Initializing Westrum scale...');
             const slider = document.getElementById('westrum-scale');
-            if (!slider) return;
+            const label = document.getElementById('westrum-scale-label');
             const steps = document.querySelectorAll('.westrum-step');
-            const handleSliderChange = () => {
-                updateWestrumScaleLabel();
+            
+            if (!slider || !label) {
+                console.error('Westrum slider or label not found!');
+                return;
+            }
+            
+            console.log('Westrum slider found:', slider);
+            console.log('Westrum steps found:', steps.length);
+
+            const updateLabel = () => {
+                const value = parseFloat(slider.value);
+                console.log(`Updating Westrum label, value: ${value}`);
+                
+                // Use WASM function if available, otherwise fallback
+                let descriptor = 'Unknown';
+                if (typeof CrtWasm.get_westrum_descriptor === 'function') {
+                    descriptor = CrtWasm.get_westrum_descriptor(value);
+                } else {
+                    const nearest = Math.min(7, Math.max(1, Math.round(value)));
+                    descriptor = WESTRUM_LEVELS[nearest] ?? 'Unknown';
+                }
+                
+                const newText = `${descriptor} (${value.toFixed(1)})`;
+                console.log(`Setting Westrum label to: ${newText}`);
+                label.textContent = newText;
+                slider.setAttribute('aria-valuetext', newText);
+                
+                // Update slider background
+                const min = 1;
+                const max = 7;
+                const range = max - min;
+                const percent = ((value - min) / range) * 100;
+                slider.style.setProperty('background', 
+                    `linear-gradient(90deg, var(--accent-color) ${percent}%, rgba(255, 255, 255, 0.08) ${percent}%)`, 
+                    'important');
+                
+                // Update active step based on range
+                steps.forEach((step, index) => {
+                    step.classList.remove('active');
+                    const stepValue = parseFloat(step.dataset.value);
+                    
+                    // Determine the range for this step (similar to DORA logic)
+                    let rangeStart, rangeEnd;
+                    
+                    if (index === 0) {
+                        // First step: 1 to 1.5 (middle of 1 and 2)
+                        rangeStart = 1;
+                        rangeEnd = 1.5;
+                    } else if (index === steps.length - 1) {
+                        // Last step: 6.5 to 7
+                        rangeStart = 6.5;
+                        rangeEnd = 7;
+                    } else {
+                        // Middle steps: centered around their value
+                        const prevValue = index > 0 ? parseFloat(steps[index - 1].dataset.value) : 1;
+                        const nextValue = index < steps.length - 1 ? parseFloat(steps[index + 1].dataset.value) : 7;
+                        rangeStart = (prevValue + stepValue) / 2;
+                        rangeEnd = (stepValue + nextValue) / 2;
+                    }
+                    
+                    if (value >= rangeStart && value <= rangeEnd) {
+                        step.classList.add('active');
+                        step.setAttribute('aria-pressed', 'true');
+                    } else {
+                        step.setAttribute('aria-pressed', 'false');
+                    }
+                });
+                
                 markAnalysisStale();
                 updateAnalysisAvailability();
             };
+
+            slider.addEventListener('input', updateLabel);
+            slider.addEventListener('change', updateLabel);
+
+            // Handle step button clicks
             steps.forEach((step) => {
                 step.addEventListener('click', () => {
                     slider.value = step.dataset.value;
-                    handleSliderChange();
+                    updateLabel();
                 });
             });
-            slider.addEventListener('input', handleSliderChange);
-            slider.addEventListener('change', handleSliderChange);
-            updateWestrumScaleLabel();
-            updateAnalysisAvailability();
+
+            // Initial update
+            updateLabel();
         }
 
         function setRefineButtonState(disabled) {
@@ -3413,7 +3572,21 @@ function setLockState(category, locked = true) {
 
                 const data = await response.json();
                 lastRefineResult = data;
-                renderRefinePreview(content, data);
+                
+                // Use structured response if available, otherwise fall back to parsing output_text
+                let responseData = data.structured_response || JSON.parse(data.output_text || '{}');
+                
+                // Validate the response structure using WASM if available
+                if (typeof CrtWasm.validate_refine_response_json === 'function') {
+                    const isValid = CrtWasm.validate_refine_response_json(JSON.stringify(responseData));
+                    if (!isValid) {
+                        console.error('Invalid refine response structure');
+                        alert('Refinement response has invalid structure');
+                        return;
+                    }
+                }
+                
+                renderRefinePreview(content, responseData);
             } catch (error) {
                 console.error('Refinement request failed', error);
                 alert(`Refinement failed: ${error.message || error}`);
@@ -4233,8 +4406,29 @@ function setLockState(category, locked = true) {
         }
 
         async function initWasm() {
-            await init();
+            try {
+                await initCrt();
             wasmReady = true;
+                console.log('WASM modules loaded successfully');
+                console.log('Available WASM functions:', Object.keys(CrtWasm));
+                console.log('translate_dora_metric type:', typeof CrtWasm.translate_dora_metric);
+                console.log('CrtWasm object:', CrtWasm);
+                
+                // Test the function immediately
+                if (typeof CrtWasm.translate_dora_metric === 'function') {
+                    try {
+                        const testResult = CrtWasm.translate_dora_metric('change_failure_rate', 0.0);
+                        console.log('Test translate_dora_metric result:', testResult);
+                    } catch (testError) {
+                        console.error('Test translate_dora_metric error:', testError);
+                    }
+                } else {
+                    console.error('translate_dora_metric is not a function!');
+                }
+            } catch (error) {
+                console.error('Failed to load WASM modules:', error);
+                wasmReady = false;
+            }
             try {
                 const response = await fetch('CRT.neo');
                 const content = await response.text();
@@ -4246,7 +4440,13 @@ function setLockState(category, locked = true) {
             }
         }
 
-        initWasm();
+        initWasm().then(() => {
+            console.log('WASM initialization complete, wasmReady:', wasmReady);
+            // Now that WASM is ready, initialize DORA sliders and Westrum scale
+            initializeDoraSliders();
+            initializeWestrumScale();
+            updateAnalysisAvailability();
+        });
 
         document.querySelectorAll('.edit-tab-button').forEach((button) => {
             button.addEventListener('click', () => setActiveEditTab(button.dataset.editTab));
@@ -4308,25 +4508,12 @@ function setLockState(category, locked = true) {
             refineAnalysisBtn.addEventListener('click', () => runRefineWithFeedback());
         }
         updateTimeAllocationSummary();
-        initializeWestrumScale();
-        initializeDoraSliders();
-        updateAnalysisAvailability();
-        window.getDoraSelections = () => {
-            const selections = {
-                deployment_frequency: parseFloat(document.getElementById('deployment-frequency')?.value || '0.25'),
-                lead_time: parseFloat(document.getElementById('lead-time')?.value || '0.25'),
-                change_failure: parseFloat(document.getElementById('change-failure')?.value || '0.75'),
-                mttr: parseFloat(document.getElementById('mttr')?.value || '0.25'),
-                commit_frequency: parseFloat(document.getElementById('commit-frequency')?.value || '0.25'),
-                branch_lifetime: parseFloat(document.getElementById('branch-lifetime')?.value || '0.25'),
-            };
-            const input = document.getElementById('pbis-per-sprint');
-            const raw = input ? input.value.trim() : '';
-            const parsed = raw === '' ? null : Number.parseFloat(raw);
-            selections.pbis_per_sprint_per_team =
-                parsed !== null && Number.isFinite(parsed) ? parsed : null;
-            return selections;
-        };
+        
+        // Westrum scale will be initialized after WASM is ready
+        
+        // initializeDoraSliders(); // Moved to after WASM is loaded
+        // updateAnalysisAvailability() will be called after WASM is loaded
+        // getDoraSelections is already defined above
         window.getWestrumScore = () => Number(document.getElementById('westrum-scale')?.value ?? 0);
 
         const textarea = document.getElementById('input');

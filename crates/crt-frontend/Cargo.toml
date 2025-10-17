@@ -1,0 +1,39 @@
+[package]
+name = "crt-frontend"
+version.workspace = true
+edition.workspace = true
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+crt-core = { path = "../crt-core", features = ["wasm"] }
+wasm-bindgen.workspace = true
+js-sys.workspace = true
+wasm-bindgen-futures.workspace = true
+serde-wasm-bindgen.workspace = true
+console_error_panic_hook.workspace = true
+serde_json.workspace = true
+
+[dependencies.web-sys]
+version = "0.3"
+features = [
+  "console",
+  "Document",
+  "Element",
+  "HtmlElement",
+  "HtmlInputElement",
+  "HtmlTextAreaElement",
+  "Window",
+  "Event",
+  "EventTarget",
+  "MessageEvent",
+  "WebSocket",
+  "Request",
+  "RequestInit",
+  "RequestMode",
+  "Headers",
+  "Response",
+  "AbortController",
+  "AbortSignal",
+]

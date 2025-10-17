@@ -1,0 +1,87 @@
+{
+  "executive_summary": "Primary constraint appears to be governance/reporting overhead that crowds out product discovery and focused delivery capacity. Despite healthy delivery capability (short lead times, short-lived branches, low MTTR, mid commit frequency, strong Westrum score), deployment frequency is low and a large share of time is spent in meetings, tech debt, and unplanned work. This pattern suggests a policy/management constraint (reporting to show control and possible release gating) rather than a technical one. Increasing time on understanding user needs and reducing control-oriented reporting would likely reduce unplanned work, improve change quality, and enable higher deployment frequency without compromising stability.",
+  "core_systemic_issues": [
+    {
+      "issue": "Control/reporting overhead limits discovery and focused delivery capacity",
+      "causes": [
+        "Policy-driven emphasis on reporting to demonstrate control (CRT E1)",
+        "Time diversion away from understanding user needs (CRT E2)",
+        "High meeting load indicating coordination/control overhead"
+      ],
+      "evidence": [
+        "CRT: E1 → E2 (L1)",
+        "Time allocation: meetings 22%, feature development 19%",
+        "Low deployment frequency despite low lead time and low MTTR"
+      ]
+    },
+    {
+      "issue": "Insufficient user understanding increases rework/unplanned work and contributes to moderate change failure rate",
+      "causes": [
+        "Reduced discovery time (CRT E2)",
+        "Reactive work and unclear requirements leading to unplanned work"
+      ],
+      "evidence": [
+        "CRT E2: Insufficient time spent on understanding user needs",
+        "Time allocation: unplanned 22%",
+        "DORA: change failure rate = medium"
+      ]
+    },
+    {
+      "issue": "Release cadence/governance likely constrains throughput more than engineering flow",
+      "causes": [
+        "Batching of releases or approval gates limiting frequency",
+        "Capacity fragmentation from reporting/meetings reduces ready, deployable changes"
+      ],
+      "evidence": [
+        "DORA: deployment frequency = low while lead time for change = low and MTTR = low",
+        "Extended metrics: branch_lifetime = low (short-lived branches) indicating healthy integration practice",
+        "Commit_frequency = medium (some flow exists but not translating into deploys)"
+      ]
+    },
+    {
+      "issue": "Capacity fragmentation from meetings, tech debt, and interruptions lowers planned feature throughput",
+      "causes": [
+        "High meeting load (coordination/control)",
+        "Significant ongoing tech debt work",
+        "Interrupt-driven unplanned work"
+      ],
+      "evidence": [
+        "Time allocation: meetings 22%, tech debt 22%, unplanned 22%, feature development 19%",
+        "DORA: lead time low (when work is started, it flows), but overall throughput appears constrained by available focused time"
+      ]
+    }
+  ],
+  "leverage_points": [
+    {
+      "constraint": "Reporting and control policies (governance overhead)",
+      "rationale": "CRT explicitly links reporting to reduced discovery time. Reducing non-value-adding reporting would free time for user understanding and focused work, likely improving change quality (lower CFR) and enabling more deployable changes without changing technical practices."
+    },
+    {
+      "constraint": "Release cadence/approval gating",
+      "rationale": "Low deployment frequency coexists with low lead time and low MTTR, indicating the system can safely ship more often. Adjusting cadence/approvals would allow existing engineering flow to convert to throughput."
+    },
+    {
+      "constraint": "Product discovery capacity",
+      "rationale": "Allocating more time to understand user needs addresses a root cause in the CRT and is likely to reduce unplanned work and functional defects, improving CFR and predictability."
+    },
+    {
+      "constraint": "Interrupt and meeting load",
+      "rationale": "High unplanned and meeting time fragments attention, suppressing feature throughput. Reducing interruptions and unnecessary coordination preserves the already-healthy flow (short branches, low lead time) and translates it into higher deployment frequency."
+    }
+  ],
+  "systemic_relationships": [
+    "Reporting to show control (E1) → less time for discovery (E2) → more rework/unplanned work → more coordination/meetings → further time lost to feature delivery → fewer deployable changes → low deployment frequency.",
+    "Less discovery → misaligned changes → medium change failure rate; strong culture (Westrum 4) and good engineering practices mitigate impact via low MTTR.",
+    "Short branch lifetime + low lead time indicate efficient integration and delivery pipelines; constraint is upstream (policy/cadence and availability of well-shaped work), not engineering capability.",
+    "High unplanned work and tech debt compete with feature development, amplifying the effect of reporting/meeting overhead on throughput."
+  ],
+  "assumptions": [
+    "\"Low\" lead time and MTTR are interpreted as favorable (short/fast); \"low\" deployment frequency is interpreted as undesirable given context.",
+    "Branch_lifetime \"low\" indicates short-lived branches (healthy); commit_frequency \"medium\" indicates moderate code flow.",
+    "Meeting time includes the reporting overhead referenced in CRT E1.",
+    "Unplanned work reflects interruptions/operational/reactive tasks rather than planned backlog items.",
+    "Westrum score of 4 indicates a generative/learning culture that can absorb change safely.",
+    "PBIs delivered per sprint per team is unavailable; conclusions about throughput rely on DORA and time allocation proxies."
+  ],
+  "analysis_confidence": "Moderate. The CRT is minimal (two entities, one link), PBIs throughput is missing, and qualitative labels (low/medium) can vary by context. However, multiple signals consistently point to a policy/governance constraint rather than a technical one."
+}

@@ -1,0 +1,71 @@
+{
+    "metadata": {
+      "review_timestamp": "...",
+      "reviewer": "...",
+      "analysis_version_reviewed": "...",
+      "review_iteration": "..."
+    },
+    "overall_assessment": {
+      "total_score": "...",
+      "recommendation": "...",
+      "confidence": "...",
+      "one_sentence_summary": "..."
+    },
+    "dimension_scores": {
+      "causal_logic_quality": {
+        "score": "...",
+        "weight": "...",
+        "weighted_score": "...",
+        "status": "..."
+      },
+      "evidence_strength": {...},
+      "constraint_identification": {...},
+      "alternative_hypotheses": {...},
+      "data_quality": {...},
+      "completeness": {...}
+    },
+    "critical_issues": [...],
+    "logical_flaws": [...],
+    "evidence_gaps": [...],
+    "alternative_hypotheses": [...],
+    "improvement_recommendations": [...],
+    "strengths": [...],
+    "validation_tests": [...],
+    "data_quality_assessment": {
+      "overall_data_completeness": "...",
+      "metric_reliability": {
+        "dora_metrics": "...",
+        "extended_metrics": "...",
+        "cultural_metrics": "..."
+      },
+      "critical_data_gaps": [...],
+      "baseline_validity": "..."
+    },
+    "constraint_validation": {...},
+    "bias_assessment": {
+      "potential_biases_detected": [...],
+      "bias_awareness": "..."
+    },
+    "decision_criteria": {
+      "approve_if": [...],
+      "revise_minor_if": [...],
+      "revise_major_if": [...],
+      "reject_if": [...]
+    },
+    "recommended_next_steps": {
+      "if_approved": [...],
+      "if_revise_minor": [...],
+      "if_revise_major": [...],
+      "if_rejected": [...]
+    },
+    "review_confidence_assessment": {
+      "overall_confidence": "...",
+      "confidence_factors": {
+        "input_data_availability": "...",
+        "analysis_clarity": "...",
+        "domain_expertise": "...",
+        "completeness_of_review": "..."
+      },
+      "limitations": [...]
+    }
+  }

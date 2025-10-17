@@ -148,7 +148,7 @@
     {
       "Link": "L1 (E1 → E2)",
       "CLR Finding": "Sufficiency",
-      "Why it’s a leap": "Assumes reporting displaces discovery time without stating capacity constraint.",
+      "Why it's a leap": "Assumes reporting displaces discovery time without stating capacity constraint.",
       "Bridging proposal": [
         "E34: PO time budget per Sprint is fixed",
         "E35: Discovery/refinement time falls below target"
@@ -158,7 +158,7 @@
     {
       "Link": "L2 (E2 → E3)",
       "CLR Finding": "Causality",
-      "Why it’s a leap": "Missing mechanism from less discovery to refinement rework.",
+      "Why it's a leap": "Missing mechanism from less discovery to refinement rework.",
       "Bridging proposal": [
         "E38: Acceptance criteria/test cases missing or inconsistent"
       ],
@@ -167,7 +167,7 @@
     {
       "Link": "L4 (E4 → E5)",
       "CLR Finding": "Causality",
-      "Why it’s a leap": "From PO prep time to batch size is a jump; bundling mechanism is not stated.",
+      "Why it's a leap": "From PO prep time to batch size is a jump; bundling mechanism is not stated.",
       "Bridging proposal": [
         "E36: Insufficient Ready PBIs at Sprint start",
         "E37: Late/insufficient Ready items cause bundling into larger releases"
@@ -177,7 +177,7 @@
     {
       "Link": "L5 (E5 → E6)",
       "CLR Finding": "Causality",
-      "Why it’s a leap": "Large slices don’t directly cause DoR failures without a mechanism.",
+      "Why it's a leap": "Large slices don't directly cause DoR failures without a mechanism.",
       "Bridging proposal": [
         "E38: Large cross-component items make ACs incomplete",
         "E41: DoR compliance fails when ACs missing"
@@ -187,7 +187,7 @@
     {
       "Link": "L6 (E6 → E7)",
       "CLR Finding": "Tautology",
-      "Why it’s a leap": "DoR typically includes consistent documentation; effect is part of the cause’s definition.",
+      "Why it's a leap": "DoR typically includes consistent documentation; effect is part of the cause's definition.",
       "Bridging proposal": [
         "Reverse the direction: inconsistent documentation contributes to failing DoR"
       ],
@@ -196,7 +196,7 @@
     {
       "Link": "L7 (E7 → E8)",
       "CLR Finding": "Causality",
-      "Why it’s a leap": "Needs mechanism explaining how inconsistent docs produce inconsistent estimates.",
+      "Why it's a leap": "Needs mechanism explaining how inconsistent docs produce inconsistent estimates.",
       "Bridging proposal": [
         "E39: Estimation scales/reference classes differ due to ambiguity"
       ],
@@ -205,7 +205,7 @@
     {
       "Link": "L8 (E8 → E9)",
       "CLR Finding": "Clarity",
-      "Why it’s a leap": "Not clear if inconsistency means variance or unit mismatch.",
+      "Why it's a leap": "Not clear if inconsistency means variance or unit mismatch.",
       "Bridging proposal": [
         "E39: Explicitly model scale/reference mismatch leading to non-comparable sizes"
       ],
@@ -214,7 +214,7 @@
     {
       "Link": "L9 ((E9 AND E10) → E11)",
       "CLR Finding": "Causality",
-      "Why it’s a leap": "Mechanism from non-comparable estimates and not-Done counting to poor predictability is implicit.",
+      "Why it's a leap": "Mechanism from non-comparable estimates and not-Done counting to poor predictability is implicit.",
       "Bridging proposal": [
         "E40: Performance metric is inflated/noisy",
         "E41: Forecasts rely on this metric"
@@ -224,7 +224,7 @@
     {
       "Link": "L10 (E11 → E12)",
       "CLR Finding": "Causality",
-      "Why it’s a leap": "Predictor unreliability doesn’t cause process unpredictability; it causes planning/communication issues.",
+      "Why it's a leap": "Predictor unreliability doesn't cause process unpredictability; it causes planning/communication issues.",
       "Bridging proposal": [
         "E41: Forecasts/plans based on noisy metrics → perceived unpredictability",
         "E50: Independently, high WIP drives actual flow variability"
@@ -234,7 +234,7 @@
     {
       "Link": "L11 (E12 → E13)",
       "CLR Finding": "Sufficiency",
-      "Why it’s a leap": "Rushing only occurs if fixed-date commitments exist and expedite policy is used.",
+      "Why it's a leap": "Rushing only occurs if fixed-date commitments exist and expedite policy is used.",
       "Bridging proposal": [
         "E42: Fixed-date commitments exist",
         "E43: Expedite/preemption policy is used when behind"
@@ -244,7 +244,7 @@
     {
       "Link": "L22 (E23 → E24)",
       "CLR Finding": "Causality",
-      "Why it’s a leap": "Missing explicit mechanism linking lack of env to unstable configs.",
+      "Why it's a leap": "Missing explicit mechanism linking lack of env to unstable configs.",
       "Bridging proposal": [
         "E44: Environment/integration drift high due to lack of prod-like env"
       ],
@@ -253,7 +253,7 @@
     {
       "Link": "L23 (E24 → E25)",
       "CLR Finding": "Sufficiency",
-      "Why it’s a leap": "Needing freezes also depends on integration failure rates.",
+      "Why it's a leap": "Needing freezes also depends on integration failure rates.",
       "Bridging proposal": [
         "E45: Integration failures/test flakiness rate high → introduce freeze"
       ],
@@ -262,7 +262,7 @@
     {
       "Link": "L24 (E25 → E26)",
       "CLR Finding": "Causality",
-      "Why it’s a leap": "Mechanism from freeze to estimate distortion is missing.",
+      "Why it's a leap": "Mechanism from freeze to estimate distortion is missing.",
       "Bridging proposal": [
         "E47: Freeze introduces wait states/queue ageing",
         "E48: Estimates become stale due to unplanned waits/scope churn"
@@ -272,7 +272,7 @@
     {
       "Link": "L25 (E26 → E12)",
       "CLR Finding": "Causality",
-      "Why it’s a leap": "Invalid estimates affect forecasts, which affects perceived predictability; process variability may be separate.",
+      "Why it's a leap": "Invalid estimates affect forecasts, which affects perceived predictability; process variability may be separate.",
       "Bridging proposal": [
         "E41: Forecasts based on invalid estimates",
         "E50: Flow variability as independent driver"
@@ -282,7 +282,7 @@
     {
       "Link": "L26 (NOT E25 → NOT E27)",
       "CLR Finding": "Causality",
-      "Why it’s a leap": "Absence of freezes doesn’t ensure low WIP; WIP is driven by policies like starting too much and rework.",
+      "Why it's a leap": "Absence of freezes doesn't ensure low WIP; WIP is driven by policies like starting too much and rework.",
       "Bridging proposal": [
         "E49: No WIP cap / start-to-keep-busy policy",
         "E5/E19 as additional causes of E27"
@@ -292,7 +292,7 @@
     {
       "Link": "L27 (NOT E19 → NOT E27)",
       "CLR Finding": "Additional Cause",
-      "Why it’s a leap": "Reducing rework helps, but WIP can still be excessive due to push policies and large batches.",
+      "Why it's a leap": "Reducing rework helps, but WIP can still be excessive due to push policies and large batches.",
       "Bridging proposal": [
         "Add parallel cause: E49 (no WIP cap)",
         "Add: E5 (large slices) contributing to E27"
@@ -302,7 +302,7 @@
     {
       "Link": "L28 (NOT E25 → NOT E28 → NOT E18)",
       "CLR Finding": "Causality",
-      "Why it’s a leap": "Lack of freeze doesn’t guarantee adequate QA; QA delays don’t directly cause low quality; often time compression does.",
+      "Why it's a leap": "Lack of freeze doesn't guarantee adequate QA; QA delays don't directly cause low quality; often time compression does.",
       "Bridging proposal": [
         "E42 + E43: Under fixed dates and expedites",
         "E56: Test scope/time compressed causes quality issues"
@@ -312,7 +312,7 @@
     {
       "Link": "L29 (NOT E19 → NOT E29 → NOT E30 → NOT E18 → NOT E22)",
       "CLR Finding": "Aggregation jump",
-      "Why it’s a leap": "Multiple big steps with untested mechanisms; assumes linear improvement chain.",
+      "Why it's a leap": "Multiple big steps with untested mechanisms; assumes linear improvement chain.",
       "Bridging proposal": [
         "Split: E19↓ → capacity↑ → time for improvement (E29)↑",
         "E29↓ → specific process changes (state which) → defect rate↓ (E18) → throughput/value↑"
@@ -322,7 +322,7 @@
     {
       "Link": "L30 ((NOT E33 AND NOT E7) → NOT E11 → NOT E12 → NOT E31 → NOT E1 → NOT E32)",
       "CLR Finding": "Sufficiency",
-      "Why it’s a leap": "Chain bundles several assumptions (metrics, trust, reporting demand) without mechanisms.",
+      "Why it's a leap": "Chain bundles several assumptions (metrics, trust, reporting demand) without mechanisms.",
       "Bridging proposal": [
         "E33/E7 → E39 → E8 → E9 → E40 → E11",
         "E11/E50/E41 → E12 → E31 → E53 → E1 → E32"
@@ -332,7 +332,7 @@
     {
       "Link": "L31 (E5 → E27)",
       "CLR Finding": "Sufficiency",
-      "Why it’s a leap": "Large slices lead to high WIP only if the system starts many items without a WIP cap.",
+      "Why it's a leap": "Large slices lead to high WIP only if the system starts many items without a WIP cap.",
       "Bridging proposal": [
         "E49: No WIP cap / start-to-keep-busy policy"
       ],

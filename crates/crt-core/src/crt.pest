@@ -1,0 +1,35 @@
+// Comments are allowed ANYWHERE and may also form full lines.
+// We DO NOT skip NEWLINE globally so we can parse line-structured sections.
+
+WHITESPACE = _{ " " | "\t" }
+NEWLINE    = _{ "\r\n" | "\n" }
+COMMENT    =  { "//" ~ (!NEWLINE ~ ANY)* }
+
+ARROW      =  { "→" | "->" }
+ID         = @{ ASCII_DIGIT+ }
+
+// ---------- helpers for line handling ----------
+eol        = _{ WHITESPACE* ~ COMMENT? ~ NEWLINE+ }     // end-of-line: optional trailing //comment
+blankline  =  { WHITESPACE* ~ COMMENT? ~ NEWLINE+ }     // a line with only ws and/or comment
+
+// ---------- file ----------
+file       = { SOI
+               ~ blankline*
+               ~ WHITESPACE* ~ "Entities" ~ eol+
+               ~ ( entity_line | blankline )*
+               ~ WHITESPACE* ~ "Links"    ~ eol+
+               ~ ( link_line    | blankline )*
+               ~ WHITESPACE* ~ EOI }
+
+// ---------- entities ----------
+entity_line = { WHITESPACE* ~ "E" ~ ID ~ "." ~ WHITESPACE* ~ text ~ eol }
+text        = @{ (!NEWLINE ~ ANY)+ }  // captures the entity label (comment, if present, is handled by eol)
+
+// ---------- links ----------
+link_line   = { WHITESPACE* ~ "L" ~ ID ~ "." ~ WHITESPACE*
+                ~ expr ~ ( WHITESPACE* ~ ARROW ~ WHITESPACE* ~ expr )+
+                ~ WHITESPACE* ~ eol }
+
+// ---------- expressions (captured as raw text, parsed in Rust) ----------
+expr       = @{ ( !ARROW ~ !NEWLINE ~ ANY )+ }
+entity_ref =  { "E" ~ ID }

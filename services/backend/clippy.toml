@@ -1,9 +1,0 @@
-# Custom clippy configuration
-[clippy]
-# Deny the use of Json<Value> in function signatures
-deny = ["clippy::all"]
-
-# Custom lint to catch Json<Value> usage
-[[clippy.allow]]
-name = "json_value_usage"
-reason = "Prefer strongly typed request/response structs over Json<Value>"
