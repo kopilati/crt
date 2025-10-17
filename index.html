@@ -837,28 +837,230 @@
     cursor: not-allowed;
 }
 .analysis-output {
-    background: #151515;
-    border: 1px solid #2f2f2f;
-    border-radius: 12px;
-    padding: 18px;
-    font-size: 13px;
-    line-height: 1.6;
-    overflow: auto;
-    max-height: 360px;
+    padding: 32px;
+    font-size: 16px;
+    line-height: 1.7;
+    color: var(--text-primary);
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 24px;
+    max-width: 900px;
+    margin: 0 auto;
 }
 .analysis-output p {
+    margin: 0 0 16px 0;
+    font-size: 16px;
+    line-height: 1.7;
+}
+
+.analysis-output h2 {
+    font-size: 24px;
+    font-weight: 700;
+    color: #fff;
+    margin: 32px 0 16px 0;
+    padding-bottom: 8px;
+    border-bottom: 2px solid var(--accent-color);
+}
+
+.analysis-output h3 {
+    font-size: 20px;
+    font-weight: 600;
+    color: #fff;
+    margin: 24px 0 12px 0;
+}
+
+.analysis-output h4 {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--accent-color);
+    margin: 20px 0 10px 0;
+}
+
+.analysis-output ul {
+    margin: 16px 0;
+    padding-left: 24px;
+    list-style: none;
+}
+
+.analysis-output li {
+    margin-bottom: 12px;
+    padding-left: 16px;
+    position: relative;
+}
+
+.analysis-output li::before {
+    content: "•";
+    color: var(--accent-color);
+    font-weight: bold;
+    position: absolute;
+    left: 0;
+}
+
+.analysis-output ol {
+    margin: 16px 0;
+    padding-left: 24px;
+}
+
+.analysis-output ol li {
+    margin-bottom: 12px;
+    padding-left: 0;
+}
+
+.analysis-output ol li::before {
+    display: none;
+}
+
+.analysis-output blockquote {
+    margin: 20px 0;
+    padding: 16px 20px;
+    border-left: 4px solid var(--accent-color);
+    background: rgba(74, 110, 245, 0.1);
+    border-radius: 0 8px 8px 0;
+    font-style: italic;
+}
+
+.analysis-output strong {
+    font-weight: 600;
+    color: #fff;
+}
+
+.analysis-output em {
+    font-style: italic;
+    color: var(--text-muted);
+}
+
+/* Full-screen analysis layout */
+.analysis-fullscreen {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    background: var(--bg-primary);
+}
+
+.analysis-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 24px 32px;
+    border-bottom: 1px solid var(--border-color);
+    background: var(--bg-secondary);
+}
+
+.analysis-header-content {
+    flex: 1;
+}
+
+.analysis-header h1 {
+    font-size: 28px;
+    font-weight: 700;
+    color: #fff;
+    margin: 0 0 8px 0;
+    line-height: 1.2;
+}
+
+.analysis-header p {
+    font-size: 16px;
+    color: var(--text-muted);
+    margin: 0 0 16px 0;
+    line-height: 1.5;
+}
+
+.analysis-tabs {
+    display: flex;
+    border-bottom: 1px solid var(--border-color);
+    background: var(--bg-secondary);
+}
+
+.analysis-tab-button {
+    background: none;
+    border: none;
+    padding: 16px 24px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-muted);
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+    transition: all 0.2s ease;
+}
+
+.analysis-tab-button:hover {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.analysis-tab-button.active {
+    color: var(--accent-color);
+    border-bottom-color: var(--accent-color);
+    background: rgba(74, 110, 245, 0.1);
+}
+
+.analysis-content-area {
+    flex: 1;
+    overflow: hidden;
+}
+
+.analysis-tab-content {
+    display: none;
+    height: 100%;
+    overflow-y: auto;
+    padding: 0;
+}
+
+.analysis-tab-content.active {
+    display: block;
+}
+
+.evaluation-panel {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    padding: 24px 32px;
+}
+
+.evaluation-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.evaluation-header h2 {
+    font-size: 20px;
+    font-weight: 600;
+    color: #fff;
     margin: 0;
 }
-.analysis-output ul {
-    margin: 8px 0 0 18px;
-    padding: 0;
-    list-style: disc;
+
+.evaluation-actions {
+    display: flex;
+    gap: 12px;
 }
-.analysis-output li {
-    margin-bottom: 4px;
+
+#evaluation-editor {
+    flex: 1;
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 20px;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-size: 15px;
+    line-height: 1.6;
+    resize: none;
+    outline: none;
+    transition: border-color 0.2s ease;
+}
+
+#evaluation-editor:focus {
+    border-color: var(--accent-color);
+}
+
+#evaluation-meta {
+    font-size: 13px;
+    color: var(--text-muted);
+    padding-top: 12px;
+    margin-top: 12px;
+    border-top: 1px solid var(--border-color);
 }
 .analysis-section-title {
     font-weight: 600;
@@ -1826,11 +2028,11 @@
                 </div>
             </div>
             <div class="edit-tab-content" id="analysis-tab">
-                <div class="analysis-content">
-                    <div class="analysis-card">
-                        <div class="analysis-card-header">
+                <div class="analysis-fullscreen">
+                    <div class="analysis-header">
+                        <div class="analysis-header-content">
                             <div>
-                                <h2>Systems Analysis</h2>
+                                <h1>Systems Analysis</h1>
                                 <p>Combine your CRT, delivery metrics, and culture signals to surface systemic constraints.</p>
                             </div>
                             <div class="analysis-status" id="analysis-status">Provide CRT text, DORA selections, Westrum score, and lock all time categories.</div>
@@ -1841,21 +2043,36 @@
                                 Run Analysis
                             </button>
                         </div>
-                        <div class="analysis-meta" id="analysis-meta"></div>
-                        <div class="analysis-split" id="analysis-split" style="display:none; gap: 16px;">
-                            <div class="analysis-output" id="analysis-output" style="flex:1;">
-                            <p>Enter CRT content, select DORA tiers, set the Westrum slider, and lock every time category to enable analysis.</p>
+                    </div>
+                    
+                    <div class="analysis-tabs">
+                        <button class="analysis-tab-button active" data-analysis-tab="analysis" id="analysis-content-tab">
+                            Analysis Results
+                        </button>
+                        <button class="analysis-tab-button" data-analysis-tab="evaluation" id="analysis-evaluation-tab">
+                            Evaluation
+                        </button>
+                    </div>
+                    
+                    <div class="analysis-content-area">
+                        <div class="analysis-tab-content active" id="analysis-content-panel">
+                            <div class="analysis-output" id="analysis-output">
+                                <p>Enter CRT content, select DORA tiers, set the Westrum slider, and lock every time category to enable analysis.</p>
+                            </div>
+                            <div class="analysis-meta" id="analysis-meta"></div>
                         </div>
-                            <div class="evaluation-panel" style="flex:1; display:flex; flex-direction:column;">
-                                <div style="display:flex; justify-content:space-between; align-items:center; padding: 8px 0;">
-                                    <strong>Analysis Evaluation</strong>
-                                    <div style="display:flex; gap:8px;">
+                        
+                        <div class="analysis-tab-content" id="analysis-evaluation-panel">
+                            <div class="evaluation-panel">
+                                <div class="evaluation-header">
+                                    <h2>Analysis Evaluation</h2>
+                                    <div class="evaluation-actions">
                                         <button type="button" id="evaluate-button" class="secondary">Evaluate</button>
                                         <button type="button" id="refine-analysis-button">Refine</button>
                                     </div>
                                 </div>
-                                <textarea id="evaluation-editor" style="min-height:200px; flex:1; background:#151515; color:#e0e0e0; border:1px solid #2f2f2f; padding:10px; font-family: Consolas, Monaco, monospace;"></textarea>
-                                <div id="evaluation-meta" style="font-size:12px; color: var(--text-muted); padding-top:6px;"></div>
+                                <textarea id="evaluation-editor" placeholder="Evaluation results will appear here after running the evaluation..."></textarea>
+                                <div id="evaluation-meta"></div>
                             </div>
                         </div>
                     </div>
@@ -2562,9 +2779,12 @@ function setLockState(category, locked = true) {
         function renderAnalysisResult(data, skipEvaluation = false) {
             const output = document.getElementById('analysis-output');
             const meta = document.getElementById('analysis-meta');
-            const split = document.getElementById('analysis-split');
-            if (!output || !meta || !split) return { hasWarnings: false };
+            if (!output || !meta) return { hasWarnings: false };
             meta.textContent = '';
+
+            // Reset refinement state for new analysis
+            refinementUsed = false;
+            updateRefinementButtonState();
 
             const result = extractAnalysisBody(data);
             if (!result) {
@@ -2598,8 +2818,9 @@ function setLockState(category, locked = true) {
                 : renderAnalysisMessage('No analysis output was returned.');
 
             lastAnalysisResult = data;
-            // Show split view and trigger evaluation (unless skipped)
-            split.style.display = 'flex';
+            
+            // Switch to analysis tab and trigger evaluation (unless skipped)
+            setActiveAnalysisTab('analysis');
             if (!skipEvaluation) {
                 queueMicrotask(() => runEvaluation());
             }
@@ -2640,7 +2861,7 @@ function setLockState(category, locked = true) {
         function formatAnalysisParagraph(title, rawContent) {
             const text = extractTextValue(rawContent);
             const body = text ? escapeHtml(text) : 'No data provided.';
-            return `<p><strong>${escapeHtml(title)}:</strong> ${body}</p>`;
+            return `<h2>${escapeHtml(title)}</h2><p>${body}</p>`;
         }
 
         function extractTextValue(value) {
@@ -2695,7 +2916,7 @@ function setLockState(category, locked = true) {
                 if (!items.length) {
                     return '';
                 }
-                return items.map((text, index) => `${index + 1}. ${text}`).join(' ');
+                return '<ul>' + items.map((text) => `<li>${escapeHtml(text)}</li>`).join('') + '</ul>';
             }
             if (typeof value === 'object') {
                 return describeStructuredItem(value, preferredKeys);
@@ -2754,10 +2975,9 @@ function setLockState(category, locked = true) {
         }
 
         async function runEvaluation() {
-            const split = document.getElementById('analysis-split');
             const editor = document.getElementById('evaluation-editor');
             const meta = document.getElementById('evaluation-meta');
-            if (!split || !editor || !meta) return;
+            if (!editor || !meta) return;
             if (!lastAnalysisResult) return;
             try {
                 meta.textContent = 'Evaluating...';
@@ -2780,6 +3000,10 @@ function setLockState(category, locked = true) {
                 const body = (data && data.result) ? data.result : data;
                 editor.value = typeof body === 'string' ? body : JSON.stringify(body, null, 2);
                 meta.textContent = lastEvaluationRunId ? `Run: ${lastEvaluationRunId}` : '';
+                
+                // Switch to evaluation tab and update refinement button state
+                setActiveAnalysisTab('evaluation');
+                updateRefinementButtonState();
             } catch (error) {
                 meta.textContent = `Evaluation failed: ${error.message || error}`;
             }
@@ -2788,8 +3012,18 @@ function setLockState(category, locked = true) {
         async function runRefineWithFeedback() {
             const editor = document.getElementById('evaluation-editor');
             const meta = document.getElementById('evaluation-meta');
+            const output = document.getElementById('analysis-output');
             if (!editor || !meta) return;
+            
             try {
+                // Clear analysis content to show new analysis is incoming
+                if (output) {
+                    output.innerHTML = '<div style="text-align: center; padding: 40px; color: var(--text-muted);"><h3>Refining Analysis...</h3><p>Generating new analysis with evaluation feedback. This may take a moment.</p></div>';
+                }
+                
+                // Switch to analysis tab to show the loading state
+                setActiveAnalysisTab('analysis');
+                
                 meta.textContent = 'Refining analysis with feedback...';
                 const original_payload = buildAnalysisPayload();
                 const analysis_result = lastAnalysisResult.result || lastAnalysisResult;
@@ -2810,8 +3044,10 @@ function setLockState(category, locked = true) {
                     throw new Error(text || response.statusText);
                 }
                 const data = await response.json();
+                refinementUsed = true; // Mark refinement as used
                 renderAnalysisResult(data, true);
                 meta.textContent = 'Refine complete. Evaluation preserved for further edits.';
+                updateRefinementButtonState();
             } catch (error) {
                 meta.textContent = `Refine failed: ${error.message || error}`;
             }
@@ -3129,6 +3365,40 @@ function setLockState(category, locked = true) {
             updateLabel();
         }
 
+        function setActiveAnalysisTab(tabName) {
+            // Update tab buttons
+            document.querySelectorAll('.analysis-tab-button').forEach(button => {
+                button.classList.toggle('active', button.dataset.analysisTab === tabName);
+            });
+            
+            // Update tab content
+            document.querySelectorAll('.analysis-tab-content').forEach(content => {
+                content.classList.toggle('active', content.id === `analysis-${tabName}-panel`);
+            });
+        }
+
+        function updateRefinementButtonState() {
+            const refineButton = document.getElementById('refine-analysis-button');
+            if (!refineButton) return;
+            
+            const hasAnalysis = lastAnalysisResult !== null;
+            const hasEvaluation = lastEvaluationResult !== null;
+            const canRefine = hasAnalysis && hasEvaluation && !refinementUsed;
+            
+            refineButton.disabled = !canRefine;
+            refineButton.classList.toggle('disabled', !canRefine);
+            
+            if (refinementUsed) {
+                refineButton.title = 'Refinement already used for this analysis. Run a new analysis to refine again.';
+            } else if (!hasAnalysis) {
+                refineButton.title = 'Run analysis first';
+            } else if (!hasEvaluation) {
+                refineButton.title = 'Run evaluation first';
+            } else {
+                refineButton.title = 'Refine analysis with evaluation feedback';
+            }
+        }
+
         function setRefineButtonState(disabled) {
             const button = document.getElementById('refine-button');
             if (!button) return;
@@ -3151,6 +3421,7 @@ function setLockState(category, locked = true) {
         let selectedEntityAdditions = new Set();
         let selectedLinkAdditions = new Set();
         let refineEntityMap = new Map();
+        let refinementUsed = false; // Track if refinement has been used for current analysis
         let refineLinkMap = new Map();
         const doraSelections = {};
 
@@ -4450,6 +4721,14 @@ function setLockState(category, locked = true) {
 
         document.querySelectorAll('.edit-tab-button').forEach((button) => {
             button.addEventListener('click', () => setActiveEditTab(button.dataset.editTab));
+        });
+
+        // Analysis tab switching
+        document.querySelectorAll('.analysis-tab-button').forEach((button) => {
+            button.addEventListener('click', () => {
+                const tabName = button.dataset.analysisTab;
+                setActiveAnalysisTab(tabName);
+            });
         });
         applyActiveEditTab();
         document.querySelectorAll('[data-time-category]').forEach((input) => {
