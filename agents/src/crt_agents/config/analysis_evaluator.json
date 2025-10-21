@@ -1,454 +1,483 @@
 {
-    "metadata": {
-      "review_timestamp": "2025-10-15T00:00:00Z",
-      "reviewer": "Analysis Reviewer Agent v2.0",
-      "analysis_version_reviewed": "resp_045a93936c9849100068efed6569c481919dcabd0494a22856",
-      "review_iteration": "1"
+  "metadata": {
+    "review_timestamp": "2025-10-17T00:00:00Z",
+    "reviewer": "Analysis Reviewer Agent v2.0",
+    "analysis_version_reviewed": "2025-10-17T00:00:00Z",
+    "review_iteration": "1"
+  },
+  "overall_assessment": {
+    "total_score": 70,
+    "recommendation": "REVISE_MAJOR",
+    "confidence": "medium",
+    "one_sentence_summary": "Strong CRT and plausible causal story, but lacks a single validated primary constraint and has key evidence gaps that must be closed before planning."
+  },
+  "dimension_scores": {
+    "causal_logic_quality": {
+      "score": 85,
+      "weight": "30%",
+      "weighted_score": 25.5,
+      "status": "good"
     },
-    "overall_assessment": {
-      "total_score": "66",
-      "recommendation": "REVISE_MAJOR",
-      "confidence": "medium",
-      "one_sentence_summary": "Analysis has coherent causal logic but lacks key evidence (DORA metrics, WIP/Ready data) to validate the primary constraint versus alternatives; major revisions and targeted validation are required before planning."
+    "evidence_strength": {
+      "score": 66,
+      "weight": "25%",
+      "weighted_score": 16.5,
+      "status": "needs_improvement"
     },
-    "dimension_scores": {
-      "causal_logic_quality": {
-        "score": "82",
-        "weight": "30%",
-        "weighted_score": "24.6",
-        "status": "good"
-      },
-      "evidence_strength": {
-        "score": "58",
-        "weight": "25%",
-        "weighted_score": "14.5",
-        "status": "needs_improvement"
-      },
-      "constraint_identification": {
-        "score": "68",
-        "weight": "20%",
-        "weighted_score": "13.6",
-        "status": "needs_improvement"
-      },
-      "alternative_hypotheses": {
-        "score": "55",
-        "weight": "10%",
-        "weighted_score": "5.5",
-        "status": "needs_improvement"
-      },
-      "data_quality": {
-        "score": "45",
-        "weight": "10%",
-        "weighted_score": "4.5",
-        "status": "critical_issue"
-      },
-      "completeness": {
-        "score": "70",
-        "weight": "5%",
-        "weighted_score": "3.5",
-        "status": "needs_improvement"
-      }
+    "constraint_identification": {
+      "score": 55,
+      "weight": "20%",
+      "weighted_score": 11,
+      "status": "critical_issue"
     },
-    "critical_issues": [
-      {
-        "issue_id": "CRIT-001",
-        "dimension": "evidence_strength",
-        "severity": "critical",
-        "issue": "Primary constraint (PO discovery/refinement capacity) not supported by direct, quantitative evidence of Ready backlog starvation or PO time diversion.",
-        "evidence": "Executive summary and Core Issue #1 rely on CRT links and proxies (PBIs per sprint ≈1, Westrum=3, time allocation), but provide no metrics on Ready backlog depth/aging or PO time split.",
-        "impact": "May misidentify the true system constraint, leading to upstream interventions that do not improve throughput or predictability.",
-        "recommendation": "Collect and analyze Ready backlog depth and aging at sprint start, PO time-use data (discovery vs reporting), and refinement cycle-time/quality metrics across 6–12 weeks.",
-        "example": "Target metric: ≥2 sprints of Ready inventory correlating with improved predictability and smaller batch sizes when PO time increases."
-      },
-      {
-        "issue_id": "CRIT-002",
-        "dimension": "data_quality",
-        "severity": "critical",
-        "issue": "Missing key DORA metrics (deployment frequency, lead time for changes, change failure rate) and expedite/freeze rates.",
-        "evidence": "Assumptions explicitly note only MTTR is available; expedite/freeze frequency not measured.",
-        "impact": "Prevents validation that identified loops materially limit throughput and predictability; impairs discrimination among alternative constraints.",
-        "recommendation": "Establish a 8–12 week baseline for all four DORA metrics and track expedite tags and code-freeze events with timestamps."
-      },
-      {
-        "issue_id": "CRIT-003",
-        "dimension": "constraint_identification",
-        "severity": "major",
-        "issue": "Multiple plausible constraints listed as leverage points without prioritization evidence that PO capacity is THE current system constraint.",
-        "evidence": "Leverage points include PO capacity, WIP policy/batch sizing, environment stability, and measurement validity without throughput impact comparison.",
-        "impact": "Risk of optimizing a non-constraint; improvements may shift the system minimally.",
-        "recommendation": "Run bottleneck tests: compare queue/aging at each candidate constraint (Ready queue, in-progress WIP, env freeze queues) and perform small pilots (PO time relief vs WIP cap) to see which increases throughput most."
-      },
-      {
-        "issue_id": "CRIT-004",
-        "dimension": "evidence_strength",
-        "severity": "major",
-        "issue": "Proxy metric used without validation: PBIs delivered per sprint ≈1 assumed to indicate large batches.",
-        "evidence": "Assumptions note PBI definition/sprint length unknown; no size distribution or cycle-time data presented.",
-        "impact": "Batch-size inferences may be invalid if PBIs are coarse-grained by definition; could misdirect batch-size/WIP interventions.",
-        "recommendation": "Validate PBI granularity: collect PBI cycle time distribution, story-point/size normalization across teams, and median batch size over 8–12 weeks."
-      }
-    ],
-    "logical_flaws": [
-      {
-        "flaw_id": "LOGIC-001",
-        "type": "logical_leap",
-        "location": "Core systemic issue #1, E36→E37→E5 chain",
-        "description": "Infers that insufficient Ready items lead to bundling and large slices without quantifying thresholds or conditions.",
-        "why_it_matters": "Interventions that increase Ready items may not reduce batch size if release policies or deployment windows enforce bundling.",
-        "suggested_fix": "Specify necessary conditions (e.g., minimum Ready depth per team and absence of fixed release windows) and measure bundling frequency.",
-        "validation_test": "Correlate Ready depth at sprint start with number/size of releases; check for release window policies."
-      },
-      {
-        "flaw_id": "LOGIC-002",
-        "type": "correlation_as_causation",
-        "location": "Executive summary and Core issue #1",
-        "description": "Uses Westrum score=3 to support 'control/reporting loop' causing PO time drain without direct measurement of reporting load.",
-        "why_it_matters": "Cultural index may correlate with reporting but doesn't establish causal magnitude for PO time diversion.",
-        "suggested_fix": "Time-audit PO activities; quantify reporting hours/week and link to meeting artifacts.",
-        "validation_test": "Introduce a reporting reduction pilot and measure change in PO discovery hours and Ready backlog."
-      },
-      {
-        "flaw_id": "LOGIC-003",
-        "type": "missing_mechanism",
-        "location": "Core systemic issue #2, E49 push policy → E27 excessive WIP",
-        "description": "Asserts 'no WIP caps/push' without evidence of policy or observed WIP levels.",
-        "why_it_matters": "If WIP is not actually high or policies already limit WIP, pull/WIP interventions will have limited effect.",
-        "suggested_fix": "Document WIP policy and measure per-person and per-team WIP and aging WIP.",
-        "validation_test": "WIP inventory and aging report; implement a WIP-cap pilot and measure lead-time change."
-      }
-    ],
-    "evidence_gaps": [
-      {
-        "gap_id": "EVID-001",
-        "claim": "PO discovery/refinement capacity is the primary system constraint causing Ready backlog starvation.",
-        "current_evidence": "CRT path E1/E34→E2→E36; PBIs per sprint ≈1; Westrum=3; time allocation percentages.",
-        "gap_type": "no_evidence",
-        "impact": "Cannot verify that relieving PO capacity increases throughput or reduces unpredictability.",
-        "recommended_evidence": "Ready backlog depth and aging; PO time split (discovery vs reporting); refinement quality metrics (DoR adherence, AC completeness).",
-        "workaround": "Run a contained pilot that shields one team’s PO from reporting for 2 sprints and observe Ready depth and predictability."
-      },
-      {
-        "gap_id": "EVID-002",
-        "claim": "Push system without WIP caps and large batches drive high WIP and variability.",
-        "current_evidence": "CRT links; commit/branch lifetime = Medium.",
-        "gap_type": "no_evidence",
-        "impact": "Magnitude of WIP-driven variability is speculative.",
-        "recommended_evidence": "Per-team WIP counts, aging WIP histograms, flow efficiency, queue wait time distributions; formal WIP policy documentation.",
-        "workaround": "Introduce provisional WIP caps in a pilot and measure lead-time/throughput deltas."
-      },
-      {
-        "gap_id": "EVID-003",
-        "claim": "Unstable test/integration environments cause freezes that degrade forecasting.",
-        "current_evidence": "CRT links; DORA MTTR=Medium (indirect).",
-        "gap_type": "weak_evidence",
-        "impact": "Unclear whether environment instability is material vs. occasional.",
-        "recommended_evidence": "Freeze frequency/duration; test flakiness rates; environment drift incidents; queue aging during freezes.",
-        "workaround": "Stabilize one service’s env via ephemeral prod-like envs for 2 sprints and compare failure/lead-time variance."
-      },
-      {
-        "gap_id": "EVID-004",
-        "claim": "Expedites and rushing degrade quality and drive rework.",
-        "current_evidence": "Time allocation shows Bugs 15% + Unplanned 15%; CRT links.",
-        "gap_type": "single_source",
-        "impact": "Cannot attribute rework to expedites without expedite frequency and CFR.",
-        "recommended_evidence": "Expedite tag frequency, change failure rate, defect injection/escape rates, late-stage test compression metrics.",
-        "workaround": "Tag expedites for 4–6 weeks and compare CFR/defects vs. non-expedites."
-      },
-      {
-        "gap_id": "EVID-005",
-        "claim": "PBIs per sprint ≈1 indicates large functional batches.",
-        "current_evidence": "Single metric; PBI definitions unknown.",
-        "gap_type": "proxy_without_validation",
-        "impact": "Risk of designing batch-size interventions on possibly coarse-grained artifacts.",
-        "recommended_evidence": "PBI cycle time distribution; size normalization across teams; story slicing adherence; release size histograms.",
-        "workaround": "Sample-review recent PBIs for granularity and acceptance criteria quality."
-      },
-      {
-        "gap_id": "EVID-006",
-        "claim": "Overall delivery unpredictability and throughput impact are driven by the identified loops.",
-        "current_evidence": "No deployment frequency, lead time, or CFR baselines.",
-        "gap_type": "no_evidence",
-        "impact": "System-wide impact cannot be triangulated without DORA baselines.",
-        "recommended_evidence": "12-week DORA baseline (DF, LT, CFR, MTTR).",
-        "workaround": "Use Jira/Git-derived lead time and release cadence as interim proxies while instrumenting pipelines."
-      }
-    ],
-    "alternative_hypotheses": [
-      {
-        "hypothesis_id": "ALT-001",
-        "alternative_explanation": "The primary constraint is WIP policy/flow efficiency (not PO capacity), where excessive WIP and push behaviors dominate lead time and variability.",
-        "supporting_evidence": "High aging WIP or low flow efficiency; long review/QA queues; frequent context switching.",
-        "how_to_test": "Implement WIP limits in one team for 2–3 sprints and track lead time, throughput, and predictability changes.",
-        "if_true_impact": "Prioritize flow/WIP interventions before investing in PO capacity or discovery changes.",
-        "analysis_coverage": "partially_addressed"
-      },
-      {
-        "hypothesis_id": "ALT-002",
-        "alternative_explanation": "Downstream environment/test instability is the system constraint via repeated freezes that dominate queueing delays.",
-        "supporting_evidence": "High frequency/duration of code freezes; test flakiness; long waiting states during freezes.",
-        "how_to_test": "Stabilize environments for a subset of services (immutable, prod-like) and compare queue aging and lead-time variance.",
-        "if_true_impact": "Focus on environment reliability before upstream discovery or WIP policies.",
-        "analysis_coverage": "partially_addressed"
-      },
-      {
-        "hypothesis_id": "ALT-003",
-        "alternative_explanation": "Deployment process/policy constraints (e.g., approval gates or narrow release windows) are the throughput limiter.",
-        "supporting_evidence": "Low deployment frequency, long lead time with high queue/approval wait components.",
-        "how_to_test": "Instrument DORA lead time stages; run a no-approval pilot or widen release windows for one team and observe DF/LT shifts.",
-        "if_true_impact": "Policy automation/removal and CD pipeline improvements become first priority.",
-        "analysis_coverage": "not_considered"
-      },
-      {
-        "hypothesis_id": "ALT-004",
-        "alternative_explanation": "Measurement artifacts (coarse PBI definitions) create the appearance of large batches and low throughput.",
-        "supporting_evidence": "PBIs consistently represent epics or multi-sprint efforts; cycle time distribution skewed by definition.",
-        "how_to_test": "Audit PBI granularity and compare with actual change size metrics (diff size, PR cycle time).",
-        "if_true_impact": "Standardize PBI granularity and adjust metrics before changing process policies.",
-        "analysis_coverage": "partially_addressed"
-      }
-    ],
-    "improvement_recommendations": [
-      {
-        "rec_id": "REC-001",
-        "dimension": "data_quality",
-        "priority": "high",
-        "current_state": "Only MTTR is available from DORA; other key metrics are missing.",
-        "proposed_change": "Instrument and baseline all DORA metrics (DF, LT, CFR, MTTR) for at least 8–12 weeks.",
-        "rationale": "Provides foundational evidence to validate throughput constraint and loop impacts.",
-        "expected_impact": "Significantly increases confidence in constraint identification and intervention prioritization.",
-        "effort": "medium"
-      },
-      {
-        "rec_id": "REC-002",
-        "dimension": "evidence_strength",
-        "priority": "high",
-        "current_state": "PO capacity constraint inferred from proxies and CRT.",
-        "proposed_change": "Collect Ready backlog depth/aging, PO time-use audit, and refinement quality metrics.",
-        "rationale": "Directly tests if PO discovery is starving flow.",
-        "expected_impact": "Clarifies if PO capacity is the true constraint.",
-        "effort": "medium"
-      },
-      {
-        "rec_id": "REC-003",
-        "dimension": "constraint_identification",
-        "priority": "high",
-        "current_state": "Multiple plausible constraints listed without prioritization.",
-        "proposed_change": "Run parallel, small-scale pilots: (a) reporting reduction for PO, (b) WIP caps, (c) environment stabilization for one service.",
-        "rationale": "Empirically determine which intervention increases throughput/predictability most.",
-        "expected_impact": "Reveals the true, current system constraint.",
-        "effort": "medium"
-      },
-      {
-        "rec_id": "REC-004",
-        "dimension": "evidence_strength",
-        "priority": "medium",
-        "current_state": "Batch-size inference relies on PBIs per sprint ≈1.",
-        "proposed_change": "Measure PBI cycle time and size distribution; standardize PBI granularity definitions.",
-        "rationale": "Validates or corrects batch-size assumptions.",
-        "expected_impact": "Reduces risk of misdirected batch-size/WIP policies.",
-        "effort": "low"
-      },
-      {
-        "rec_id": "REC-005",
-        "dimension": "completeness",
-        "priority": "medium",
-        "current_state": "Leverage points lack leverage_type and impact radius; affected_teams not specified.",
-        "proposed_change": "Add leverage_type (policy/bottleneck/information_flow) and estimated_impact_radius; list affected_teams per issue.",
-        "rationale": "Improves clarity for planning and change management.",
-        "expected_impact": "Better alignment of interventions with organizational scope.",
-        "effort": "low"
-      }
-    ],
-    "strengths": [
-      {
-        "strength": "Causal structure is explicit and rich, with clear feedback loops and AND conditions in the CRT.",
-        "dimension": "causal_logic_quality",
-        "why_it_matters": "Supports testable hypotheses and reduces risk of simplistic, linear thinking."
-      },
-      {
-        "strength": "Assumptions and data gaps are openly acknowledged, including missing DORA metrics and proxy limitations.",
-        "dimension": "evidence_strength",
-        "why_it_matters": "Transparent confidence calibration prevents overcommitting to weakly supported conclusions."
-      },
-      {
-        "strength": "Multiple interacting systemic loops identified (Discovery–Batch–Forecast, Push–WIP–Quality, Env–Freeze–Forecast).",
-        "dimension": "alternative_hypotheses",
-        "why_it_matters": "Shows systems thinking breadth and prepares for multi-pronged validation."
-      }
-    ],
-    "validation_tests": [
-      {
-        "test_id": "TEST-001",
-        "purpose": "Validate whether PO discovery/refinement capacity is the primary constraint.",
-        "test_description": "For one team, reduce reporting load by 50% and reserve a fixed discovery block for the PO for 2 sprints; measure Ready backlog depth/aging, DoR adherence, and predictability (commit vs. complete).",
-        "expected_result_if_analysis_correct": "Ready depth increases, batch size decreases, predictability improves meaningfully.",
-        "expected_result_if_analysis_wrong": "Little to no change in flow metrics; other queues remain dominant.",
-        "effort": "medium",
-        "when_to_run": "before_planning"
-      },
-      {
-        "test_id": "TEST-002",
-        "purpose": "Discriminate between WIP policy vs. PO capacity as the constraint.",
-        "test_description": "Introduce strict WIP limits and pull policy for a comparable team for 2–3 sprints; track lead time, throughput, CFR.",
-        "expected_result_if_analysis_correct": "Smaller improvement than PO-focused pilot; PO pilot outperforms WIP pilot.",
-        "expected_result_if_analysis_wrong": "WIP pilot yields greater lead-time/throughput improvements, indicating flow constraint.",
-        "effort": "medium",
-        "when_to_run": "before_planning"
-      },
-      {
-        "test_id": "TEST-003",
-        "purpose": "Assess environment instability impact on flow.",
-        "test_description": "Stabilize test/integration via immutable, prod-like ephemeral envs for one service; track freeze frequency, queue aging, and lead-time variance for 4 weeks.",
-        "expected_result_if_analysis_correct": "Modest improvements only; upstream constraints still dominate.",
-        "expected_result_if_analysis_wrong": "Large reductions in waits and lead-time variance, indicating environment as constraint.",
-        "effort": "medium",
-        "when_to_run": "phase_1"
-      },
-      {
-        "test_id": "TEST-004",
-        "purpose": "Validate batch-size inference from PBIs per sprint.",
-        "test_description": "Collect PBI cycle times and size normalization across teams; audit PBI definitions.",
-        "expected_result_if_analysis_correct": "Cycle times and sizes confirm large batches; standardization reduces variance.",
-        "expected_result_if_analysis_wrong": "PBIs are coarse-grained by definition; need metric correction.",
-        "effort": "low",
-        "when_to_run": "before_planning"
-      },
-      {
-        "test_id": "TEST-005",
-        "purpose": "Establish throughput and quality baselines.",
-        "test_description": "Instrument CI/CD to capture DORA DF, LT, CFR, MTTR for 8–12 weeks; segment by team.",
-        "expected_result_if_analysis_correct": "Patterns align with hypothesized queues and loops; improvements track pilots.",
-        "expected_result_if_analysis_wrong": "No alignment; other stages dominate LT or CFR.",
-        "effort": "medium",
-        "when_to_run": "ongoing"
-      }
-    ],
-    "data_quality_assessment": {
-      "overall_data_completeness": "55%",
-      "metric_reliability": {
-        "dora_metrics": "low",
-        "extended_metrics": "medium",
-        "cultural_metrics": "medium"
-      },
-      "critical_data_gaps": [
-        {
-          "metric": "Deployment frequency, Lead time, Change failure rate",
-          "impact": "Cannot triangulate throughput constraint or quality impact.",
-          "mitigation": "Instrument pipelines and incidents; create a rolling 12-week baseline."
-        },
-        {
-          "metric": "Ready backlog depth/aging and PO time-use",
-          "impact": "Primary constraint validation impossible without these.",
-          "mitigation": "Time audit and backlog instrumentation."
-        },
-        {
-          "metric": "Expedite and freeze rates",
-          "impact": "Unclear contribution of rushing and environment to flow variability.",
-          "mitigation": "Add tagging and logging for expedites/freezes."
-        }
-      ],
-      "baseline_validity": "low"
+    "alternative_hypotheses": {
+      "score": 52,
+      "weight": "10%",
+      "weighted_score": 5.2,
+      "status": "needs_improvement"
     },
-    "constraint_validation": {
-      "constraint_identified": "PO discovery/refinement capacity limited by reporting demand (Ready backlog starvation)",
-      "constraint_type": "policy",
-      "constraint_clarity": "somewhat_clear",
-      "bottleneck_evidence": "weak",
-      "exploitation_potential": "medium",
-      "impact_radius": "multi-team",
-      "confidence_in_identification": "low",
-      "alternative_constraints_considered": "partially",
-      "recommendation": "need_more_data"
+    "data_quality": {
+      "score": 72,
+      "weight": "10%",
+      "weighted_score": 7.2,
+      "status": "good"
     },
-    "bias_assessment": {
-      "potential_biases_detected": [
-        {
-          "bias_type": "confirmation",
-          "evidence_of_bias": "Early elevation of PO capacity as primary constraint with supportive CRT links but without disconfirming tests.",
-          "impact": "Overweighting upstream factors; under-testing WIP or environment constraints.",
-          "mitigation": "Run competing pilots (PO time relief vs WIP caps vs env stabilization) and compare outcomes."
-        },
-        {
-          "bias_type": "availability",
-          "evidence_of_bias": "Use of Westrum=3 and meeting time as proxies for reporting burden.",
-          "impact": "Overemphasis on reporting as a cause without quantification.",
-          "mitigation": "Conduct PO time-use study and categorize meeting types."
-        },
-        {
-          "bias_type": "anchoring",
-          "evidence_of_bias": "Strong reliance on CRT structure may anchor on initial causal framing.",
-          "impact": "Insufficient exploration of deployment/release policy constraints.",
-          "mitigation": "Introduce a neutral stage-based lead-time analysis to identify dominant queues."
-        }
-      ],
-      "bias_awareness": "medium"
-    },
-    "decision_criteria": {
-      "approve_if": [
-        "Score ≥85 with no critical issues",
-        "Constraint clearly identified with strong evidence",
-        "Causal logic sound (no major leaps or flaws)",
-        "Data quality sufficient for conclusions drawn"
-      ],
-      "revise_minor_if": [
-        "Score 70-84",
-        "1-3 evidence gaps that can be filled",
-        "Minor logical issues that don't invalidate core conclusions",
-        "Data quality adequate but could be stronger"
-      ],
-      "revise_major_if": [
-        "Score 50-69",
-        "Major causal logic flaws",
-        "Constraint identification uncertain or wrong",
-        "Multiple critical evidence gaps",
-        "Alternative hypotheses not considered"
-      ],
-      "reject_if": [
-        "Score <50",
-        "Fundamental logical errors (circular reasoning, reversed causality)",
-        "No evidence for major claims",
-        "Wrong constraint identified",
-        "Data quality too poor to support any conclusions"
-      ]
-    },
-    "recommended_next_steps": {
-      "if_approved": [
-        "Proceed to Planner Agent",
-        "Note any medium-priority recommendations for validation in Phase 1",
-        "Document confidence level for planning"
-      ],
-      "if_revise_minor": [
-        "Address evidence gaps EVID-001, EVID-003",
-        "Clarify causal mechanism for issue #2",
-        "Run validation test TEST-001 if feasible",
-        "Re-submit for review (expect approval)"
-      ],
-      "if_revise_major": [
-        "Address critical issues CRIT-001 through CRIT-004",
-        "Instrument missing DORA metrics and collect Ready/WIP/PO time-use data",
-        "Run competing pilots (TEST-001, TEST-002, TEST-003) to identify the true constraint",
-        "Validate batch-size inference via TEST-004",
-        "Reassess primary constraint with new evidence and update CRT if needed"
-      ],
-      "if_rejected": [
-        "Return to CRT construction (Goldratt-Assistant)",
-        "Fundamental rethink of causal logic required",
-        "Gather additional data before re-analysis",
-        "Consider alternative analytical approaches"
-      ]
-    },
-    "review_confidence_assessment": {
-      "overall_confidence": "medium",
-      "confidence_factors": {
-        "input_data_availability": "medium",
-        "analysis_clarity": "high",
-        "domain_expertise": "high",
-        "completeness_of_review": "high"
-      },
-      "limitations": [
-        "Absence of deployment frequency, lead time, and CFR prevents full constraint validation.",
-        "No direct visibility into Ready backlog data or freeze/expedite logs.",
-        "Some extended metrics reported as qualitative levels (Medium) without thresholds."
-      ]
+    "completeness": {
+      "score": 90,
+      "weight": "5%",
+      "weighted_score": 4.5,
+      "status": "excellent"
     }
+  },
+  "critical_issues": [
+    {
+      "issue_id": "CRIT-001",
+      "dimension": "constraint_identification",
+      "severity": "critical",
+      "issue": "No single primary constraint is identified and prioritized; multiple concurrent 'constraints' are listed.",
+      "evidence": "Executive summary names three drivers; leverage_points lists seven constraints without prioritization or throughput-limiting proof.",
+      "impact": "Without a single system constraint, interventions will be diffused and sub-optimization is likely; TOC subordination cannot be applied.",
+      "recommendation": "Select and justify ONE primary constraint via throughput analysis and queue-time decomposition (e.g., map lead time components and quantify which stage imposes the largest sustained queue). Provide evidence that elevating this constraint increases system throughput.",
+      "example": "E.g., show 'code freeze wait time accounts for 48% of end-to-end lead time across past 12 weeks; when freeze absent, throughput doubles' to justify 'unstable baseline' as THE constraint."
+    },
+    {
+      "issue_id": "CRIT-002",
+      "dimension": "evidence_strength",
+      "severity": "major",
+      "issue": "Key policy assertions (fixed-date commitments, expedite policy usage, absence of WIP limits, lack of production-like test environment, PO capacity constraint) are not supported with direct evidence.",
+      "evidence": "Core issues reference E42/E43/E49/E23/E34 from CRT but provide no logs, policy documents, usage counts, or time audits.",
+      "impact": "If these policies are not actually binding or frequent, planned interventions will target the wrong leverage points.",
+      "recommendation": "Cite specific artifacts and measurements: policy docs, change/ad-hoc deploy window calendars, expedite tag frequency over past 8–12 weeks, WIP limit settings in boards, PO calendar/time study, environment provisioning records."
+    },
+    {
+      "issue_id": "CRIT-003",
+      "dimension": "data_quality",
+      "severity": "major",
+      "issue": "Change Failure Rate (100%) and Deployment Frequency (0.001/day) lack sample size and time-window context; may be unstable or misleading.",
+      "evidence": "No denominator (N of changes) or period specified; with very low deployment frequency, CFR can be 100% due to single event.",
+      "impact": "Overstates environment instability and may bias constraint selection toward integration when low sample size or reporting artifact is the cause.",
+      "recommendation": "Recompute DORA with a defined 12-week window, include Ns and confidence intervals. Show weekly CFR and DF to assess stability and outliers."
+    }
+  ],
+  "logical_flaws": [
+    {
+      "flaw_id": "LOGIC-001",
+      "type": "correlation_as_causation",
+      "location": "Core systemic issue #2, evidence 'Change failure rate = 100.0%' used to infer unstable baseline",
+      "description": "Assumes CFR=100% implies unstable integration baseline without validating sample size, denominator, or alternative causes (e.g., single incident, change freeze policy side-effects).",
+      "why_it_matters": "May misidentify the constraint and over-invest in environment fixes.",
+      "suggested_fix": "Provide CFR denominator, periodization, and link failures specifically to integration drift/flake via incident root-cause categorizations.",
+      "validation_test": "Segment CFR by failure type (integration vs. functional vs. config). If integration-related comprise majority, the causal link is supported."
+    },
+    {
+      "flaw_id": "LOGIC-002",
+      "type": "logical_leap",
+      "location": "Core systemic issue #1, 'Discovery/refinement capacity constraint drives large batches'",
+      "description": "PO capacity constraint is asserted via CRT (E34/E35) but not evidenced with time audits or Ready buffer metrics.",
+      "why_it_matters": "If discovery is not the limiting stage, focusing here will not increase throughput.",
+      "suggested_fix": "Measure PO hours on discovery, number of Ready PBIs at sprint start, and Ready buffer days over time.",
+      "validation_test": "If Ready buffer is consistently <1 sprint while downstream stages have idle time, discovery is a likely constraint; otherwise, reconsider."
+    },
+    {
+      "flaw_id": "LOGIC-003",
+      "type": "hidden_AND",
+      "location": "Systemic relationship R1 'Discovery→Large batches→High WIP'",
+      "description": "High WIP requires both large batch sizes and permissive WIP policy; analysis emphasizes batch size but treats WIP policy (E49) as background without quantifying it.",
+      "why_it_matters": "If WIP caps are enforced effectively, batch size alone may not produce excessive queues; different intervention needed.",
+      "suggested_fix": "Explicitly model AND condition: (Large batches AND no/enforced WIP limits) → High WIP; quantify WIP policy adherence.",
+      "validation_test": "Audit WIP per person/column vs. policy across sprints; if exceeded >30% of the time, WIP policy is a necessary co-cause."
+    }
+  ],
+  "evidence_gaps": [
+    {
+      "gap_id": "EVID-001",
+      "claim": "Fixed-date commitments (E42) and expedite/preemption policy (E43) are driving rushed work and compressed testing.",
+      "current_evidence": "Referenced via CRT links; no policy documents, event logs, or counts provided.",
+      "gap_type": "no_evidence",
+      "impact": "Uncertain whether dates/expedites materially contribute to variability.",
+      "recommended_evidence": "Provide policy text, release calendars, expedite-tag frequency per sprint, and preemption counts from boards over last 8–12 weeks.",
+      "workaround": "Qualitative manager and team interviews triangulated with board change histories if logs unavailable."
+    },
+    {
+      "gap_id": "EVID-002",
+      "claim": "PO discovery/refinement capacity is a binding constraint (E34/E35).",
+      "current_evidence": "Inferred from low PBIs delivered and CRT chain; no time audit.",
+      "gap_type": "weak_evidence",
+      "impact": "Risk of mis-allocating improvement effort to discovery.",
+      "recommended_evidence": "PO calendar time study, Ready PBIs buffer size trend, time-to-Ready lead time.",
+      "workaround": "Short sampling study (2 sprints) measuring Ready pipeline before committing."
+    },
+    {
+      "gap_id": "EVID-003",
+      "claim": "Absence of WIP limits (E49) materially drives variability.",
+      "current_evidence": "Stated; no board policies or adherence metrics.",
+      "gap_type": "no_evidence",
+      "impact": "Cannot justify WIP-focused interventions.",
+      "recommended_evidence": "Board policies/screenshots; WIP per column/person distributions and breach rates over time.",
+      "workaround": "Manual sample of 2 recent sprints across teams."
+    },
+    {
+      "gap_id": "EVID-004",
+      "claim": "No production-like ad-hoc test environment (E23) causes drift and freezes.",
+      "current_evidence": "Asserted via CRT; no environment inventory or provisioning SLAs.",
+      "gap_type": "no_evidence",
+      "impact": "Environment investments may be unnecessary if drift is minimal.",
+      "recommended_evidence": "Inventory of test environments, drift metrics, flake rates, and time-to-provision statistics.",
+      "workaround": "Targeted incident review sampling last 10 integration failures."
+    },
+    {
+      "gap_id": "EVID-005",
+      "claim": "CFR=100% and MTTR=10.5 days reflect systemic instability.",
+      "current_evidence": "Point estimates only; no Ns or time window.",
+      "gap_type": "single_source",
+      "impact": "Potentially overstates severity.",
+      "recommended_evidence": "Weekly time series over 12 weeks with Ns and confidence intervals; categorize failure causes.",
+      "workaround": "At minimum report last-4-week Ns and rolling averages."
+    },
+    {
+      "gap_id": "EVID-006",
+      "claim": "Deployment frequency 0.001/day accurately reflects current operations.",
+      "current_evidence": "Single point estimate.",
+      "gap_type": "single_source",
+      "impact": "Could be distorted by freeze/outage window.",
+      "recommended_evidence": "Deployment calendar and pipeline logs confirming count and any blackout windows.",
+      "workaround": "Cross-check prod change tickets or release notes."
+    },
+    {
+      "gap_id": "EVID-007",
+      "claim": "Metric validity and comparability issues (E10/E39) drive forecast noise.",
+      "current_evidence": "CRT linkage; no audit of estimation scales or Done-definition enforcement.",
+      "gap_type": "weak_evidence",
+      "impact": "Forecasting interventions may not address root cause.",
+      "recommended_evidence": "Sampling audit of completed PBIs vs DoD; estimation scale inventory across teams; variance analysis.",
+      "workaround": "One-sprint audit across 2–3 teams."
+    }
+  ],
+  "alternative_hypotheses": [
+    {
+      "hypothesis_id": "ALT-001",
+      "alternative_explanation": "Deployment windows or external CAB approvals, not environment instability, primarily limit deployment frequency.",
+      "supporting_evidence": "Presence of narrow windows (e.g., Tue-Thu 2–4pm), CAB meeting cadence, approval queues.",
+      "how_to_test": "Review release policy; extract approval timestamps and queue times; compare lead-time components.",
+      "if_true_impact": "Primary constraint shifts to policy; focus on policy change/automation rather than environment investment.",
+      "analysis_coverage": "not_considered"
+    },
+    {
+      "hypothesis_id": "ALT-002",
+      "alternative_explanation": "Small sample size inflates CFR to 100%; actual failure rate is lower and not the main driver of unpredictability.",
+      "supporting_evidence": "Low DF implies few deployments; one failure can yield 100%.",
+      "how_to_test": "Compute CFR with Ns and CI over 12 weeks; analyze per-change failure causes.",
+      "if_true_impact": "Reduce emphasis on CFR; re-evaluate constraint prioritization.",
+      "analysis_coverage": "partially_addressed"
+    },
+    {
+      "hypothesis_id": "ALT-003",
+      "alternative_explanation": "Architecture complexity/monolith drives long branch lifetimes and integration pain independent of environment.",
+      "supporting_evidence": "High coupling metrics, change size, long-lived feature branches.",
+      "how_to_test": "Measure change size distribution, dependency graph/coupling metrics, build times.",
+      "if_true_impact": "Constraint may be architectural; interventions target modularization/strangler patterns.",
+      "analysis_coverage": "not_considered"
+    },
+    {
+      "hypothesis_id": "ALT-004",
+      "alternative_explanation": "PO capacity is not the bottleneck; the constraint lies in test/QA or integration throughput.",
+      "supporting_evidence": "Ready buffer adequate; test cycle time dominates lead time.",
+      "how_to_test": "Measure Ready backlog days of supply; decompose lead time stage by stage.",
+      "if_true_impact": "Shift improvement focus from discovery to QA/integration.",
+      "analysis_coverage": "partially_addressed"
+    }
+  ],
+  "improvement_recommendations": [
+    {
+      "rec_id": "REC-001",
+      "dimension": "constraint_identification",
+      "priority": "high",
+      "current_state": "Multiple candidate constraints listed without prioritization.",
+      "proposed_change": "Perform end-to-end lead-time decomposition (value stream map) over last 8–12 weeks and identify the stage with the largest sustained queue/wait; declare a single primary constraint.",
+      "rationale": "TOC requires one current constraint to subordinate around.",
+      "expected_impact": "Enables focused, high-leverage interventions and clear subordination.",
+      "effort": "medium"
+    },
+    {
+      "rec_id": "REC-002",
+      "dimension": "evidence_strength",
+      "priority": "high",
+      "current_state": "Policy-based claims lack direct evidence.",
+      "proposed_change": "Collect and cite concrete artifacts: deployment window/CAB policy, expedite tag frequency, WIP policy settings and breach rates, PO time audit, environment inventory.",
+      "rationale": "Elevates claims from plausible to evidenced.",
+      "expected_impact": "Raises evidence strength and confidence; may refine constraint choice.",
+      "effort": "medium"
+    },
+    {
+      "rec_id": "REC-003",
+      "dimension": "data_quality",
+      "priority": "high",
+      "current_state": "DORA metrics presented without Ns/time window.",
+      "proposed_change": "Report 12-week time series for DF, LT, CFR, MTTR with Ns and CIs; annotate freezes/outliers.",
+      "rationale": "Avoids misinterpretation from small samples and outliers.",
+      "expected_impact": "Improves reliability of causal inferences.",
+      "effort": "low"
+    },
+    {
+      "rec_id": "REC-004",
+      "dimension": "alternative_hypotheses",
+      "priority": "medium",
+      "current_state": "Alternatives (deployment windows, architecture, sample-size effects) not assessed.",
+      "proposed_change": "Explicitly evaluate and rule out key alternatives with data.",
+      "rationale": "Reduces risk of confirmation bias.",
+      "expected_impact": "Increases robustness of conclusions.",
+      "effort": "low"
+    },
+    {
+      "rec_id": "REC-005",
+      "dimension": "evidence_strength",
+      "priority": "medium",
+      "current_state": "Discovery constraint inferred without measures.",
+      "proposed_change": "Measure Ready buffer (days of supply), PO discovery hours, and time-to-Ready.",
+      "rationale": "Validates whether discovery is actually limiting.",
+      "expected_impact": "Prevents misdirected effort.",
+      "effort": "low"
+    },
+    {
+      "rec_id": "REC-006",
+      "dimension": "data_quality",
+      "priority": "medium",
+      "current_state": "WIP and queue variability not quantified.",
+      "proposed_change": "Capture WIP per stage, cycle-time distributions, and WIP limit breaches across teams for 2–3 sprints.",
+      "rationale": "Quantifies flow variability and validates E49/E50 effects.",
+      "expected_impact": "Strengthens causal claims about WIP and batch size.",
+      "effort": "low"
+    }
+  ],
+  "strengths": [
+    {
+      "strength": "Rich, well-structured Current Reality Tree with explicit feedback loops and AND conditions.",
+      "dimension": "causal_logic_quality",
+      "why_it_matters": "Supports systemic reasoning and avoids linear cause-effect oversimplification."
+    },
+    {
+      "strength": "Good alignment between observed metrics (lead time, branch lifetime, low PBIs) and hypothesized batching/WIP dynamics.",
+      "dimension": "evidence_strength",
+      "why_it_matters": "Converging indicators increase plausibility of the main narrative."
+    },
+    {
+      "strength": "Cultural factors acknowledged (Westrum=2.0) and integrated into the trust-reporting loop.",
+      "dimension": "completeness",
+      "why_it_matters": "Prevents purely technical framing and recognizes socio-technical feedbacks."
+    },
+    {
+      "strength": "Assumptions and analysis confidence explicitly stated with data completeness estimate.",
+      "dimension": "completeness",
+      "why_it_matters": "Enables appropriate calibration and targeted follow-up."
+    }
+  ],
+  "validation_tests": [
+    {
+      "test_id": "TEST-001",
+      "purpose": "Identify the primary system constraint via queue/wait analysis.",
+      "test_description": "Value stream map last 20–30 changes; decompose lead time into stages (discovery, dev, review, test, integration, approval, freeze) and quantify average wait/queue time per stage.",
+      "expected_result_if_analysis_correct": "One stage (e.g., integration/freeze or discovery) dominates wait time and queues.",
+      "expected_result_if_analysis_wrong": "No single dominant stage; waits evenly distributed or dominated by unconsidered stage.",
+      "effort": "medium",
+      "when_to_run": "before_planning"
+    },
+    {
+      "test_id": "TEST-002",
+      "purpose": "Validate policy constraints (dates, expedites, deployment windows).",
+      "test_description": "Extract expedite/preemption tags from boards and deployment calendars over 12 weeks; count frequency and queue impact.",
+      "expected_result_if_analysis_correct": "Frequent expedites and/or narrow deployment windows correlate with increased lead time and failure.",
+      "expected_result_if_analysis_wrong": "Rare expedites and broad windows with no measurable impact.",
+      "effort": "low",
+      "when_to_run": "before_planning"
+    },
+    {
+      "test_id": "TEST-003",
+      "purpose": "Confirm discovery/Ready as a bottleneck.",
+      "test_description": "Measure Ready backlog days of supply at each sprint start for 4 sprints and PO hours spent on discovery.",
+      "expected_result_if_analysis_correct": "Ready buffer consistently <1 sprint; PO discovery time constrained.",
+      "expected_result_if_analysis_wrong": "Adequate Ready buffer despite low throughput; constraint lies elsewhere.",
+      "effort": "low",
+      "when_to_run": "before_planning"
+    },
+    {
+      "test_id": "TEST-004",
+      "purpose": "Stabilize DORA metrics and assess CFR validity.",
+      "test_description": "Recompute DF, LT, CFR, MTTR with Ns and 12-week window; classify incident causes.",
+      "expected_result_if_analysis_correct": "Consistently high CFR tied to integration failures; DF remains very low.",
+      "expected_result_if_analysis_wrong": "CFR normalizes with sufficient N or failures not integration-related.",
+      "effort": "low",
+      "when_to_run": "before_planning"
+    },
+    {
+      "test_id": "TEST-005",
+      "purpose": "Assess WIP policy adherence as co-cause of variability.",
+      "test_description": "Collect WIP per column/person and breach rates across 2–3 sprints.",
+      "expected_result_if_analysis_correct": "Frequent WIP breaches coincide with long queues and variable cycle times.",
+      "expected_result_if_analysis_wrong": "WIP adherent; variability explained by other factors.",
+      "effort": "low",
+      "when_to_run": "phase_1"
+    },
+    {
+      "test_id": "TEST-006",
+      "purpose": "Rule in/out deployment windows or CAB as bottleneck.",
+      "test_description": "Review deployment policy; extract approval timestamps and queue durations; compare to total lead time.",
+      "expected_result_if_analysis_correct": "Approval/window queues are minimal relative to total lead time.",
+      "expected_result_if_analysis_wrong": "Approval/window queues dominate total lead time, indicating policy constraint.",
+      "effort": "low",
+      "when_to_run": "before_planning"
+    }
+  ],
+  "data_quality_assessment": {
+    "overall_data_completeness": "80%",
+    "metric_reliability": {
+      "dora_metrics": "medium",
+      "extended_metrics": "high",
+      "cultural_metrics": "medium"
+    },
+    "critical_data_gaps": [
+      {
+        "metric": "DORA denominator/time window (Ns for CFR, DF, MTTR, LT)",
+        "impact": "Without Ns and periodization, metrics may be unstable and misleading.",
+        "mitigation": "Recompute over 12-week window with Ns and confidence intervals."
+      },
+      {
+        "metric": "Policy usage data (expedites, deployment windows/CAB)",
+        "impact": "Cannot establish policy constraints' contribution to flow variability.",
+        "mitigation": "Extract logs from boards and release calendars."
+      },
+      {
+        "metric": "WIP measurements and policy adherence",
+        "impact": "Uncertain role of WIP in variability and queues.",
+        "mitigation": "Collect WIP distributions and breach rates."
+      },
+      {
+        "metric": "PO discovery/refinement time and Ready buffer",
+        "impact": "Constraint identification for discovery is speculative.",
+        "mitigation": "PO time study; Ready days-of-supply tracking."
+      }
+    ],
+    "baseline_validity": "medium"
+  },
+  "constraint_validation": {
+    "constraint_identified": "Multiple candidates listed (discovery/refinement capacity, unstable integration baseline/code freezes, absence of WIP limits, date-driven expedites, metric validity).",
+    "constraint_type": "mixed",
+    "constraint_clarity": "unclear",
+    "bottleneck_evidence": "weak",
+    "exploitation_potential": "medium",
+    "impact_radius": "org-wide",
+    "confidence_in_identification": "low",
+    "alternative_constraints_considered": "yes",
+    "recommendation": "need_more_data"
+  },
+  "bias_assessment": {
+    "potential_biases_detected": [
+      {
+        "bias_type": "confirmation",
+        "evidence_of_bias": "Narrative centers on three reinforcing drivers from the outset; alternatives like deployment windows/CAB not explored.",
+        "impact": "May anchor on environment/discovery explanations and overlook policy bottlenecks.",
+        "mitigation": "Explicitly generate and test alternatives; run validation tests TEST-002/006."
+      },
+      {
+        "bias_type": "anchoring",
+        "evidence_of_bias": "Strong CRT structure may discourage revisiting initial causal attributions despite weak direct evidence for some nodes.",
+        "impact": "Premature convergence on a multi-constraint view without prioritization.",
+        "mitigation": "Require quantitative bottleneck test before finalizing THE constraint."
+      },
+      {
+        "bias_type": "availability",
+        "evidence_of_bias": "Use of extreme point values (CFR=100%) without Ns/time window.",
+        "impact": "Overweights salient but possibly unrepresentative data.",
+        "mitigation": "Use time series and confidence bounds; investigate outliers."
+      }
+    ],
+    "bias_awareness": "medium"
+  },
+  "decision_criteria": {
+    "approve_if": [
+      "Score ≥85 with no critical issues",
+      "Constraint clearly identified with strong evidence",
+      "Causal logic sound (no major leaps or flaws)",
+      "Data quality sufficient for conclusions drawn"
+    ],
+    "revise_minor_if": [
+      "Score 70-84",
+      "1-3 evidence gaps that can be filled",
+      "Minor logical issues that don't invalidate core conclusions",
+      "Data quality adequate but could be stronger"
+    ],
+    "revise_major_if": [
+      "Score 50-69",
+      "Major causal logic flaws",
+      "Constraint identification uncertain or wrong",
+      "Multiple critical evidence gaps",
+      "Alternative hypotheses not considered"
+    ],
+    "reject_if": [
+      "Score <50",
+      "Fundamental logical errors (circular reasoning, reversed causality)",
+      "No evidence for major claims",
+      "Wrong constraint identified",
+      "Data quality too poor to support any conclusions"
+    ]
+  },
+  "recommended_next_steps": {
+    "if_approved": [
+      "Proceed to Planner Agent",
+      "Note any medium-priority recommendations for validation in Phase 1",
+      "Document confidence level for planning"
+    ],
+    "if_revise_minor": [
+      "Address limited evidence gaps (e.g., Ns and time windows for DORA)",
+      "Clarify causal mechanism for a small number of links",
+      "Run validation test TEST-004",
+      "Re-submit for review"
+    ],
+    "if_revise_major": [
+      "Address critical issues CRIT-001 to CRIT-003",
+      "Select and justify a single primary constraint using TEST-001",
+      "Validate policy and environment claims with artifacts/logs (TEST-002, TEST-006)",
+      "Quantify discovery pipeline and WIP adherence (TEST-003, TEST-005)",
+      "Recompute DORA with Ns/time window (TEST-004)",
+      "Re-submit with prioritized leverage point tied to the identified constraint"
+    ],
+    "if_rejected": [
+      "Return to CRT construction",
+      "Gather additional data before re-analysis",
+      "Consider alternative analytical approaches"
+    ]
+  },
+  "review_confidence_assessment": {
+    "overall_confidence": "medium",
+    "confidence_factors": {
+      "input_data_availability": "medium",
+      "analysis_clarity": "high",
+      "domain_expertise": "high",
+      "completeness_of_review": "high"
+    },
+    "limitations": [
+      "No access to raw metric time series or Ns to independently verify stability.",
+      "Policy artifacts (deployment windows, expedite logs) not provided.",
+      "Team count and time horizon for extended metrics unspecified."
+    ]
   }
+}

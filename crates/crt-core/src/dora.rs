@@ -1,4 +1,5 @@
 use crate::types::{DoraMetric, DoraMetrics, EngineeringMetrics};
+use std::collections::HashMap;
 
 #[derive(Debug, Clone)]
 pub struct DoraMetricConfig {
@@ -71,7 +72,7 @@ pub const DORA_METRIC_CONFIGS: &[(&str, DoraMetricConfig)] = &[
     }),
 ];
 
-pub fn translate_dora_metrics_for_agent(dora_metrics: &DoraMetrics) -> serde_json::Value {
+pub fn translate_dora_metrics_for_agent(dora_metrics: &DoraMetrics) -> HashMap<String, DoraMetric> {
     let get_config = |metric_name: &str| -> &DoraMetricConfig {
         DORA_METRIC_CONFIGS
             .iter()
@@ -80,15 +81,15 @@ pub fn translate_dora_metrics_for_agent(dora_metrics: &DoraMetrics) -> serde_jso
             .expect("Unknown DORA metric")
     };
 
-    serde_json::json!({
-        "deployment_frequency": get_config("deployment_frequency").translate(dora_metrics.deployment_frequency),
-        "lead_time": get_config("lead_time").translate(dora_metrics.lead_time),
-        "change_failure_rate": get_config("change_failure_rate").translate(dora_metrics.change_failure_rate),
-        "mttr": get_config("mttr").translate(dora_metrics.mttr),
-    })
+    let mut result = HashMap::new();
+    result.insert("deployment_frequency".to_string(), get_config("deployment_frequency").translate(dora_metrics.deployment_frequency));
+    result.insert("lead_time".to_string(), get_config("lead_time").translate(dora_metrics.lead_time));
+    result.insert("change_failure_rate".to_string(), get_config("change_failure_rate").translate(dora_metrics.change_failure_rate));
+    result.insert("mttr".to_string(), get_config("mttr").translate(dora_metrics.mttr));
+    result
 }
 
-pub fn translate_engineering_metrics_for_agent(engineering_metrics: &EngineeringMetrics) -> serde_json::Value {
+pub fn translate_engineering_metrics_for_agent(engineering_metrics: &EngineeringMetrics) -> HashMap<String, DoraMetric> {
     let get_config = |metric_name: &str| -> &DoraMetricConfig {
         DORA_METRIC_CONFIGS
             .iter()
@@ -97,9 +98,12 @@ pub fn translate_engineering_metrics_for_agent(engineering_metrics: &Engineering
             .expect("Unknown DORA metric")
     };
 
-    serde_json::json!({
-        "commit_frequency": get_config("commit_frequency").translate(engineering_metrics.commit_frequency),
-        "branch_lifetime": get_config("branch_lifetime").translate(engineering_metrics.branch_lifetime),
-        "pbis_delivered_per_sprint_per_team": engineering_metrics.pbis_delivered_per_sprint_per_team,
-    })
+    let mut result = HashMap::new();
+    result.insert("commit_frequency".to_string(), get_config("commit_frequency").translate(engineering_metrics.commit_frequency));
+    result.insert("branch_lifetime".to_string(), get_config("branch_lifetime").translate(engineering_metrics.branch_lifetime));
+    result.insert("pbis_delivered_per_sprint_per_team".to_string(), DoraMetric {
+        value: engineering_metrics.pbis_delivered_per_sprint_per_team,
+        unit: "PBIs/sprint/team".to_string(),
+    });
+    result
 }

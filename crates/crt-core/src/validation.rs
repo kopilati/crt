@@ -92,8 +92,8 @@ impl Validate for AnalyseWithFeedbackRequest {
             return Err("Analysis result must have analysis confidence".to_string());
         }
         
-        if self.evaluation.is_null() {
-            return Err("Evaluation feedback is required".to_string());
+        if !self.evaluation.overall_assessment.total_score.is_finite() {
+            return Err("Evaluation feedback must include a valid overall score".to_string());
         }
         Ok(())
     }
